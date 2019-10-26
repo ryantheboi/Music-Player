@@ -50,4 +50,15 @@
         android:layout_marginLeft="11dp"
         android:layout_marginStart="11dp"
         android:background="@drawable/stop" />
+
+    <Button
+        android:id="@+id/sendMessageButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="sendNotification"
+        android:text="@+string/Get Notification"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"/>
+
 </RelativeLayout>
+

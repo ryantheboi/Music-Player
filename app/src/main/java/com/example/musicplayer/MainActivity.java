@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.support.v4.media.session.MediaSessionCompat;
 import android.view.View;
 import android.widget.Button;
 
@@ -23,6 +24,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Button play, pause, stop;
     MediaPlayer mediaPlayer;
     int pauseCurrentPosition;
+    private MediaSessionCompat mediaSession;
     private NotificationManagerCompat notificationManager;
 
     @Override
@@ -38,6 +40,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         pause.setOnClickListener(this);
         stop.setOnClickListener(this);
 
+        mediaSession = new MediaSessionCompat(this, "media");
         notificationManager = NotificationManagerCompat.from(this);
     }
 
@@ -75,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void sendNotification(View view){
-        Bitmap largeImage = BitmapFactory.decodeResource(getResources(), R.drawable.music_default);
+        Bitmap largeImage = BitmapFactory.decodeResource(getResources(), R.drawable.kaminomanimani);
         Intent activityIntent = new Intent(this, MainActivity.class);
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, activityIntent, 0);
 
@@ -90,7 +93,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .setOngoing(true)
                 .setContentIntent(contentIntent)
                 .setStyle(new MediaStyle()
-                        .setShowActionsInCompactView(0, 2))
+                        .setShowActionsInCompactView(0, 1, 2)
+                        .setMediaSession(mediaSession.getSessionToken()))
                 .build();
         notificationManager.notify(1, channel1);
     }

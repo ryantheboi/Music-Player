@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.view.View;
 import android.widget.Button;
@@ -51,7 +52,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btn_play:
                 if (mediaPlayer == null) {
                     mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.aft);
-                    mediaPlayer.start();
+                    // keep CPU from sleeping and play music with screen off
+                    mediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
                 }
 
                 else if (!mediaPlayer.isPlaying()){
@@ -65,6 +67,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (mediaPlayer != null) {
                     mediaPlayer.pause();
                     pauseCurrentPosition = mediaPlayer.getCurrentPosition();
+
                 }
                 break;
 

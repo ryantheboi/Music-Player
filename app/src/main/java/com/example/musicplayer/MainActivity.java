@@ -74,14 +74,19 @@ public class MainActivity
         Intent activityIntent = new Intent(this, MainActivity.class);
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, activityIntent, 0);
 
+        // create intents for the action buttons
+        Intent prevIntent = new Intent(this, MusicPlayerService.class).putExtra("action", "prev");
+        Intent pauseIntent = new Intent(this, MusicPlayerService.class).putExtra("action", "pause");
+        Intent nextIntent = new Intent(this, MusicPlayerService.class).putExtra("action", "next");
+
         Notification channel1 = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID_1)
                 .setSmallIcon(R.drawable.ic_music)
                 .setContentTitle("song3")
                 .setContentText("artist3")
                 .setLargeIcon(largeImage)
-                .addAction(R.drawable.ic_prev, "prev", null)
-                .addAction(R.drawable.ic_pause, "pause", null)
-                .addAction(R.drawable.ic_next, "next", null)
+                .addAction(R.drawable.ic_prev, "prev", PendingIntent.getService(this, 0, prevIntent, PendingIntent.FLAG_UPDATE_CURRENT))
+                .addAction(R.drawable.ic_pause, "pause", PendingIntent.getService(this, 1, pauseIntent, PendingIntent.FLAG_UPDATE_CURRENT))
+                .addAction(R.drawable.ic_next, "next", PendingIntent.getService(this, 2, nextIntent, PendingIntent.FLAG_UPDATE_CURRENT))
                 .setOngoing(true)
                 .setContentIntent(contentIntent)
                 .setStyle(new MediaStyle()

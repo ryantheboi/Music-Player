@@ -33,6 +33,9 @@ public class MusicPlayerService
         mediaPlayer.setOnCompletionListener(this);
         mediaPlayer.setOnErrorListener(this);
 
+        // keep CPU from sleeping and be able to play music with screen off
+        mediaPlayer.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK);
+
         mAudioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
 
         mAudioAttributes =
@@ -82,16 +85,39 @@ public class MusicPlayerService
 
     @TargetApi(26)
     public int onStartCommand(Intent intent, int flags, int startId) {
-        // keep CPU from sleeping and play music with screen off
-        mediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
-        int focusRequest = mAudioManager.requestAudioFocus(mAudioFocusRequest);
-        switch (focusRequest) {
-            case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
-                break;
-            case AudioManager.AUDIOFOCUS_REQUEST_GRANTED:
-                toggleMedia();
-                break;
+        // check if service was started via notification action button
+        String notificationAction = intent.getStringExtra("action");
+        if (notificationAction == null) {
+            int focusRequest = mAudioManager.requestAudioFocus(mAudioFocusRequest);
+            switch (focusRequest) {
+                case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
+                    break;
+                case AudioManager.AUDIOFOCUS_REQUEST_GRANTED:
+                    toggleMedia();
+                    break;
+            }
         }
+        else{
+            switch (notificationAction){
+                case "prev":
+                    Toast.makeText(this, "received notification: " + notificationAction, Toast.LENGTH_SHORT).show();
+                    break;
+                case "pause":
+                    int focusRequest = mAudioManager.requestAudioFocus(mAudioFocusRequest);
+                    switch (focusRequest) {
+                        case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
+                            break;
+                        case AudioManager.AUDIOFOCUS_REQUEST_GRANTED:
+                            toggleMedia();
+                            break;
+                    }
+                    break;
+                case "next":
+                    Toast.makeText(this, "received notification: " + notificationAction,Toast.LENGTH_SHORT).show();
+                    break;
+            }
+        }
+
 
         // Start Stick return means service will explicitly continue until user
         // ends it

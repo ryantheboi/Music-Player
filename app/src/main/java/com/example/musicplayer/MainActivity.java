@@ -8,9 +8,11 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.os.Messenger;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.view.View;
-import android.widget.Button;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -20,13 +22,13 @@ import androidx.media.app.NotificationCompat.MediaStyle;
 import android.app.Notification;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 public class MainActivity
-        extends AppCompatActivity
-        implements View.OnClickListener{
+        extends AppCompatActivity{
 
-    private Button play, pause, stop;
+    private ImageButton pauseplay;
     private Intent serviceIntent;
     private MediaSessionCompat mediaSession;
     private NotificationManagerCompat notificationManager;
@@ -36,38 +38,29 @@ public class MainActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        play = findViewById((R.id.btn_play));
-        pause = findViewById((R.id.btn_pause));
-        stop = findViewById((R.id.btn_stop));
-
-        play.setOnClickListener(this);
-        pause.setOnClickListener(this);
-        stop.setOnClickListener(this);
 
         serviceIntent = new Intent(this, MusicPlayerService.class);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
         mediaSession = new MediaSessionCompat(this, "media");
         notificationManager = NotificationManagerCompat.from(this);
+
+        pauseplay = findViewById((R.id.btn_play));
+
+        pauseplay.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+
+                switch(view.getId()){
+                    case R.id.btn_play:
+                        Messenger messenger = new Messenger(new MessageHandler());
+                        serviceIntent.putExtra("messenger", messenger);
+                        startService(serviceIntent);
+                        break;
+                }
+            }
+        });
     }
 
-    @Override
-    @TargetApi(26)
-    public void onClick(View view){
-
-        switch(view.getId()){
-            case R.id.btn_play:
-                startService(serviceIntent);
-                break;
-
-            case R.id.btn_pause:
-                startService(serviceIntent);
-                break;
-
-            case R.id.btn_stop:
-                stopService(serviceIntent);
-                break;
-        }
-    }
 
     public void sendNotification(View view){
         Bitmap largeImage = BitmapFactory.decodeResource(getResources(), R.drawable.kaminomanimani);
@@ -76,7 +69,7 @@ public class MainActivity
 
         // create intents for the action buttons
         Intent prevIntent = new Intent(this, MusicPlayerService.class).putExtra("action", "prev");
-        Intent pauseIntent = new Intent(this, MusicPlayerService.class).putExtra("action", "pause");
+        Intent pauseIntent = new Intent(this, MusicPlayerService.class).putExtra("action", "pauseplay");
         Intent nextIntent = new Intent(this, MusicPlayerService.class).putExtra("action", "next");
 
         Notification channel1 = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID_1)
@@ -95,4 +88,21 @@ public class MainActivity
                 .build();
         notificationManager.notify(1, channel1);
     }
+
+    class MessageHandler extends Handler
+    {
+        @Override
+        public void handleMessage(Message msg) {
+
+            Bundle bundle = msg.getData();
+            String hello = (String) bundle.get("update");
+            if (hello.equals("update_play")){
+                pauseplay.setImageResource(R.drawable.ic_play);
+            }
+            else{
+                pauseplay.setImageResource(R.drawable.ic_pause);
+            }
+        }
+    }
+
 }

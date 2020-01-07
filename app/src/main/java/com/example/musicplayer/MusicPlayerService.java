@@ -10,8 +10,12 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnErrorListener;
+import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
 import android.os.PowerManager;
+import android.os.RemoteException;
 import android.widget.Toast;
 
 public class MusicPlayerService
@@ -80,14 +84,33 @@ public class MusicPlayerService
                                         }
                                     }
                                 }).build();
-
     }
 
     @TargetApi(26)
     public int onStartCommand(Intent intent, int flags, int startId) {
         // check if service was started via notification action button
         String notificationAction = intent.getStringExtra("action");
-        if (notificationAction == null) {
+        if (notificationAction == null){
+
+            // update the pauseplay button with the messenger
+            Messenger messenger = intent.getParcelableExtra("messenger");
+            if (messenger != null){
+                Message msg = Message.obtain();
+                Bundle bundle = new Bundle();
+                if (mediaPlayer.isPlaying()) {
+                    bundle.putString("update", "update_play");
+                }
+                else {
+                    bundle.putString("update", "update_pause");
+                }
+                msg.setData(bundle);
+                try {
+                    messenger.send(msg);
+                }
+                catch (RemoteException e){
+                    e.printStackTrace();
+                }
+            }
             int focusRequest = mAudioManager.requestAudioFocus(mAudioFocusRequest);
             switch (focusRequest) {
                 case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
@@ -97,7 +120,9 @@ public class MusicPlayerService
                     break;
             }
         }
-        else{
+
+        else {
+            
             switch (notificationAction){
                 case "prev":
                     Toast.makeText(this, "received notification: " + notificationAction, Toast.LENGTH_SHORT).show();
@@ -118,9 +143,7 @@ public class MusicPlayerService
             }
         }
 
-
-        // Start Stick return means service will explicitly continue until user
-        // ends it
+        // Start Stick return means service will explicitly continue until user ends it
         return START_STICKY;
 
     }

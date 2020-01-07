@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/gh1"
+    android:background="@drawable/ic_launcher_background"
     tools:context=".MainActivity">
 
     <com.mikhaellopez.circularimageview.CircularImageView
@@ -18,38 +18,15 @@
         app:civ_border_color="#000000"
         />
 
-    <Button
+    <ImageButton
         android:id="@+id/btn_play"
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:layout_below="@+id/circularImageView"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="70dp"
-        android:background="@drawable/play" />
-
-    <Button
-        android:id="@+id/btn_pause"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_below="@+id/circularImageView"
-        android:layout_toLeftOf="@+id/btn_play"
-        android:layout_toStartOf="@+id/btn_play"
-        android:layout_marginTop="70dp"
-        android:layout_marginRight="11dp"
-        android:layout_marginEnd="11dp"
-        android:background="@drawable/pause" />
-
-    <Button
-        android:id="@+id/btn_stop"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_below="@+id/circularImageView"
-        android:layout_toRightOf="@+id/btn_play"
-        android:layout_toEndOf="@+id/btn_play"
-        android:layout_marginTop="70dp"
-        android:layout_marginLeft="11dp"
-        android:layout_marginStart="11dp"
-        android:background="@drawable/stop" />
+        android:src="@drawable/ic_play"
+        android:background="#00000000"/>
 
     <Button
         android:id="@+id/sendMessageButton"

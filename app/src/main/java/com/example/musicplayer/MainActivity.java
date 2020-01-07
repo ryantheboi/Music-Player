@@ -35,6 +35,8 @@ public class MainActivity
     private NotificationCompat.Builder notificationBuilder;
     private Notification notificationChannel1;
     private Intent pauseplayIntent;
+    private Intent prevIntent;
+    private Intent nextIntent;
 
     @Override
     @TargetApi(26)
@@ -46,6 +48,7 @@ public class MainActivity
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
         mediaSession = new MediaSessionCompat(this, "media");
         notificationManager = NotificationManagerCompat.from(this);
+        showNotification();
 
         pauseplay = findViewById((R.id.btn_play));
 
@@ -65,16 +68,16 @@ public class MainActivity
     }
 
     @TargetApi(19)
-    public void sendNotification(View view){
+    public void showNotification(){
         Bitmap largeImage = BitmapFactory.decodeResource(getResources(), R.drawable.kaminomanimani);
         Intent activityIntent = new Intent(this, MainActivity.class);
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, activityIntent, 0);
 
         // create intents for the notification action buttons
         Messenger notificationMessenger = new Messenger(new MessageHandler());
-        Intent prevIntent = new Intent(this, MusicPlayerService.class).putExtra("notificationPrev", notificationMessenger);
+        prevIntent = new Intent(this, MusicPlayerService.class).putExtra("notificationPrev", notificationMessenger);
         pauseplayIntent =  new Intent(this, MusicPlayerService.class).putExtra("pauseplay", notificationMessenger);
-        Intent nextIntent = new Intent(this, MusicPlayerService.class).putExtra("notificationNext", notificationMessenger);
+        nextIntent = new Intent(this, MusicPlayerService.class).putExtra("notificationNext", notificationMessenger);
 
         notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID_1)
                 .setSmallIcon(R.drawable.ic_music)

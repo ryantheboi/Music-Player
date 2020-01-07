@@ -89,57 +89,36 @@ public class MusicPlayerService
     @TargetApi(26)
     public int onStartCommand(Intent intent, int flags, int startId) {
         // check if service was started via notification action button
-        String notificationAction = intent.getStringExtra("action");
-        if (notificationAction == null){
+        Bundle b = intent.getExtras();
+        if (b != null) {
+            Messenger messenger;
+            for (String key : b.keySet()) {
+                System.out.println(key);
+                switch (key){
+                    case "pauseplay":
+                        // update the pauseplay button icon via messenger and toggle music
+                        messenger = intent.getParcelableExtra("pauseplay");
+                        if (mediaPlayer.isPlaying()) {
+                            sendUpdateMessage(messenger, "update_main_play");
+                            sendUpdateMessage(messenger, "update_notification_play");
+                        }
+                        else{
+                            sendUpdateMessage(messenger, "update_main_pause");
+                            sendUpdateMessage(messenger, "update_notification_pause");
 
-            // update the pauseplay button with the messenger
-            Messenger messenger = intent.getParcelableExtra("messenger");
-            if (messenger != null){
-                Message msg = Message.obtain();
-                Bundle bundle = new Bundle();
-                if (mediaPlayer.isPlaying()) {
-                    bundle.putString("update", "update_play");
-                }
-                else {
-                    bundle.putString("update", "update_pause");
-                }
-                msg.setData(bundle);
-                try {
-                    messenger.send(msg);
-                }
-                catch (RemoteException e){
-                    e.printStackTrace();
-                }
-            }
-            int focusRequest = mAudioManager.requestAudioFocus(mAudioFocusRequest);
-            switch (focusRequest) {
-                case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
-                    break;
-                case AudioManager.AUDIOFOCUS_REQUEST_GRANTED:
-                    toggleMedia();
-                    break;
-            }
-        }
+                        }
+                        audioFocusToggleMedia();
+                        break;
+                    case "notificationPrev":
+                        messenger = intent.getParcelableExtra("notificationPrev");
+                        Toast.makeText(this, "received notification: prev", Toast.LENGTH_SHORT).show();
+                        break;
+                    case "notificationNext":
+                        messenger = intent.getParcelableExtra("notificationNext");
+                        Toast.makeText(this, "received notification: next", Toast.LENGTH_SHORT).show();
+                        break;
 
-        else {
-            
-            switch (notificationAction){
-                case "prev":
-                    Toast.makeText(this, "received notification: " + notificationAction, Toast.LENGTH_SHORT).show();
-                    break;
-                case "pause":
-                    int focusRequest = mAudioManager.requestAudioFocus(mAudioFocusRequest);
-                    switch (focusRequest) {
-                        case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
-                            break;
-                        case AudioManager.AUDIOFOCUS_REQUEST_GRANTED:
-                            toggleMedia();
-                            break;
-                    }
-                    break;
-                case "next":
-                    Toast.makeText(this, "received notification: " + notificationAction,Toast.LENGTH_SHORT).show();
-                    break;
+                }
             }
         }
 
@@ -183,6 +162,33 @@ public class MusicPlayerService
         return false;
     }
 
+    // sends a message to the main thread
+    private void sendUpdateMessage(Messenger messenger, String message) {
+        Message msg = Message.obtain();
+        Bundle bundle = new Bundle();
+
+        bundle.putString("update", message);
+        msg.setData(bundle);
+        try {
+            messenger.send(msg);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    @TargetApi(26)
+    // checks for audio focus before toggling media
+    private void audioFocusToggleMedia(){
+        int focusRequest = mAudioManager.requestAudioFocus(mAudioFocusRequest);
+        switch (focusRequest) {
+            case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
+                break;
+            case AudioManager.AUDIOFOCUS_REQUEST_GRANTED:
+                toggleMedia();
+                break;
+        }
+    }
 
     private void toggleMedia() {
         if (!mediaPlayer.isPlaying()) {

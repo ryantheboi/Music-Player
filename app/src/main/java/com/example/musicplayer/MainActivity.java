@@ -32,6 +32,9 @@ public class MainActivity
     private Intent serviceIntent;
     private MediaSessionCompat mediaSession;
     private NotificationManagerCompat notificationManager;
+    private NotificationCompat.Builder notificationBuilder;
+    private Notification notificationChannel1;
+    private Intent pauseplayIntent;
 
     @Override
     @TargetApi(26)
@@ -52,8 +55,8 @@ public class MainActivity
 
                 switch(view.getId()){
                     case R.id.btn_play:
-                        Messenger messenger = new Messenger(new MessageHandler());
-                        serviceIntent.putExtra("messenger", messenger);
+                        Messenger mainMessenger = new Messenger(new MessageHandler());
+                        serviceIntent.putExtra("pauseplay", mainMessenger);
                         startService(serviceIntent);
                         break;
                 }
@@ -61,48 +64,63 @@ public class MainActivity
         });
     }
 
-
+    @TargetApi(19)
     public void sendNotification(View view){
         Bitmap largeImage = BitmapFactory.decodeResource(getResources(), R.drawable.kaminomanimani);
         Intent activityIntent = new Intent(this, MainActivity.class);
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, activityIntent, 0);
 
-        // create intents for the action buttons
-        Intent prevIntent = new Intent(this, MusicPlayerService.class).putExtra("action", "prev");
-        Intent pauseIntent = new Intent(this, MusicPlayerService.class).putExtra("action", "pauseplay");
-        Intent nextIntent = new Intent(this, MusicPlayerService.class).putExtra("action", "next");
+        // create intents for the notification action buttons
+        Messenger notificationMessenger = new Messenger(new MessageHandler());
+        Intent prevIntent = new Intent(this, MusicPlayerService.class).putExtra("notificationPrev", notificationMessenger);
+        pauseplayIntent =  new Intent(this, MusicPlayerService.class).putExtra("pauseplay", notificationMessenger);
+        Intent nextIntent = new Intent(this, MusicPlayerService.class).putExtra("notificationNext", notificationMessenger);
 
-        Notification channel1 = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID_1)
+        notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID_1)
                 .setSmallIcon(R.drawable.ic_music)
                 .setContentTitle("song3")
                 .setContentText("artist3")
                 .setLargeIcon(largeImage)
                 .addAction(R.drawable.ic_prev, "prev", PendingIntent.getService(this, 0, prevIntent, PendingIntent.FLAG_UPDATE_CURRENT))
-                .addAction(R.drawable.ic_pause, "pause", PendingIntent.getService(this, 1, pauseIntent, PendingIntent.FLAG_UPDATE_CURRENT))
+                .addAction(R.drawable.ic_play24dp, "play", PendingIntent.getService(this, 1, pauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT))
                 .addAction(R.drawable.ic_next, "next", PendingIntent.getService(this, 2, nextIntent, PendingIntent.FLAG_UPDATE_CURRENT))
+                .setPriority(NotificationCompat.PRIORITY_MIN)
                 .setOngoing(true)
                 .setContentIntent(contentIntent)
                 .setStyle(new MediaStyle()
                         .setShowActionsInCompactView(0, 1, 2)
-                        .setMediaSession(mediaSession.getSessionToken()))
-                .build();
-        notificationManager.notify(1, channel1);
+                        .setMediaSession(mediaSession.getSessionToken()));
+
+        notificationChannel1 = notificationBuilder.build();
+        notificationManager.notify(1, notificationChannel1);
     }
 
     class MessageHandler extends Handler
     {
         @Override
+        @TargetApi(19)
         public void handleMessage(Message msg) {
 
             Bundle bundle = msg.getData();
-            String hello = (String) bundle.get("update");
-            if (hello.equals("update_play")){
-                pauseplay.setImageResource(R.drawable.ic_play);
-            }
-            else{
-                pauseplay.setImageResource(R.drawable.ic_pause);
+            String updateOperation = (String) bundle.get("update");
+            switch (updateOperation) {
+                case "update_main_play":
+                    pauseplay.setImageResource(R.drawable.ic_play);
+                    break;
+                case "update_main_pause":
+                    pauseplay.setImageResource(R.drawable.ic_pause);
+                    break;
+                case "update_notification_play":
+                    notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_play24dp, "play", PendingIntent.getService(getApplicationContext(), 1, pauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
+                    notificationChannel1 = notificationBuilder.build();
+                    notificationManager.notify(1, notificationChannel1);
+                    break;
+                case "update_notification_pause":
+                    notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_pause24dp, "pause", PendingIntent.getService(getApplicationContext(), 1, pauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
+                    notificationChannel1 = notificationBuilder.build();
+                    notificationManager.notify(1, notificationChannel1);
+                    break;
             }
         }
     }
-
 }

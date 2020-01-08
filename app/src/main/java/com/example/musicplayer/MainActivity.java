@@ -23,17 +23,19 @@ import android.app.Notification;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.widget.ImageButton;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 public class MainActivity
         extends AppCompatActivity{
 
     private ImageButton pauseplay;
-    private Intent serviceIntent;
+    private SeekBar seekBar;
     private MediaSessionCompat mediaSession;
     private NotificationManagerCompat notificationManager;
     private NotificationCompat.Builder notificationBuilder;
     private Notification notificationChannel1;
+    private Intent serviceIntent;
     private Intent pauseplayIntent;
     private Intent prevIntent;
     private Intent nextIntent;
@@ -49,6 +51,28 @@ public class MainActivity
         mediaSession = new MediaSessionCompat(this, "media");
         notificationManager = NotificationManagerCompat.from(this);
         showNotification();
+
+        seekBar = findViewById(R.id.seekBar);
+        Messenger mainMessenger = new Messenger(new MessageHandler());
+        serviceIntent.putExtra("seekbarDuration", mainMessenger);
+        startService(serviceIntent);
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
 
         pauseplay = findViewById((R.id.btn_play));
 
@@ -122,6 +146,14 @@ public class MainActivity
                     notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_pause24dp, "pause", PendingIntent.getService(getApplicationContext(), 1, pauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);
+                    break;
+                case "update_seekbar_duration":
+                    int musicDuration = (int) bundle.get("time");
+                    seekBar.setMax(musicDuration);
+                    break;
+                case "update_seekbar_progress":
+                    int musicCurrentPosition = (int) bundle.get("time");
+                    seekBar.setProgress(musicCurrentPosition);
                     break;
             }
         }

@@ -88,7 +88,7 @@ public class MusicPlayerService
 
     @TargetApi(26)
     public int onStartCommand(Intent intent, int flags, int startId) {
-        // check if service was started via notification action button
+        // begin responding to the messenger based on message received
         Bundle b = intent.getExtras();
         if (b != null) {
             Messenger messenger;
@@ -116,6 +116,20 @@ public class MusicPlayerService
                     case "notificationNext":
                         messenger = intent.getParcelableExtra("notificationNext");
                         Toast.makeText(this, "received notification: next", Toast.LENGTH_SHORT).show();
+                        break;
+                    case "seekbarDuration":
+                        messenger = intent.getParcelableExtra("seekbarDuration");
+                        Object[] durationMessage = new Object[2];
+                        durationMessage[0] = "update_seekbar_duration";
+                        durationMessage[1] = (double) mediaPlayer.getDuration();
+                        sendUpdateMessage(messenger, durationMessage);
+                        break;
+                    case "seekbarProgress":
+                        messenger = intent.getParcelableExtra("seekbarDuration");
+                        Object[] progressMessage = new Object[2];
+                        progressMessage[0] = "update_seekbar_progress";
+                        progressMessage[1] = (double) mediaPlayer.getCurrentPosition() / 1000;
+                        sendUpdateMessage(messenger, progressMessage);
                         break;
 
                 }
@@ -162,7 +176,7 @@ public class MusicPlayerService
         return false;
     }
 
-    // sends a message to the main thread
+    // sends a string message to the main thread
     private void sendUpdateMessage(Messenger messenger, String message) {
         Message msg = Message.obtain();
         Bundle bundle = new Bundle();
@@ -174,7 +188,22 @@ public class MusicPlayerService
         } catch (RemoteException e) {
             e.printStackTrace();
         }
+    }
 
+    // overloaded function to send a message containing a string and double
+    private void sendUpdateMessage(Messenger messenger, Object[] message) {
+        Message msg = Message.obtain();
+        Bundle bundle = new Bundle();
+        String strMessage = (String) message[0];
+        double dblMessage = (double) message[1];
+        bundle.putString("update", strMessage);
+        bundle.putDouble("time", dblMessage);
+        msg.setData(bundle);
+        try {
+            messenger.send(msg);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 
     @TargetApi(26)

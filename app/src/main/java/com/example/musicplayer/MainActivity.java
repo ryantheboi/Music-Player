@@ -81,8 +81,8 @@ public class MainActivity
 
         notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID_1)
                 .setSmallIcon(R.drawable.ic_music)
-                .setContentTitle("song3")
-                .setContentText("artist3")
+                .setContentTitle("song")
+                .setContentText("artist")
                 .setLargeIcon(largeImage)
                 .addAction(R.drawable.ic_prev, "prev", PendingIntent.getService(this, 0, prevIntent, PendingIntent.FLAG_UPDATE_CURRENT))
                 .addAction(R.drawable.ic_play24dp, "play", PendingIntent.getService(this, 1, pauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT))

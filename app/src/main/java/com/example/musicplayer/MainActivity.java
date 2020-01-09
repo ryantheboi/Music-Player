@@ -39,6 +39,8 @@ public class MainActivity
     private Intent pauseplayIntent;
     private Intent prevIntent;
     private Intent nextIntent;
+    private Intent seekBarProgressIntent;
+    private Intent seekBarSeekIntent;
 
     @Override
     @TargetApi(26)
@@ -52,15 +54,22 @@ public class MainActivity
         notificationManager = NotificationManagerCompat.from(this);
         showNotification();
 
+        // init seekbar and set the max duration
         seekBar = findViewById(R.id.seekBar);
+        Intent seekBarDurationIntent = new Intent(this, MusicPlayerService.class);
+        seekBarProgressIntent = new Intent(this, MusicPlayerService.class);
+        seekBarSeekIntent = new Intent(this, MusicPlayerService.class);
         Messenger mainMessenger = new Messenger(new MessageHandler());
-        serviceIntent.putExtra("seekbarDuration", mainMessenger);
-        startService(serviceIntent);
+        seekBarDurationIntent.putExtra("seekbarDuration", mainMessenger);
+        startService(seekBarDurationIntent);
 
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-
+                if (fromUser) {
+                    seekBarSeekIntent.putExtra("seekbarSeek", progress * 1000);
+                    startService(seekBarSeekIntent);
+                }
             }
 
             @Override
@@ -148,11 +157,32 @@ public class MainActivity
                     notificationManager.notify(1, notificationChannel1);
                     break;
                 case "update_seekbar_duration":
+                    // init the seekbar max duration and begin thread to track progress
                     int musicDuration = (int) bundle.get("time");
+                    System.out.println(musicDuration);
                     seekBar.setMax(musicDuration);
+
+                    // spawn a thread to update seekbar progress each second
+                    final Messenger seekMessenger = new Messenger(new MessageHandler());
+                    seekBarProgressIntent.putExtra("seekbarProgress", seekMessenger);
+                    Thread seekbarUpdateThread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            while (true) {
+                                startService(seekBarProgressIntent);
+                                try {
+                                    Thread.sleep(1000);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    });
+                    seekbarUpdateThread.start();
                     break;
                 case "update_seekbar_progress":
                     int musicCurrentPosition = (int) bundle.get("time");
+                    System.out.println(musicCurrentPosition);
                     seekBar.setProgress(musicCurrentPosition);
                     break;
             }

@@ -121,17 +121,19 @@ public class MusicPlayerService
                         messenger = intent.getParcelableExtra("seekbarDuration");
                         Object[] durationMessage = new Object[2];
                         durationMessage[0] = "update_seekbar_duration";
-                        durationMessage[1] = (double) mediaPlayer.getDuration();
+                        durationMessage[1] = mediaPlayer.getDuration() / 1000;
                         sendUpdateMessage(messenger, durationMessage);
                         break;
                     case "seekbarProgress":
-                        messenger = intent.getParcelableExtra("seekbarDuration");
+                        messenger = intent.getParcelableExtra("seekbarProgress");
                         Object[] progressMessage = new Object[2];
                         progressMessage[0] = "update_seekbar_progress";
-                        progressMessage[1] = (double) mediaPlayer.getCurrentPosition() / 1000;
+                        progressMessage[1] = mediaPlayer.getCurrentPosition() / 1000;
                         sendUpdateMessage(messenger, progressMessage);
                         break;
-
+                    case "seekbarSeek":
+                        pauseCurrentPosition = intent.getIntExtra("seekbarSeek", 0);
+                        mediaPlayer.seekTo(pauseCurrentPosition);
                 }
             }
         }
@@ -190,14 +192,14 @@ public class MusicPlayerService
         }
     }
 
-    // overloaded function to send a message containing a string and double
+    // overloaded function to send a message containing a string and int
     private void sendUpdateMessage(Messenger messenger, Object[] message) {
         Message msg = Message.obtain();
         Bundle bundle = new Bundle();
         String strMessage = (String) message[0];
-        double dblMessage = (double) message[1];
+        int intMessage = (int) message[1];
         bundle.putString("update", strMessage);
-        bundle.putDouble("time", dblMessage);
+        bundle.putInt("time", intMessage);
         msg.setData(bundle);
         try {
             messenger.send(msg);

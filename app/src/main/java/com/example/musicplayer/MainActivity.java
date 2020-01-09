@@ -24,6 +24,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity
@@ -31,6 +32,8 @@ public class MainActivity
 
     private ImageButton pauseplay;
     private SeekBar seekBar;
+    private TextView musicPosition;
+    private TextView musicDuration;
     private MediaSessionCompat mediaSession;
     private NotificationManagerCompat notificationManager;
     private NotificationCompat.Builder notificationBuilder;
@@ -54,8 +57,12 @@ public class MainActivity
         notificationManager = NotificationManagerCompat.from(this);
         showNotification();
 
-        // init seekbar and set the max duration
+        // init seekbar and textviews
         seekBar = findViewById(R.id.seekBar);
+        musicPosition = findViewById(R.id.music_position);
+        musicDuration = findViewById(R.id.music_duration);
+
+        // set the seekbar & textview duration and sync with mediaplayer
         Intent seekBarDurationIntent = new Intent(this, MusicPlayerService.class);
         seekBarProgressIntent = new Intent(this, MusicPlayerService.class);
         seekBarSeekIntent = new Intent(this, MusicPlayerService.class);
@@ -66,6 +73,8 @@ public class MainActivity
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                String time = convertTime(progress);
+                musicPosition.setText(time);
                 if (fromUser) {
                     seekBarSeekIntent.putExtra("seekbarSeek", progress * 1000);
                     startService(seekBarSeekIntent);
@@ -131,6 +140,27 @@ public class MainActivity
         notificationManager.notify(1, notificationChannel1);
     }
 
+    // helper function to convert time in seconds to HH:MM:SS format
+    public static String convertTime(int timeInSeconds){
+        int seconds = timeInSeconds % 3600 % 60;
+        int minutes = timeInSeconds % 3600 / 60;
+        int hours = timeInSeconds / 3600;
+
+        String HH, MM, SS;
+        if (hours == 0){
+            MM = ((minutes  < 10) ? "" : "") + minutes;
+            SS = ((seconds  < 10) ? "0" : "") + seconds;
+            return MM + ":" + SS;
+        }
+        else {
+            HH = ((hours    < 10) ? "0" : "") + hours;
+            MM = ((minutes  < 10) ? "0" : "") + minutes;
+            SS = ((seconds  < 10) ? "0" : "") + seconds;
+        }
+
+        return HH + ":" + MM + ":" + SS;
+    }
+
     class MessageHandler extends Handler
     {
         @Override
@@ -157,10 +187,11 @@ public class MainActivity
                     notificationManager.notify(1, notificationChannel1);
                     break;
                 case "update_seekbar_duration":
-                    // init the seekbar max duration and begin thread to track progress
-                    int musicDuration = (int) bundle.get("time");
-                    System.out.println(musicDuration);
-                    seekBar.setMax(musicDuration);
+                    // init the seekbar & textview max duration and begin thread to track progress
+                    int musicMaxDuration = (int) bundle.get("time");
+                    seekBar.setMax(musicMaxDuration);
+                    String time = convertTime(musicMaxDuration);
+                    musicDuration.setText(time);
 
                     // spawn a thread to update seekbar progress each second
                     final Messenger seekMessenger = new Messenger(new MessageHandler());

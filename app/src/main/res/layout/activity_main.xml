@@ -28,6 +28,26 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"/>
 
+    <TextView
+        android:id="@+id/music_position"
+        android:layout_width="45dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/seekBar"
+        android:text="0:00"
+        android:layout_alignStart="@+id/seekBar"
+        android:layout_alignLeft="@+id/seekBar"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/music_duration"
+        android:layout_width="45dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/seekBar"
+        android:text="0:00"
+        android:layout_alignEnd="@+id/seekBar"
+        android:layout_alignRight="@+id/seekBar"
+        android:textSize="20sp" />
+
     <ImageButton
         android:id="@+id/btn_play"
         android:layout_width="100dp"

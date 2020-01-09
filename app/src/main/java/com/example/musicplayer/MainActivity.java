@@ -202,7 +202,7 @@ public class MainActivity
                             while (true) {
                                 startService(seekBarProgressIntent);
                                 try {
-                                    Thread.sleep(1000);
+                                    Thread.sleep(100);
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }

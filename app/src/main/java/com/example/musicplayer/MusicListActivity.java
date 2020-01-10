@@ -26,10 +26,9 @@ public class MusicListActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSION_REQUEST = 1;
     private ImageButton mainActivity;
-    private ArrayList<Song> songList;
-    private ArrayList<String> arrayList;
     private ListView listView;
-    private ArrayAdapter<String> adapter;
+    private ArrayList<Song> songList;
+    private SongListAdapter adapter;
 
     @Override
     @TargetApi(16)
@@ -64,9 +63,9 @@ public class MusicListActivity extends AppCompatActivity {
 
     public void createMusicList() {
         listView = findViewById(R.id.listView);
-        arrayList = new ArrayList<>();
+        songList = new ArrayList<>();
         getMusic();
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, arrayList);
+        adapter = new SongListAdapter(this, R.layout.adapter_view_layout, songList);
         listView.setAdapter(adapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -91,10 +90,10 @@ public class MusicListActivity extends AppCompatActivity {
                 String currentTitle = songCursor.getString(songTitle);
                 String currentArtist = songCursor.getString(songArtist);
                 String currentAlbum = songCursor.getString(songAlbum);
-                Song song = new Song(currentTitle, currentArtist, currentAlbum, songAlbumID);
+                int currentAlbumID = songCursor.getInt(songAlbumID);
+                Song song = new Song(currentTitle, currentArtist, currentAlbum, currentAlbumID);
                 songList.add(song);
 
-                arrayList.add(currentTitle + "\n" + currentArtist + "\n" + currentAlbum);
                 System.out.println(currentTitle + "\n" + currentArtist + "\n" + currentAlbum);
             } while (songCursor.moveToNext());
 

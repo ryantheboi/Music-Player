@@ -26,6 +26,7 @@ public class MusicListActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSION_REQUEST = 1;
     private ImageButton mainActivity;
+    private ArrayList<Song> songList;
     private ArrayList<String> arrayList;
     private ListView listView;
     private ArrayAdapter<String> adapter;
@@ -85,11 +86,14 @@ public class MusicListActivity extends AppCompatActivity {
             int songTitle = songCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
             int songArtist = songCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
             int songAlbum = songCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM);
-
+            int songAlbumID = songCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID);
             do {
                 String currentTitle = songCursor.getString(songTitle);
                 String currentArtist = songCursor.getString(songArtist);
                 String currentAlbum = songCursor.getString(songAlbum);
+                Song song = new Song(currentTitle, currentArtist, currentAlbum, songAlbumID);
+                songList.add(song);
+
                 arrayList.add(currentTitle + "\n" + currentArtist + "\n" + currentAlbum);
                 System.out.println(currentTitle + "\n" + currentArtist + "\n" + currentAlbum);
             } while (songCursor.moveToNext());

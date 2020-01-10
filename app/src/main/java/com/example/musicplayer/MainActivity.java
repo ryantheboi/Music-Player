@@ -30,6 +30,7 @@ import android.widget.Toast;
 public class MainActivity
         extends AppCompatActivity{
 
+    private ImageButton musicList;
     private ImageButton pauseplay;
     private SeekBar seekBar;
     private TextView musicPosition;
@@ -56,6 +57,15 @@ public class MainActivity
         mediaSession = new MediaSessionCompat(this, "media");
         notificationManager = NotificationManagerCompat.from(this);
         showNotification();
+
+        // init button for displaying music list
+        musicList = findViewById(R.id.btn_musiclist);
+        musicList.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+                openMusicList();
+            }
+        });
 
         // init seekbar and textviews
         seekBar = findViewById(R.id.seekBar);
@@ -109,6 +119,27 @@ public class MainActivity
         });
     }
 
+    // helper function to convert time in seconds to HH:MM:SS format
+    public static String convertTime(int timeInSeconds){
+        int seconds = timeInSeconds % 3600 % 60;
+        int minutes = timeInSeconds % 3600 / 60;
+        int hours = timeInSeconds / 3600;
+
+        String HH, MM, SS;
+        if (hours == 0){
+            MM = ((minutes  < 10) ? "" : "") + minutes;
+            SS = ((seconds  < 10) ? "0" : "") + seconds;
+            return MM + ":" + SS;
+        }
+        else {
+            HH = ((hours    < 10) ? "0" : "") + hours;
+            MM = ((minutes  < 10) ? "0" : "") + minutes;
+            SS = ((seconds  < 10) ? "0" : "") + seconds;
+        }
+
+        return HH + ":" + MM + ":" + SS;
+    }
+
     @TargetApi(19)
     public void showNotification(){
         Bitmap largeImage = BitmapFactory.decodeResource(getResources(), R.drawable.kaminomanimani);
@@ -140,25 +171,10 @@ public class MainActivity
         notificationManager.notify(1, notificationChannel1);
     }
 
-    // helper function to convert time in seconds to HH:MM:SS format
-    public static String convertTime(int timeInSeconds){
-        int seconds = timeInSeconds % 3600 % 60;
-        int minutes = timeInSeconds % 3600 / 60;
-        int hours = timeInSeconds / 3600;
-
-        String HH, MM, SS;
-        if (hours == 0){
-            MM = ((minutes  < 10) ? "" : "") + minutes;
-            SS = ((seconds  < 10) ? "0" : "") + seconds;
-            return MM + ":" + SS;
-        }
-        else {
-            HH = ((hours    < 10) ? "0" : "") + hours;
-            MM = ((minutes  < 10) ? "0" : "") + minutes;
-            SS = ((seconds  < 10) ? "0" : "") + seconds;
-        }
-
-        return HH + ":" + MM + ":" + SS;
+    // function to launch the music list activity
+    public void openMusicList(){
+        Intent musicListIntent = new Intent(this, MusicListActivity.class);
+        startActivity(musicListIntent);
     }
 
     class MessageHandler extends Handler
@@ -213,7 +229,6 @@ public class MainActivity
                     break;
                 case "update_seekbar_progress":
                     int musicCurrentPosition = (int) bundle.get("time");
-                    System.out.println(musicCurrentPosition);
                     seekBar.setProgress(musicCurrentPosition);
                     break;
             }

@@ -93,7 +93,7 @@ public class MusicPlayerService
         if (b != null) {
             Messenger messenger;
             for (String key : b.keySet()) {
-                System.out.println(key);
+                //System.out.println(key);
                 switch (key){
                     case "pauseplay":
                         // update the pauseplay button icon via messenger and toggle music

@@ -58,6 +58,16 @@ public class SongListAdapter extends ArrayAdapter {
             holder = (ViewHolder) convertView.getTag();
         }
 
+        // set resources for the view
+        if (title.length() > 35){
+            title = title.substring(0,35) + "...";
+        }
+        if (artist.length() > 35){
+            artist = artist.substring(0,35) + "...";
+        }
+        if (album.length() > 35){
+            album = album.substring(0,35) + "...";
+        }
         holder.title.setText(title);
         holder.artist.setText(artist);
         holder.album.setText(album);

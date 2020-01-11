@@ -7,15 +7,15 @@
     android:paddingLeft="0dp"
     android:paddingRight="0dp"
     android:paddingTop="0dp"
-    android:background="#C5CAE9">
+    android:background="#BDBDBD">
 
     <ListView
         android:id="@+id/listView"
         android:layout_width="match_parent"
         android:layout_height="550dp"
         android:dividerHeight="3dp"
-        android:divider="#C5CAE9"
-        android:background="#FAFAFA"/>
+        android:divider="#757575"
+        android:background="#BDBDBD"/>
 
     <ImageButton
         android:id="@+id/btn_mainactivity"

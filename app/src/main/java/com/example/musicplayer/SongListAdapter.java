@@ -1,10 +1,12 @@
 package com.example.musicplayer;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -21,6 +23,7 @@ public class SongListAdapter extends ArrayAdapter {
         TextView title;
         TextView artist;
         TextView album;
+        ImageView albumArt;
     }
 
     public SongListAdapter(Context context, int resource, ArrayList<Song> objects) {
@@ -31,12 +34,12 @@ public class SongListAdapter extends ArrayAdapter {
 
     @Override
     public View getView(int position,  View convertView, ViewGroup parent) {
+
         // get song info and create Song object
         String title = ((Song) getItem(position)).getTitle();
         String artist = ((Song) getItem(position)).getArtist();
         String album = ((Song) getItem(position)).getAlbum();
-        int albumID = ((Song) getItem(position)).getAlbumID();
-        Song song = new Song(title, artist, album, albumID);
+        Bitmap albumArt = ((Song) getItem(position)).getAlbumArt();
 
         ViewHolder holder;
 
@@ -48,16 +51,21 @@ public class SongListAdapter extends ArrayAdapter {
             holder.title = convertView.findViewById(R.id.textView1);
             holder.artist = convertView.findViewById(R.id.textView2);
             holder.album = convertView.findViewById(R.id.textView3);
-
+            holder.albumArt = convertView.findViewById(R.id.album_art);
             convertView.setTag(holder);
         }
         else{
             holder = (ViewHolder) convertView.getTag();
         }
 
-        holder.title.setText(song.getTitle());
-        holder.artist.setText(song.getArtist());
-        holder.album.setText(song.getAlbum());
+        holder.title.setText(title);
+        holder.artist.setText(artist);
+        holder.album.setText(album);
+        holder.albumArt.setImageBitmap(albumArt);
+        if (albumArt == null){
+            int defaultImage = mContext.getResources().getIdentifier("@drawable/default_image", null, mContext.getPackageName());
+            holder.albumArt.setImageResource(defaultImage);
+        }
 
         return convertView;
     }

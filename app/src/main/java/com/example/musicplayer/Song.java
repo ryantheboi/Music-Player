@@ -1,16 +1,18 @@
 package com.example.musicplayer;
 
+import android.graphics.Bitmap;
+
 public class Song {
     private String title;
     private String artist;
     private String album;
-    private int albumID;
+    private Bitmap albumArt;
 
-    public Song(String title, String artist, String album, int albumID){
+    public Song(String title, String artist, String album, Bitmap albumArt){
         this.title = title;
         this.artist = artist;
         this.album = album;
-        this.albumID = albumID;
+        this.albumArt = albumArt;
     }
 
     public String getTitle() {
@@ -37,11 +39,11 @@ public class Song {
         this.album = album;
     }
 
-    public int getAlbumID() {
-        return albumID;
+    public Bitmap getAlbumArt() {
+        return albumArt;
     }
 
-    public void setAlbumID(int albumID) {
-        this.albumID = albumID;
+    public void setAlbumArt(Bitmap albumArt) {
+        this.albumArt = albumArt;
     }
 }

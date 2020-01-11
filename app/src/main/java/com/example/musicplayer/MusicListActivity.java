@@ -7,19 +7,23 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 public class MusicListActivity extends AppCompatActivity {
@@ -86,15 +90,26 @@ public class MusicListActivity extends AppCompatActivity {
             int songArtist = songCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
             int songAlbum = songCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM);
             int songAlbumID = songCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID);
+
             do {
                 String currentTitle = songCursor.getString(songTitle);
                 String currentArtist = songCursor.getString(songArtist);
                 String currentAlbum = songCursor.getString(songAlbum);
                 int currentAlbumID = songCursor.getInt(songAlbumID);
-                Song song = new Song(currentTitle, currentArtist, currentAlbum, currentAlbumID);
-                songList.add(song);
+                Bitmap currentAlbumArt = null;
+                // get album art for song
+                Uri artURI = Uri.parse("content://media/external/audio/albumart");
+                Uri albumArtURI = ContentUris.withAppendedId(artURI, currentAlbumID);
+                ContentResolver res = getContentResolver();
+                try {
+                    InputStream in = res.openInputStream(albumArtURI);
+                    currentAlbumArt = BitmapFactory.decodeStream(in);
+                }catch(FileNotFoundException e){
+                    e.printStackTrace();
+                }
 
-                System.out.println(currentTitle + "\n" + currentArtist + "\n" + currentAlbum);
+                Song song = new Song(currentTitle, currentArtist, currentAlbum, currentAlbumArt);
+                songList.add(song);
             } while (songCursor.moveToNext());
 
             songCursor.close();

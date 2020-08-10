@@ -134,6 +134,15 @@ public class MusicPlayerService
                     case "seekbarSeek":
                         pauseCurrentPosition = intent.getIntExtra("seekbarSeek", 0);
                         mediaPlayer.seekTo(pauseCurrentPosition);
+                        break;
+                    case "musicListActivity":
+                        Bundle musicListbundle = intent.getExtras();
+                        messenger = (Messenger) musicListbundle.get("musicListActivity");
+                        Song song = (Song) musicListbundle.get("song");
+                        Object[] songMessage = new Object[2];
+                        songMessage[0] = "update_song";
+                        songMessage[1] = song;
+                        sendSongUpdateMessage(messenger, songMessage);
                 }
             }
         }
@@ -207,6 +216,23 @@ public class MusicPlayerService
             e.printStackTrace();
         }
     }
+
+    // function to send a message containing a string and Song
+    private void sendSongUpdateMessage(Messenger messenger, Object[] message) {
+        Message msg = Message.obtain();
+        Bundle bundle = new Bundle();
+        String strMessage = (String) message[0];
+        Song songMessage = (Song) message[1];
+        bundle.putString("update", strMessage);
+        bundle.putParcelable("song", songMessage);
+        msg.setData(bundle);
+        try {
+            messenger.send(msg);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     @TargetApi(26)
     // checks for audio focus before toggling media

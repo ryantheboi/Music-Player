@@ -173,11 +173,12 @@ public class MainActivity
 
     // function to launch the music list activity
     public void openMusicList(){
-        Intent musicListIntent = new Intent(this, MusicListActivity.class);
+        Messenger musicListMessenger = new Messenger(new MessageHandler());
+        Intent musicListIntent = new Intent(this, MusicListActivity.class).putExtra("mainActivity", musicListMessenger);
         startActivity(musicListIntent);
     }
 
-    class MessageHandler extends Handler
+    public class MessageHandler extends Handler
     {
         @Override
         @TargetApi(19)
@@ -209,7 +210,7 @@ public class MainActivity
                     String time = convertTime(musicMaxDuration);
                     musicDuration.setText(time);
 
-                    // spawn a thread to update seekbar progress each second
+                    // spawn a thread to update seekbar progress each millisecond
                     final Messenger seekMessenger = new Messenger(new MessageHandler());
                     seekBarProgressIntent.putExtra("seekbarProgress", seekMessenger);
                     Thread seekbarUpdateThread = new Thread(new Runnable() {
@@ -231,6 +232,16 @@ public class MainActivity
                     int musicCurrentPosition = (int) bundle.get("time");
                     seekBar.setProgress(musicCurrentPosition);
                     break;
+                case "update_song":
+                    // update main activitiy with the selected song from music list
+                    Song song = (Song) bundle.get("song");
+//
+//                    notificationBuilder.setContentTitle(song.getTitle());
+//                    notificationBuilder.setContentText(song.getArtist());
+//                    notificationChannel1 = notificationBuilder.build();
+//                    notificationManager.notify(1, notificationChannel1);
+
+
             }
         }
     }

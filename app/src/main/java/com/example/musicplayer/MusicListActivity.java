@@ -15,6 +15,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Message;
+import android.os.Messenger;
 import android.provider.MediaStore;
 import android.view.View;
 import android.widget.AdapterView;
@@ -33,12 +35,30 @@ public class MusicListActivity extends AppCompatActivity {
     private ListView listView;
     private ArrayList<Song> songList;
     private SongListAdapter adapter;
+    private Messenger mainActivityMessenger;
+    private Intent musicListIntent;
+
 
     @Override
     @TargetApi(16)
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_musiclist);
+
+        // obtain the intent that started this activity (should be the Main Activity)
+        Intent intent = this.getIntent();
+        Bundle b = intent.getExtras();
+        if (b != null) {
+            for (String key : b.keySet()) {
+                switch (key) {
+                    case "mainActivity":
+                        // get the mainActivity's messenger and forward it to MusicPlayerService
+                        mainActivityMessenger = intent.getParcelableExtra("mainActivity");
+                        musicListIntent = new Intent(this, MusicPlayerService.class);
+                        break;
+                }
+            }
+        }
 
         // init button for returning to main activity
         mainActivity = findViewById(R.id.btn_mainactivity);
@@ -74,9 +94,16 @@ public class MusicListActivity extends AppCompatActivity {
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                // open music player main activity to play the selected song
-                openMainActivity();
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                // obtain the selected song object
+                Song song = (Song) listView.getItemAtPosition(position);
+
+                // notify music player service with the main activity messenger and the selected song
+                Bundle bundle = new Bundle();
+                bundle.putParcelable("mainActivityMessenger", mainActivityMessenger);
+                bundle.putParcelable("song", song);
+                musicListIntent.putExtra("musicListActivity", bundle);
+                startService(musicListIntent);
             }
         });
     }

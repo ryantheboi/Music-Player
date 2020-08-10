@@ -1,7 +1,12 @@
 package com.example.musicplayer;
 
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.ParcelFileDescriptor;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +14,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 public class SongListAdapter extends ArrayAdapter {
@@ -39,7 +46,9 @@ public class SongListAdapter extends ArrayAdapter {
         String title = ((Song) getItem(position)).getTitle();
         String artist = ((Song) getItem(position)).getArtist();
         String album = ((Song) getItem(position)).getAlbum();
-        Bitmap albumArt = ((Song) getItem(position)).getAlbumArt();
+        int albumID = ( (Song) getItem(position)).getAlbumID();
+
+        Bitmap albumArt = getAlbumArt(albumID);
 
         ViewHolder holder;
 
@@ -78,5 +87,21 @@ public class SongListAdapter extends ArrayAdapter {
         }
 
         return convertView;
+    }
+
+    public Bitmap getAlbumArt(int albumId){
+        Bitmap albumArt = null;
+        // get album art for song
+        Uri artURI = Uri.parse("content://media/external/audio/albumart");
+        Uri albumArtURI = ContentUris.withAppendedId(artURI, albumId);
+        ContentResolver res = mContext.getContentResolver();
+        try {
+            InputStream in = res.openInputStream(albumArtURI);
+            albumArt = BitmapFactory.decodeStream(in);
+        }catch(FileNotFoundException e){
+            e.printStackTrace();
+        }
+
+        return albumArt;
     }
 }

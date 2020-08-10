@@ -1,21 +1,19 @@
 package com.example.musicplayer;
 
-import android.graphics.Bitmap;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public class Song implements Parcelable{
+public class Song implements Parcelable {
     private String title;
     private String artist;
     private String album;
-    private Bitmap albumArt;
+    private int albumID;
 
-    public Song(String title, String artist, String album, Bitmap albumArt)
-    {
+    public Song(String title, String artist, String album, int albumID) {
         this.title = title;
         this.artist = artist;
         this.album = album;
-        this.albumArt = albumArt;
+        this.albumID = albumID;
     }
 
     public String getTitle() {
@@ -42,12 +40,12 @@ public class Song implements Parcelable{
         this.album = album;
     }
 
-    public Bitmap getAlbumArt() {
-        return albumArt;
+    public int getAlbumID() {
+        return albumID;
     }
 
-    public void setAlbumArt(Bitmap albumArt) {
-        this.albumArt = albumArt;
+    public void setAlbumID(int albumID) {
+        this.albumID = albumID;
     }
 
     @Override
@@ -57,6 +55,7 @@ public class Song implements Parcelable{
 
     /**
      * write the object to a parcelable instance that can be passed through Intents
+     *
      * @param dest the parcelable object
      */
     @Override
@@ -64,7 +63,23 @@ public class Song implements Parcelable{
         dest.writeString(this.title);
         dest.writeString(this.artist);
         dest.writeString(this.album);
-        dest.writeValue(this.albumArt);
+        dest.writeInt(this.albumID);
     }
 
+    public Song(Parcel in) {
+        this.title = in.readString();
+        this.artist = in.readString();
+        this.album = in.readString();
+        this.albumID = in.readInt();
+    }
+
+    public static Creator<Song> CREATOR = new Creator<Song>() {
+        public Song createFromParcel(Parcel source) {
+            return new Song(source);
+        }
+
+        public Song[] newArray(int size) {
+            return new Song[size];
+        }
+    };
 }

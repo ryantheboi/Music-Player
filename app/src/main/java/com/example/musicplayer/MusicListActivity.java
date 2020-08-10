@@ -123,19 +123,8 @@ public class MusicListActivity extends AppCompatActivity {
                 String currentArtist = songCursor.getString(songArtist);
                 String currentAlbum = songCursor.getString(songAlbum);
                 int currentAlbumID = songCursor.getInt(songAlbumID);
-                Bitmap currentAlbumArt = null;
-                // get album art for song
-                Uri artURI = Uri.parse("content://media/external/audio/albumart");
-                Uri albumArtURI = ContentUris.withAppendedId(artURI, currentAlbumID);
-                ContentResolver res = getContentResolver();
-                try {
-                    InputStream in = res.openInputStream(albumArtURI);
-                    currentAlbumArt = BitmapFactory.decodeStream(in);
-                }catch(FileNotFoundException e){
-                    e.printStackTrace();
-                }
 
-                Song song = new Song(currentTitle, currentArtist, currentAlbum, currentAlbumArt);
+                Song song = new Song(currentTitle, currentArtist, currentAlbum, currentAlbumID);
                 songList.add(song);
             } while (songCursor.moveToNext());
 

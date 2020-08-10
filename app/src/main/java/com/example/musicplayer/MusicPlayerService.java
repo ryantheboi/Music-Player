@@ -136,8 +136,8 @@ public class MusicPlayerService
                         mediaPlayer.seekTo(pauseCurrentPosition);
                         break;
                     case "musicListActivity":
-                        Bundle musicListbundle = intent.getExtras();
-                        messenger = (Messenger) musicListbundle.get("musicListActivity");
+                        Bundle musicListbundle = intent.getBundleExtra("musicListActivity");
+                        messenger = (Messenger) musicListbundle.get("mainActivityMessenger");
                         Song song = (Song) musicListbundle.get("song");
                         Object[] songMessage = new Object[2];
                         songMessage[0] = "update_song";

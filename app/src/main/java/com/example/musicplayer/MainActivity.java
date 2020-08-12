@@ -235,11 +235,11 @@ public class MainActivity
                 case "update_song":
                     // update main activitiy with the selected song from music list
                     Song song = (Song) bundle.get("song");
-//
-//                    notificationBuilder.setContentTitle(song.getTitle());
-//                    notificationBuilder.setContentText(song.getArtist());
-//                    notificationChannel1 = notificationBuilder.build();
-//                    notificationManager.notify(1, notificationChannel1);
+
+                    notificationBuilder.setContentTitle(song.getTitle());
+                    notificationBuilder.setContentText(song.getArtist());
+                    notificationChannel1 = notificationBuilder.build();
+                    notificationManager.notify(1, notificationChannel1);
 
 
             }

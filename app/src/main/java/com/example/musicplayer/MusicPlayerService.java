@@ -2,6 +2,7 @@ package com.example.musicplayer;
 
 import android.annotation.TargetApi;
 import android.app.Service;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioAttributes;
@@ -10,12 +11,14 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnErrorListener;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.PowerManager;
 import android.os.RemoteException;
+import android.provider.MediaStore;
 import android.widget.Toast;
 
 public class MusicPlayerService
@@ -139,6 +142,20 @@ public class MusicPlayerService
                         Bundle musicListbundle = intent.getBundleExtra("musicListActivity");
                         messenger = (Messenger) musicListbundle.get("mainActivityMessenger");
                         Song song = (Song) musicListbundle.get("song");
+
+                        // find the song uri and start playing the song
+                        int songID = song.getID();
+                        Uri audioURI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                        Uri songURI = ContentUris.withAppendedId(audioURI, songID);
+                        try {
+                            mediaPlayer.reset();
+                            mediaPlayer.setDataSource(this, songURI);
+                            mediaPlayer.prepare();
+                            mediaPlayer.start();
+                        }
+                        catch (Exception e){
+                            e.printStackTrace();
+                        }
                         Object[] songMessage = new Object[2];
                         songMessage[0] = "update_song";
                         songMessage[1] = song;

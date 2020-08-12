@@ -113,18 +113,20 @@ public class MusicListActivity extends AppCompatActivity {
         Uri songUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         Cursor songCursor = contentResolver.query(songUri, null, null, null, null);
         if (songCursor != null && songCursor.moveToFirst()) {
+            int songID = songCursor.getColumnIndex(MediaStore.Audio.Media._ID);
             int songTitle = songCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
             int songArtist = songCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
             int songAlbum = songCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM);
             int songAlbumID = songCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID);
 
             do {
+                int currentID = songCursor.getInt(songID);
                 String currentTitle = songCursor.getString(songTitle);
                 String currentArtist = songCursor.getString(songArtist);
                 String currentAlbum = songCursor.getString(songAlbum);
                 int currentAlbumID = songCursor.getInt(songAlbumID);
 
-                Song song = new Song(currentTitle, currentArtist, currentAlbum, currentAlbumID);
+                Song song = new Song(currentID, currentTitle, currentArtist, currentAlbum, currentAlbumID);
                 songList.add(song);
             } while (songCursor.moveToNext());
 

@@ -4,9 +4,13 @@ import static com.example.musicplayer.Notifications.CHANNEL_ID_1;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.TargetApi;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Intent;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -26,6 +30,9 @@ import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 
 public class MainActivity
         extends AppCompatActivity{
@@ -153,6 +160,8 @@ public class MainActivity
         nextIntent = new Intent(this, MusicPlayerService.class).putExtra("notificationNext", notificationMessenger);
 
         notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID_1)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setOnlyAlertOnce(true)
                 .setSmallIcon(R.drawable.ic_music)
                 .setContentTitle("song")
                 .setContentText("artist")
@@ -181,7 +190,7 @@ public class MainActivity
     public class MessageHandler extends Handler
     {
         @Override
-        @TargetApi(19)
+        @TargetApi(24)
         public void handleMessage(Message msg) {
 
             Bundle bundle = msg.getData();
@@ -236,8 +245,26 @@ public class MainActivity
                     // update main activitiy with the selected song from music list
                     Song song = (Song) bundle.get("song");
 
-                    notificationBuilder.setContentTitle(song.getTitle());
-                    notificationBuilder.setContentText(song.getArtist());
+                    // grab song album art
+                    int albumID = song.getAlbumID();
+                    Bitmap albumImage;
+                    Uri artURI = Uri.parse("content://media/external/audio/albumart");
+                    Uri albumArtURI = ContentUris.withAppendedId(artURI, albumID);
+                    ContentResolver res = getContentResolver();
+                    try {
+                        InputStream in = res.openInputStream(albumArtURI);
+                        albumImage = BitmapFactory.decodeStream(in);
+                    }catch(FileNotFoundException e){
+                        albumImage = BitmapFactory.decodeResource(getResources(), R.drawable.default_image);
+                        e.printStackTrace();
+                    }
+
+                    // update notification details
+                    notificationBuilder
+                            .setContentTitle(song.getTitle())
+                            .setPriority(NotificationManager.IMPORTANCE_LOW)
+                            .setContentText(song.getArtist())
+                            .setLargeIcon(albumImage);
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);
 

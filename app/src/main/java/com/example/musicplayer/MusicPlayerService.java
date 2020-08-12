@@ -160,6 +160,8 @@ public class MusicPlayerService
                         songMessage[0] = "update_song";
                         songMessage[1] = song;
                         sendSongUpdateMessage(messenger, songMessage);
+                        sendUpdateMessage(messenger, "update_main_pause");
+                        sendUpdateMessage(messenger, "update_notification_pause");
                 }
             }
         }

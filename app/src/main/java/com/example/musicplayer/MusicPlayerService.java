@@ -124,14 +124,14 @@ public class MusicPlayerService
                         messenger = intent.getParcelableExtra("seekbarDuration");
                         Object[] durationMessage = new Object[2];
                         durationMessage[0] = "update_seekbar_duration";
-                        durationMessage[1] = mediaPlayer.getDuration() / 1000;
+                        durationMessage[1] = mediaPlayer.getDuration();
                         sendUpdateMessage(messenger, durationMessage);
                         break;
                     case "seekbarProgress":
                         messenger = intent.getParcelableExtra("seekbarProgress");
                         Object[] progressMessage = new Object[2];
                         progressMessage[0] = "update_seekbar_progress";
-                        progressMessage[1] = mediaPlayer.getCurrentPosition() / 1000;
+                        progressMessage[1] = mediaPlayer.getCurrentPosition();
                         sendUpdateMessage(messenger, progressMessage);
                         break;
                     case "seekbarSeek":

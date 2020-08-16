@@ -27,6 +27,7 @@ import android.app.Notification;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -37,6 +38,7 @@ import java.io.InputStream;
 public class MainActivity
         extends AppCompatActivity{
 
+    private ImageView musicArt;
     private ImageButton musicList;
     private ImageButton pauseplay;
     private SeekBar seekBar;
@@ -58,6 +60,7 @@ public class MainActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        musicArt = findViewById(R.id.circularImageView);
 
         serviceIntent = new Intent(this, MusicPlayerService.class);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
@@ -93,7 +96,7 @@ public class MainActivity
                 String time = convertTime(progress);
                 musicPosition.setText(time);
                 if (fromUser) {
-                    seekBarSeekIntent.putExtra("seekbarSeek", progress * 1000);
+                    seekBarSeekIntent.putExtra("seekbarSeek", progress);
                     startService(seekBarSeekIntent);
                 }
             }
@@ -126,8 +129,10 @@ public class MainActivity
         });
     }
 
-    // helper function to convert time in seconds to HH:MM:SS format
-    public static String convertTime(int timeInSeconds){
+    // helper function to convert time in milliseconds to HH:MM:SS format
+    public static String convertTime(int timeInMS){
+        int timeInSeconds = timeInMS / 1000;
+
         int seconds = timeInSeconds % 3600 % 60;
         int minutes = timeInSeconds % 3600 / 60;
         int hours = timeInSeconds / 3600;
@@ -245,7 +250,7 @@ public class MainActivity
                     // update main activitiy with the selected song from music list
                     Song song = (Song) bundle.get("song");
 
-                    // grab song album art
+                    // grab song album art and duration
                     int albumID = song.getAlbumID();
                     Bitmap albumImage;
                     Uri artURI = Uri.parse("content://media/external/audio/albumart");
@@ -258,6 +263,8 @@ public class MainActivity
                         albumImage = BitmapFactory.decodeResource(getResources(), R.drawable.default_image);
                         e.printStackTrace();
                     }
+                    int songDuration = song.getDuration();
+
 
                     // update notification details
                     notificationBuilder
@@ -267,6 +274,11 @@ public class MainActivity
                             .setLargeIcon(albumImage);
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);
+
+                    // update main activity details
+                    musicArt.setImageBitmap(albumImage);
+                    seekBar.setMax(songDuration);
+                    musicDuration.setText(convertTime(songDuration));
 
 
             }

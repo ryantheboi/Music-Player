@@ -7,15 +7,11 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Message;
 import android.os.Messenger;
 import android.provider.MediaStore;
 import android.view.View;
@@ -23,10 +19,10 @@ import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Toast;
-
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.util.ArrayList;
+
+import static android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT;
+import static android.os.Build.VERSION_CODES.Q;
 
 public class MusicListActivity extends AppCompatActivity {
 
@@ -76,7 +72,7 @@ public class MusicListActivity extends AppCompatActivity {
                     Manifest.permission.READ_EXTERNAL_STORAGE)) {
                 ActivityCompat.requestPermissions(MusicListActivity.this,
                         new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
-            } else {
+            } else { // temp else branch
                 ActivityCompat.requestPermissions(MusicListActivity.this,
                         new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
             }
@@ -108,6 +104,7 @@ public class MusicListActivity extends AppCompatActivity {
         });
     }
 
+    @TargetApi(Q)
     public void getMusic() {
         ContentResolver contentResolver = getContentResolver();
         Uri songUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
@@ -118,6 +115,7 @@ public class MusicListActivity extends AppCompatActivity {
             int songArtist = songCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
             int songAlbum = songCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM);
             int songAlbumID = songCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID);
+            int songDuration = songCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
 
             do {
                 int currentID = songCursor.getInt(songID);
@@ -125,8 +123,15 @@ public class MusicListActivity extends AppCompatActivity {
                 String currentArtist = songCursor.getString(songArtist);
                 String currentAlbum = songCursor.getString(songAlbum);
                 int currentAlbumID = songCursor.getInt(songAlbumID);
+                int currentSongDuration = songCursor.getInt(songDuration);
 
-                Song song = new Song(currentID, currentTitle, currentArtist, currentAlbum, currentAlbumID);
+                Song song = new Song(currentID,
+                                    currentTitle,
+                                    currentArtist,
+                                    currentAlbum,
+                                    currentAlbumID,
+                                    currentSongDuration
+                                    );
                 songList.add(song);
             } while (songCursor.moveToNext());
 
@@ -153,6 +158,7 @@ public class MusicListActivity extends AppCompatActivity {
 
     public void openMainActivity(){
         Intent mainActivityIntent = new Intent(this, MainActivity.class);
+        mainActivityIntent.addFlags(FLAG_ACTIVITY_REORDER_TO_FRONT );
         startActivity(mainActivityIntent);
     }
 }

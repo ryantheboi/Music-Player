@@ -9,13 +9,15 @@ public class Song implements Parcelable {
     private String artist;
     private String album;
     private int albumID;
+    private int duration;
 
-    public Song(int id, String title, String artist, String album, int albumID) {
+    public Song(int id, String title, String artist, String album, int albumID, int duration) {
         this.id = id;
         this.title = title;
         this.artist = artist;
         this.album = album;
         this.albumID = albumID;
+        this.duration = duration;
     }
 
     public int getID() {
@@ -26,32 +28,20 @@ public class Song implements Parcelable {
         return title;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
     public String getArtist() {
         return artist;
-    }
-
-    public void setArtist(String artist) {
-        this.artist = artist;
     }
 
     public String getAlbum() {
         return album;
     }
 
-    public void setAlbum(String album) {
-        this.album = album;
-    }
-
     public int getAlbumID() {
         return albumID;
     }
 
-    public void setAlbumID(int albumID) {
-        this.albumID = albumID;
+    public int getDuration(){
+        return duration;
     }
 
     @Override
@@ -71,6 +61,7 @@ public class Song implements Parcelable {
         dest.writeString(this.artist);
         dest.writeString(this.album);
         dest.writeInt(this.albumID);
+        dest.writeInt(this.duration);
     }
 
     public Song(Parcel in) {
@@ -79,6 +70,7 @@ public class Song implements Parcelable {
         this.artist = in.readString();
         this.album = in.readString();
         this.albumID = in.readInt();
+        this.duration = in.readInt();
     }
 
     public static Creator<Song> CREATOR = new Creator<Song>() {

@@ -1,6 +1,8 @@
 package com.example.musicplayer;
+import static android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT;
 import static com.example.musicplayer.Notifications.CHANNEL_ID_1;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.TargetApi;
@@ -9,6 +11,9 @@ import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.GradientDrawable;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -21,13 +26,16 @@ import android.view.View;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
+import androidx.core.content.res.ResourcesCompat;
 import androidx.media.app.NotificationCompat.MediaStyle;
+import androidx.palette.graphics.Palette;
 
 import android.app.Notification;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -41,6 +49,12 @@ public class MainActivity
     private ImageView musicArt;
     private ImageButton musicList;
     private ImageButton pauseplay;
+    private RelativeLayout relativeLayout;
+    private AnimationDrawable animationDrawable;
+    private GradientDrawable gradient1;
+    private GradientDrawable gradient2;
+    private GradientDrawable gradient3;
+    private GradientDrawable gradient4;
     private SeekBar seekBar;
     private TextView musicPosition;
     private TextView musicDuration;
@@ -55,11 +69,38 @@ public class MainActivity
     private Intent seekBarProgressIntent;
     private Intent seekBarSeekIntent;
 
+    private Palette.Swatch vibrantSwatch;
+    private Palette.Swatch darkVibrantSwatch;
+    private Palette.Swatch dominantSwatch;
+
     @Override
     @TargetApi(26)
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // set up gradients that can be mutated
+        gradient1 = (GradientDrawable) ResourcesCompat.getDrawable(this.getResources(), R.drawable.gradient_default1, null);
+        gradient2 = (GradientDrawable) ResourcesCompat.getDrawable(this.getResources(), R.drawable.gradient_default2, null);
+        gradient3 = (GradientDrawable) ResourcesCompat.getDrawable(this.getResources(), R.drawable.gradient_default1, null);
+        gradient4 = (GradientDrawable) ResourcesCompat.getDrawable(this.getResources(), R.drawable.gradient_default2, null);
+        gradient1.mutate();
+        gradient2.mutate();
+        gradient3.mutate();
+        gradient4.mutate();
+
+        // 6 second animated gradients with 3 second transitions
+        relativeLayout = findViewById(R.id.layout);
+        animationDrawable = new AnimationDrawable();
+        animationDrawable.addFrame(gradient1, 6000);
+        animationDrawable.addFrame(gradient2, 6000);
+        animationDrawable.setEnterFadeDuration(3000);
+        animationDrawable.setExitFadeDuration(3000);
+        animationDrawable.setOneShot(false);
+        relativeLayout.setBackground(animationDrawable);
+        animationDrawable.start();
+
+
         musicArt = findViewById(R.id.circularImageView);
 
         serviceIntent = new Intent(this, MusicPlayerService.class);
@@ -189,6 +230,7 @@ public class MainActivity
     public void openMusicList(){
         Messenger musicListMessenger = new Messenger(new MessageHandler());
         Intent musicListIntent = new Intent(this, MusicListActivity.class).putExtra("mainActivity", musicListMessenger);
+        musicListIntent.addFlags(FLAG_ACTIVITY_REORDER_TO_FRONT);
         startActivity(musicListIntent);
     }
 
@@ -280,7 +322,24 @@ public class MainActivity
                     seekBar.setMax(songDuration);
                     musicDuration.setText(convertTime(songDuration));
 
+                    // update palette swatch colors for the animated gradients
+                    Palette.from(albumImage).maximumColorCount(8).generate(new Palette.PaletteAsyncListener() {
+                        @Override
+                        public void onGenerated(@Nullable Palette palette) {
+                            vibrantSwatch = palette.getVibrantSwatch();
+                            darkVibrantSwatch = palette.getDarkVibrantSwatch();
+                            dominantSwatch = palette.getDominantSwatch();
 
+                            gradient1.setColors(new int[]{Color.WHITE, dominantSwatch.getRgb()});
+                            gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
+                            gradient2.setColors(new int[]{Color.WHITE, dominantSwatch.getRgb()});
+                            gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
+                            gradient3.setColors(new int[]{Color.BLACK, dominantSwatch.getRgb()});
+                            gradient3.setOrientation(GradientDrawable.Orientation.TL_BR);
+                            gradient4.setColors(new int[]{Color.BLACK, dominantSwatch.getRgb()});
+                            gradient4.setOrientation(GradientDrawable.Orientation.BR_TL);
+                        }
+                    });
             }
         }
     }

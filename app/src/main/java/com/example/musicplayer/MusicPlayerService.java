@@ -95,6 +95,7 @@ public class MusicPlayerService
         Bundle b = intent.getExtras();
         if (b != null) {
             Messenger messenger;
+            Bundle musicListbundle;
             for (String key : b.keySet()) {
                 //System.out.println(key);
                 switch (key){
@@ -139,7 +140,7 @@ public class MusicPlayerService
                         mediaPlayer.seekTo(pauseCurrentPosition);
                         break;
                     case "musicListActivity":
-                        Bundle musicListbundle = intent.getBundleExtra("musicListActivity");
+                        musicListbundle = intent.getBundleExtra("musicListActivity");
                         messenger = (Messenger) musicListbundle.get("mainActivityMessenger");
                         Song song = (Song) musicListbundle.get("song");
 
@@ -162,6 +163,18 @@ public class MusicPlayerService
                         sendSongUpdateMessage(messenger, songMessage);
                         sendUpdateMessage(messenger, "update_main_pause");
                         sendUpdateMessage(messenger, "update_notification_pause");
+                        break;
+                    case "musicListNightToggle":
+                        musicListbundle = intent.getBundleExtra("musicListNightToggle");
+                        messenger = (Messenger) musicListbundle.get("mainActivityMessenger");
+                        boolean nightMode = (boolean) musicListbundle.get("nightmode");
+                        if (nightMode){
+                            sendUpdateMessage(messenger, "update_night");
+                        }
+                        else{
+                            sendUpdateMessage(messenger, "update_light");
+                        }
+                        break;
                 }
             }
         }

@@ -31,7 +31,7 @@ public class MusicListActivity extends AppCompatActivity {
     private static final int MY_PERMISSION_REQUEST = 1;
     private ImageButton mainActivity;
     private ImageButton nightModeButton;
-    private boolean nightMode;
+    public static boolean nightMode;
     private ListView listView;
     private RelativeLayout relativeLayout;
     private ArrayList<Song> songList;
@@ -129,6 +129,13 @@ public class MusicListActivity extends AppCompatActivity {
             adapter.setItemTitleTextColor("#F5F5F5");
             nightModeButton.setImageResource(R.drawable.night);
             nightMode = true;
+
+            // notify music player service with the main activity messenger
+            Bundle bundle = new Bundle();
+            bundle.putParcelable("mainActivityMessenger", mainActivityMessenger);
+            bundle.putBoolean("nightmode", true);
+            musicListIntent.putExtra("musicListNightToggle", bundle);
+            startService(musicListIntent);
         }
         else{
             listView.setBackgroundColor(Color.parseColor("#F4F4F4"));
@@ -136,6 +143,13 @@ public class MusicListActivity extends AppCompatActivity {
             adapter.setItemTitleTextColor("#030303");
             nightModeButton.setImageResource(R.drawable.light);
             nightMode = false;
+
+            // notify music player service with the main activity messenger
+            Bundle bundle = new Bundle();
+            bundle.putParcelable("mainActivityMessenger", mainActivityMessenger);
+            bundle.putBoolean("nightmode", false);
+            musicListIntent.putExtra("musicListNightToggle", bundle);
+            startService(musicListIntent);
         }
     }
 

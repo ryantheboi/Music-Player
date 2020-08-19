@@ -53,8 +53,6 @@ public class MainActivity
     private AnimationDrawable animationDrawable;
     private GradientDrawable gradient1;
     private GradientDrawable gradient2;
-    private GradientDrawable gradient3;
-    private GradientDrawable gradient4;
     private SeekBar seekBar;
     private TextView musicPosition;
     private TextView musicDuration;
@@ -82,12 +80,8 @@ public class MainActivity
         // set up gradients that can be mutated
         gradient1 = (GradientDrawable) ResourcesCompat.getDrawable(this.getResources(), R.drawable.gradient_default1, null);
         gradient2 = (GradientDrawable) ResourcesCompat.getDrawable(this.getResources(), R.drawable.gradient_default2, null);
-        gradient3 = (GradientDrawable) ResourcesCompat.getDrawable(this.getResources(), R.drawable.gradient_default1, null);
-        gradient4 = (GradientDrawable) ResourcesCompat.getDrawable(this.getResources(), R.drawable.gradient_default2, null);
         gradient1.mutate();
         gradient2.mutate();
-        gradient3.mutate();
-        gradient4.mutate();
 
         // 6 second animated gradients with 3 second transitions
         relativeLayout = findViewById(R.id.layout);
@@ -234,6 +228,38 @@ public class MainActivity
         startActivity(musicListIntent);
     }
 
+    @TargetApi(16)
+    public void swapVibrantGradient(){
+        if (vibrantSwatch != null){
+            gradient1.setColors(new int[]{Color.WHITE, vibrantSwatch.getRgb()});
+            gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
+            gradient2.setColors(new int[]{Color.WHITE, vibrantSwatch.getRgb()});
+            gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
+        }
+        else{
+            gradient1.setColors(new int[]{Color.WHITE, Color.YELLOW});
+            gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
+            gradient2.setColors(new int[]{Color.WHITE, Color.YELLOW});
+            gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
+        }
+    }
+
+    @TargetApi(16)
+    public void swapDarkVibrantGradient(){
+        if (darkVibrantSwatch != null) {
+            gradient1.setColors(new int[]{Color.parseColor("#232123"), darkVibrantSwatch.getRgb()});
+            gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
+            gradient2.setColors(new int[]{Color.parseColor("#232123"), darkVibrantSwatch.getRgb()});
+            gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
+        }
+        else {
+            gradient1.setColors(new int[]{Color.parseColor("#232123"), Color.parseColor("#8a8a8a")});
+            gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
+            gradient2.setColors(new int[]{Color.parseColor("#232123"), Color.parseColor("#8a8a8a")});
+            gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
+        }
+    }
+
     public class MessageHandler extends Handler
     {
         @Override
@@ -329,17 +355,20 @@ public class MainActivity
                             vibrantSwatch = palette.getVibrantSwatch();
                             darkVibrantSwatch = palette.getDarkVibrantSwatch();
                             dominantSwatch = palette.getDominantSwatch();
-
-                            gradient1.setColors(new int[]{Color.WHITE, dominantSwatch.getRgb()});
-                            gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
-                            gradient2.setColors(new int[]{Color.WHITE, dominantSwatch.getRgb()});
-                            gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
-                            gradient3.setColors(new int[]{Color.BLACK, dominantSwatch.getRgb()});
-                            gradient3.setOrientation(GradientDrawable.Orientation.TL_BR);
-                            gradient4.setColors(new int[]{Color.BLACK, dominantSwatch.getRgb()});
-                            gradient4.setOrientation(GradientDrawable.Orientation.BR_TL);
+                            if (MusicListActivity.nightMode){
+                                swapDarkVibrantGradient();
+                            }
+                            else{
+                                swapVibrantGradient();
+                            }
                         }
                     });
+                    break;
+                case "update_night":
+                    swapDarkVibrantGradient();
+                    break;
+                case "update_light":
+                    swapVibrantGradient();
             }
         }
     }

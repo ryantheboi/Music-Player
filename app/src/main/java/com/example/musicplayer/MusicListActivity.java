@@ -10,6 +10,7 @@ import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Messenger;
@@ -18,6 +19,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 import java.util.ArrayList;
 
@@ -28,7 +30,10 @@ public class MusicListActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSION_REQUEST = 1;
     private ImageButton mainActivity;
+    private ImageButton nightModeButton;
+    private boolean nightMode;
     private ListView listView;
+    private RelativeLayout relativeLayout;
     private ArrayList<Song> songList;
     private SongListAdapter adapter;
     private Messenger mainActivityMessenger;
@@ -40,6 +45,7 @@ public class MusicListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_musiclist);
+        relativeLayout = findViewById(R.id.activity_musiclist);
 
         // obtain the intent that started this activity (should be the Main Activity)
         Intent intent = this.getIntent();
@@ -78,6 +84,7 @@ public class MusicListActivity extends AppCompatActivity {
             }
         } else {
             createMusicList();
+            initNightMode();
         }
     }
 
@@ -102,6 +109,34 @@ public class MusicListActivity extends AppCompatActivity {
                 startService(musicListIntent);
             }
         });
+    }
+
+    public void initNightMode(){
+        nightMode = false;
+        nightModeButton = findViewById(R.id.btn_nightmode);
+        nightModeButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+                toggleNightMode();
+            }
+        });
+    }
+
+    public void toggleNightMode(){
+        if (!nightMode){
+            listView.setBackgroundColor(Color.parseColor("#232123"));
+            relativeLayout.setBackgroundColor(Color.parseColor("#232123"));
+            adapter.setItemTitleTextColor("#F5F5F5");
+            nightModeButton.setImageResource(R.drawable.night);
+            nightMode = true;
+        }
+        else{
+            listView.setBackgroundColor(Color.parseColor("#F4F4F4"));
+            relativeLayout.setBackgroundColor(Color.parseColor("#F4F4F4"));
+            adapter.setItemTitleTextColor("#030303");
+            nightModeButton.setImageResource(R.drawable.light);
+            nightMode = false;
+        }
     }
 
     @TargetApi(Q)

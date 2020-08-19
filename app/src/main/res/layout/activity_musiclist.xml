@@ -7,15 +7,15 @@
     android:paddingLeft="0dp"
     android:paddingRight="0dp"
     android:paddingTop="0dp"
-    android:background="#BDBDBD">
+    android:background="#F4F4F4">
 
     <ListView
         android:id="@+id/listView"
         android:layout_width="match_parent"
         android:layout_height="550dp"
-        android:dividerHeight="3dp"
-        android:divider="#757575"
-        android:background="#BDBDBD"/>
+        android:dividerHeight="20dp"
+        android:divider="@drawable/list_divider"
+        android:background="#F4F4F4"/>
 
     <ImageButton
         android:id="@+id/btn_mainactivity"
@@ -25,4 +25,14 @@
         android:src="@drawable/ic_chevron_right"
         android:layout_below="@+id/listView"
         />
+
+    <ImageButton
+        android:id="@+id/btn_nightmode"
+        android:layout_below="@+id/listView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignRight="@id/listView"
+        android:background="#00000000"
+        android:src="@drawable/light" />
+
 </RelativeLayout>

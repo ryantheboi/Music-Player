@@ -52,6 +52,8 @@ public class MainActivity
     private Button albumArt_btn;
     private ImageButton musicList;
     private ImageButton pauseplay;
+    private ImageButton next_btn;
+    private ImageButton prev_btn;
     private RelativeLayout relativeLayout;
     private AnimationDrawable animationDrawable;
     private GradientDrawable gradient1;
@@ -65,7 +67,9 @@ public class MainActivity
     private NotificationManagerCompat notificationManager;
     private NotificationCompat.Builder notificationBuilder;
     private Notification notificationChannel1;
-    private Intent serviceIntent;
+    private Intent mainPausePlayIntent;
+    private Intent mainPrevIntent;
+    private Intent mainNextIntent;
     private Intent pauseplayIntent;
     private Intent prevIntent;
     private Intent nextIntent;
@@ -111,7 +115,6 @@ public class MainActivity
             }
         });
 
-        serviceIntent = new Intent(this, MusicPlayerService.class);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
         mediaSession = new MediaSessionCompat(this, "media");
         notificationManager = NotificationManagerCompat.from(this);
@@ -161,21 +164,35 @@ public class MainActivity
             }
         });
 
+        // init pauseplay, prev, and next buttons
         pauseplay = findViewById((R.id.btn_play));
-
+        mainPausePlayIntent = new Intent(this, MusicPlayerService.class);
+        mainPausePlayIntent.putExtra("pauseplay", mainMessenger);
         pauseplay.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
-
-                switch(view.getId()){
-                    case R.id.btn_play:
-                        Messenger mainMessenger = new Messenger(new MessageHandler());
-                        serviceIntent.putExtra("pauseplay", mainMessenger);
-                        startService(serviceIntent);
-                        break;
-                }
+                startService(mainPausePlayIntent);
             }
         });
+        prev_btn = findViewById((R.id.btn_prev));
+        mainPrevIntent = new Intent(this, MusicPlayerService.class);
+        mainPrevIntent.putExtra("prev", mainMessenger);
+        prev_btn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                startService(mainPrevIntent);
+            }
+        });
+        next_btn = findViewById((R.id.btn_next));
+        mainNextIntent = new Intent(this, MusicPlayerService.class);
+        mainNextIntent.putExtra("next", mainMessenger);
+        next_btn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                startService(mainNextIntent);
+            }
+        });
+
     }
 
     // helper function to convert time in milliseconds to HH:MM:SS format
@@ -233,9 +250,9 @@ public class MainActivity
 
         // create intents for the notification action buttons
         Messenger notificationMessenger = new Messenger(new MessageHandler());
-        prevIntent = new Intent(this, MusicPlayerService.class).putExtra("notificationPrev", notificationMessenger);
+        prevIntent = new Intent(this, MusicPlayerService.class).putExtra("prev", notificationMessenger);
         pauseplayIntent =  new Intent(this, MusicPlayerService.class).putExtra("pauseplay", notificationMessenger);
-        nextIntent = new Intent(this, MusicPlayerService.class).putExtra("notificationNext", notificationMessenger);
+        nextIntent = new Intent(this, MusicPlayerService.class).putExtra("next", notificationMessenger);
 
         notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID_1)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -244,9 +261,9 @@ public class MainActivity
                 .setContentTitle("song")
                 .setContentText("artist")
                 .setLargeIcon(largeImage)
-                .addAction(R.drawable.ic_prev, "prev", PendingIntent.getService(this, 0, prevIntent, PendingIntent.FLAG_UPDATE_CURRENT))
+                .addAction(R.drawable.ic_prev24dp, "prev", PendingIntent.getService(this, 0, prevIntent, PendingIntent.FLAG_UPDATE_CURRENT))
                 .addAction(R.drawable.ic_play24dp, "play", PendingIntent.getService(this, 1, pauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT))
-                .addAction(R.drawable.ic_next, "next", PendingIntent.getService(this, 2, nextIntent, PendingIntent.FLAG_UPDATE_CURRENT))
+                .addAction(R.drawable.ic_next24dp, "next", PendingIntent.getService(this, 2, nextIntent, PendingIntent.FLAG_UPDATE_CURRENT))
                 .setPriority(NotificationCompat.PRIORITY_MIN)
                 .setOngoing(true)
                 .setContentIntent(contentIntent)

@@ -129,12 +129,12 @@ public class MusicPlayerService
                         }
                         audioFocusToggleMedia();
                         break;
-                    case "notificationPrev":
-                        messenger = intent.getParcelableExtra("notificationPrev");
+                    case "prev":
+                        messenger = intent.getParcelableExtra("prev");
                         Toast.makeText(this, "received notification: prev", Toast.LENGTH_SHORT).show();
                         break;
-                    case "notificationNext":
-                        messenger = intent.getParcelableExtra("notificationNext");
+                    case "next":
+                        messenger = intent.getParcelableExtra("next");
                         Toast.makeText(this, "received notification: next", Toast.LENGTH_SHORT).show();
                         break;
                     case "seekbarDuration":

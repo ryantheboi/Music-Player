@@ -32,6 +32,22 @@ public class MusicPlayerService
     boolean mPlayOnAudioFocus;
     int pauseCurrentPosition;
 
+    public static final String DARK_BACKGROUND = "#232123";
+    public static final String GREY_BACKGROUND = "#8a8a8a";
+    public static final String DARK_TEXT = "#030303";
+    public static final String ALMOST_WHITE = "#F4F4F4";
+
+    public static final int UPDATE_MAIN_PLAY = 0;
+    public static final int UPDATE_NOTIFICATION_PLAY = 1;
+    public static final int UPDATE_MAIN_PAUSE = 2;
+    public static final int UPDATE_NOTIFICATION_PAUSE = 3;
+    public static final int UPDATE_SEEKBAR_DURATION = 4;
+    public static final int UPDATE_SEEKBAR_PROGRESS = 5;
+    public static final int UPDATE_SONG = 6;
+    public static final int UPDATE_NIGHT = 7;
+    public static final int UPDATE_LIGHT = 8;
+
+
 
     @Override
     @TargetApi(26)
@@ -103,12 +119,12 @@ public class MusicPlayerService
                         // update the pauseplay button icon via messenger and toggle music
                         messenger = intent.getParcelableExtra("pauseplay");
                         if (mediaPlayer.isPlaying()) {
-                            sendUpdateMessage(messenger, "update_main_play");
-                            sendUpdateMessage(messenger, "update_notification_play");
+                            sendUpdateMessage(messenger, UPDATE_MAIN_PLAY);
+                            sendUpdateMessage(messenger, UPDATE_NOTIFICATION_PLAY);
                         }
                         else{
-                            sendUpdateMessage(messenger, "update_main_pause");
-                            sendUpdateMessage(messenger, "update_notification_pause");
+                            sendUpdateMessage(messenger, UPDATE_MAIN_PAUSE);
+                            sendUpdateMessage(messenger, UPDATE_NOTIFICATION_PAUSE);
 
                         }
                         audioFocusToggleMedia();
@@ -124,14 +140,14 @@ public class MusicPlayerService
                     case "seekbarDuration":
                         messenger = intent.getParcelableExtra("seekbarDuration");
                         Object[] durationMessage = new Object[2];
-                        durationMessage[0] = "update_seekbar_duration";
+                        durationMessage[0] = UPDATE_SEEKBAR_DURATION;
                         durationMessage[1] = mediaPlayer.getDuration();
                         sendUpdateMessage(messenger, durationMessage);
                         break;
                     case "seekbarProgress":
                         messenger = intent.getParcelableExtra("seekbarProgress");
                         Object[] progressMessage = new Object[2];
-                        progressMessage[0] = "update_seekbar_progress";
+                        progressMessage[0] = UPDATE_SEEKBAR_PROGRESS;
                         progressMessage[1] = mediaPlayer.getCurrentPosition();
                         sendUpdateMessage(messenger, progressMessage);
                         break;
@@ -158,21 +174,21 @@ public class MusicPlayerService
                             e.printStackTrace();
                         }
                         Object[] songMessage = new Object[2];
-                        songMessage[0] = "update_song";
+                        songMessage[0] = UPDATE_SONG;
                         songMessage[1] = song;
                         sendSongUpdateMessage(messenger, songMessage);
-                        sendUpdateMessage(messenger, "update_main_pause");
-                        sendUpdateMessage(messenger, "update_notification_pause");
+                        sendUpdateMessage(messenger, UPDATE_MAIN_PAUSE);
+                        sendUpdateMessage(messenger, UPDATE_NOTIFICATION_PAUSE);
                         break;
                     case "musicListNightToggle":
                         musicListbundle = intent.getBundleExtra("musicListNightToggle");
                         messenger = (Messenger) musicListbundle.get("mainActivityMessenger");
                         boolean nightMode = (boolean) musicListbundle.get("nightmode");
                         if (nightMode){
-                            sendUpdateMessage(messenger, "update_night");
+                            sendUpdateMessage(messenger, UPDATE_NIGHT);
                         }
                         else{
-                            sendUpdateMessage(messenger, "update_light");
+                            sendUpdateMessage(messenger, UPDATE_LIGHT);
                         }
                         break;
                 }
@@ -219,12 +235,12 @@ public class MusicPlayerService
         return false;
     }
 
-    // sends a string message to the main thread
-    private void sendUpdateMessage(Messenger messenger, String message) {
+    // sends an int message to the main thread
+    private void sendUpdateMessage(Messenger messenger, int message) {
         Message msg = Message.obtain();
         Bundle bundle = new Bundle();
 
-        bundle.putString("update", message);
+        bundle.putInt("update", message);
         msg.setData(bundle);
         try {
             messenger.send(msg);
@@ -233,13 +249,13 @@ public class MusicPlayerService
         }
     }
 
-    // overloaded function to send a message containing a string and int
+    // overloaded function to send a message containing an update and int
     private void sendUpdateMessage(Messenger messenger, Object[] message) {
         Message msg = Message.obtain();
         Bundle bundle = new Bundle();
-        String strMessage = (String) message[0];
+        int updateMessage = (int) message[0];
         int intMessage = (int) message[1];
-        bundle.putString("update", strMessage);
+        bundle.putInt("update", updateMessage);
         bundle.putInt("time", intMessage);
         msg.setData(bundle);
         try {
@@ -253,9 +269,9 @@ public class MusicPlayerService
     private void sendSongUpdateMessage(Messenger messenger, Object[] message) {
         Message msg = Message.obtain();
         Bundle bundle = new Bundle();
-        String strMessage = (String) message[0];
+        int updateMessage = (int) message[0];
         Song songMessage = (Song) message[1];
-        bundle.putString("update", strMessage);
+        bundle.putInt("update", updateMessage);
         bundle.putParcelable("song", songMessage);
         msg.setData(bundle);
         try {

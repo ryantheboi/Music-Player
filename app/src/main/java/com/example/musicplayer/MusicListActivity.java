@@ -125,9 +125,9 @@ public class MusicListActivity extends AppCompatActivity {
     public void toggleNightMode(){
         Intent nightModeIntent;
         if (!nightMode){
-            listView.setBackgroundColor(Color.parseColor("#232123"));
-            relativeLayout.setBackgroundColor(Color.parseColor("#232123"));
-            adapter.setItemTitleTextColor("#F5F5F5");
+            listView.setBackgroundColor(Color.parseColor(MusicPlayerService.DARK_BACKGROUND));
+            relativeLayout.setBackgroundColor(Color.parseColor(MusicPlayerService.DARK_BACKGROUND));
+            adapter.setItemTitleTextColor(MusicPlayerService.ALMOST_WHITE);
             nightModeButton.setImageResource(R.drawable.night);
             nightMode = true;
 
@@ -140,9 +140,9 @@ public class MusicListActivity extends AppCompatActivity {
             startService(nightModeIntent);
         }
         else{
-            listView.setBackgroundColor(Color.parseColor("#F4F4F4"));
-            relativeLayout.setBackgroundColor(Color.parseColor("#F4F4F4"));
-            adapter.setItemTitleTextColor("#030303");
+            listView.setBackgroundColor(Color.parseColor(MusicPlayerService.ALMOST_WHITE));
+            relativeLayout.setBackgroundColor(Color.parseColor(MusicPlayerService.ALMOST_WHITE));
+            adapter.setItemTitleTextColor(MusicPlayerService.DARK_TEXT);
             nightModeButton.setImageResource(R.drawable.light);
             nightMode = false;
 

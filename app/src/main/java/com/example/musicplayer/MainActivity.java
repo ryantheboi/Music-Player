@@ -268,7 +268,7 @@ public class MainActivity
 
     @TargetApi(16)
     public void swapVibrantGradient(){
-        songName.setTextColor(Color.parseColor("#030303"));
+        songName.setTextColor(Color.parseColor(MusicPlayerService.DARK_TEXT));
         if (vibrantSwatch != null){
             gradient1.setColors(new int[]{Color.WHITE, vibrantSwatch.getRgb()});
             gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
@@ -291,23 +291,23 @@ public class MainActivity
 
     @TargetApi(16)
     public void swapDarkVibrantGradient(){
-        songName.setTextColor(Color.parseColor("#F5F5F5"));
+        songName.setTextColor(Color.parseColor(MusicPlayerService.ALMOST_WHITE));
         if (darkVibrantSwatch != null) {
-            gradient1.setColors(new int[]{Color.parseColor("#232123"), darkVibrantSwatch.getRgb()});
+            gradient1.setColors(new int[]{Color.parseColor(MusicPlayerService.DARK_BACKGROUND), darkVibrantSwatch.getRgb()});
             gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
-            gradient2.setColors(new int[]{Color.parseColor("#232123"), darkVibrantSwatch.getRgb()});
+            gradient2.setColors(new int[]{Color.parseColor(MusicPlayerService.DARK_BACKGROUND), darkVibrantSwatch.getRgb()});
             gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
         }
         else if (dominantSwatch != null){
-            gradient1.setColors(new int[]{Color.parseColor("#232123"), dominantSwatch.getRgb()});
+            gradient1.setColors(new int[]{Color.parseColor(MusicPlayerService.DARK_BACKGROUND), dominantSwatch.getRgb()});
             gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
-            gradient2.setColors(new int[]{Color.parseColor("#232123"), dominantSwatch.getRgb()});
+            gradient2.setColors(new int[]{Color.parseColor(MusicPlayerService.DARK_BACKGROUND), dominantSwatch.getRgb()});
             gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
         }
         else {
-            gradient1.setColors(new int[]{Color.parseColor("#232123"), Color.parseColor("#8a8a8a")});
+            gradient1.setColors(new int[]{Color.parseColor(MusicPlayerService.DARK_BACKGROUND), Color.parseColor(MusicPlayerService.GREY_BACKGROUND)});
             gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
-            gradient2.setColors(new int[]{Color.parseColor("#232123"), Color.parseColor("#8a8a8a")});
+            gradient2.setColors(new int[]{Color.parseColor(MusicPlayerService.DARK_BACKGROUND), Color.parseColor(MusicPlayerService.GREY_BACKGROUND)});
             gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
         }
     }
@@ -319,25 +319,25 @@ public class MainActivity
         public void handleMessage(Message msg) {
 
             Bundle bundle = msg.getData();
-            String updateOperation = (String) bundle.get("update");
+            int updateOperation = (int) bundle.get("update");
             switch (updateOperation) {
-                case "update_main_play":
+                case MusicPlayerService.UPDATE_MAIN_PLAY:
                     pauseplay.setImageResource(R.drawable.ic_play);
                     break;
-                case "update_main_pause":
+                case MusicPlayerService.UPDATE_MAIN_PAUSE:
                     pauseplay.setImageResource(R.drawable.ic_pause);
                     break;
-                case "update_notification_play":
+                case MusicPlayerService.UPDATE_NOTIFICATION_PLAY:
                     notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_play24dp, "play", PendingIntent.getService(getApplicationContext(), 1, pauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);
                     break;
-                case "update_notification_pause":
+                case MusicPlayerService.UPDATE_NOTIFICATION_PAUSE:
                     notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_pause24dp, "pause", PendingIntent.getService(getApplicationContext(), 1, pauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);
                     break;
-                case "update_seekbar_duration":
+                case MusicPlayerService.UPDATE_SEEKBAR_DURATION:
                     // init the seekbar & textview max duration and begin thread to track progress
                     int musicMaxDuration = (int) bundle.get("time");
                     seekBar.setMax(musicMaxDuration);
@@ -362,11 +362,11 @@ public class MainActivity
                     });
                     seekbarUpdateThread.start();
                     break;
-                case "update_seekbar_progress":
+                case MusicPlayerService.UPDATE_SEEKBAR_PROGRESS:
                     int musicCurrentPosition = (int) bundle.get("time");
                     seekBar.setProgress(musicCurrentPosition);
                     break;
-                case "update_song":
+                case MusicPlayerService.UPDATE_SONG:
                     // update main activitiy with the selected song from music list
                     Song song = (Song) bundle.get("song");
 
@@ -418,10 +418,10 @@ public class MainActivity
                         }
                     });
                     break;
-                case "update_night":
+                case MusicPlayerService.UPDATE_NIGHT:
                     swapDarkVibrantGradient();
                     break;
-                case "update_light":
+                case MusicPlayerService.UPDATE_LIGHT:
                     swapVibrantGradient();
                     break;
             }

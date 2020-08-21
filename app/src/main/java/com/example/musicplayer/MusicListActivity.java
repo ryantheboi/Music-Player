@@ -123,6 +123,7 @@ public class MusicListActivity extends AppCompatActivity {
     }
 
     public void toggleNightMode(){
+        Intent nightModeIntent;
         if (!nightMode){
             listView.setBackgroundColor(Color.parseColor("#232123"));
             relativeLayout.setBackgroundColor(Color.parseColor("#232123"));
@@ -131,11 +132,12 @@ public class MusicListActivity extends AppCompatActivity {
             nightMode = true;
 
             // notify music player service with the main activity messenger
+            nightModeIntent = new Intent(this, MusicPlayerService.class);
             Bundle bundle = new Bundle();
             bundle.putParcelable("mainActivityMessenger", mainActivityMessenger);
             bundle.putBoolean("nightmode", true);
-            musicListIntent.putExtra("musicListNightToggle", bundle);
-            startService(musicListIntent);
+            nightModeIntent.putExtra("musicListNightToggle", bundle);
+            startService(nightModeIntent);
         }
         else{
             listView.setBackgroundColor(Color.parseColor("#F4F4F4"));
@@ -145,11 +147,12 @@ public class MusicListActivity extends AppCompatActivity {
             nightMode = false;
 
             // notify music player service with the main activity messenger
+            nightModeIntent = new Intent(this, MusicPlayerService.class);
             Bundle bundle = new Bundle();
             bundle.putParcelable("mainActivityMessenger", mainActivityMessenger);
             bundle.putBoolean("nightmode", false);
-            musicListIntent.putExtra("musicListNightToggle", bundle);
-            startService(musicListIntent);
+            nightModeIntent.putExtra("musicListNightToggle", bundle);
+            startService(nightModeIntent);
         }
     }
 

@@ -33,6 +33,7 @@ import androidx.palette.graphics.Palette;
 import android.app.Notification;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -46,7 +47,9 @@ import java.io.InputStream;
 public class MainActivity
         extends AppCompatActivity{
 
-    private ImageView musicArt;
+    private boolean largeAlbumArt;
+    private ImageView albumArt;
+    private Button albumArt_btn;
     private ImageButton musicList;
     private ImageButton pauseplay;
     private RelativeLayout relativeLayout;
@@ -56,6 +59,8 @@ public class MainActivity
     private SeekBar seekBar;
     private TextView musicPosition;
     private TextView musicDuration;
+    private TextView songName;
+    private TextView artistName;
     private MediaSessionCompat mediaSession;
     private NotificationManagerCompat notificationManager;
     private NotificationCompat.Builder notificationBuilder;
@@ -66,7 +71,6 @@ public class MainActivity
     private Intent nextIntent;
     private Intent seekBarProgressIntent;
     private Intent seekBarSeekIntent;
-
     private Palette.Swatch vibrantSwatch;
     private Palette.Swatch darkVibrantSwatch;
     private Palette.Swatch dominantSwatch;
@@ -94,8 +98,18 @@ public class MainActivity
         relativeLayout.setBackground(animationDrawable);
         animationDrawable.start();
 
-
-        musicArt = findViewById(R.id.circularImageView);
+        // init album art button and textviews for song details
+        albumArt = findViewById(R.id.circularImageView);
+        albumArt_btn = findViewById(R.id.toggle_largeAlbumArt);
+        songName = findViewById(R.id.song_name);
+        artistName = findViewById(R.id.artist_name);
+        largeAlbumArt = true;
+        albumArt_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toggleLargeAlbumArt();
+            }
+        });
 
         serviceIntent = new Intent(this, MusicPlayerService.class);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
@@ -187,6 +201,30 @@ public class MainActivity
         return HH + ":" + MM + ":" + SS;
     }
 
+    @TargetApi(16)
+    public void toggleLargeAlbumArt(){
+        if (largeAlbumArt) {
+            largeAlbumArt = false;
+            albumArt.animate().scaleX(0.6f).scaleY(0.6f);
+            albumArt_btn.setScaleX((float)0.65);
+            albumArt_btn.setScaleY((float)0.65);
+            songName.setVisibility(View.VISIBLE);
+            artistName.setVisibility(View.VISIBLE);
+
+
+
+        }
+        else{
+            largeAlbumArt = true;
+            albumArt.animate().scaleX(1f).scaleY(1f);
+            albumArt_btn.setScaleX(1);
+            albumArt_btn.setScaleY(1);
+            songName.setVisibility(View.INVISIBLE);
+            artistName.setVisibility(View.INVISIBLE);
+
+        }
+    }
+
     @TargetApi(19)
     public void showNotification(){
         Bitmap largeImage = BitmapFactory.decodeResource(getResources(), R.drawable.kaminomanimani);
@@ -230,10 +268,17 @@ public class MainActivity
 
     @TargetApi(16)
     public void swapVibrantGradient(){
+        songName.setTextColor(Color.parseColor("#030303"));
         if (vibrantSwatch != null){
             gradient1.setColors(new int[]{Color.WHITE, vibrantSwatch.getRgb()});
             gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
             gradient2.setColors(new int[]{Color.WHITE, vibrantSwatch.getRgb()});
+            gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
+        }
+        else if (dominantSwatch != null){
+            gradient1.setColors(new int[]{Color.WHITE, dominantSwatch.getRgb()});
+            gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
+            gradient2.setColors(new int[]{Color.WHITE, dominantSwatch.getRgb()});
             gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
         }
         else{
@@ -246,10 +291,17 @@ public class MainActivity
 
     @TargetApi(16)
     public void swapDarkVibrantGradient(){
+        songName.setTextColor(Color.parseColor("#F5F5F5"));
         if (darkVibrantSwatch != null) {
             gradient1.setColors(new int[]{Color.parseColor("#232123"), darkVibrantSwatch.getRgb()});
             gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
             gradient2.setColors(new int[]{Color.parseColor("#232123"), darkVibrantSwatch.getRgb()});
+            gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
+        }
+        else if (dominantSwatch != null){
+            gradient1.setColors(new int[]{Color.parseColor("#232123"), dominantSwatch.getRgb()});
+            gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
+            gradient2.setColors(new int[]{Color.parseColor("#232123"), dominantSwatch.getRgb()});
             gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
         }
         else {
@@ -344,7 +396,9 @@ public class MainActivity
                     notificationManager.notify(1, notificationChannel1);
 
                     // update main activity details
-                    musicArt.setImageBitmap(albumImage);
+                    songName.setText(song.getTitle());
+                    artistName.setText(song.getArtist());
+                    albumArt.setImageBitmap(albumImage);
                     seekBar.setMax(songDuration);
                     musicDuration.setText(convertTime(songDuration));
 
@@ -369,6 +423,7 @@ public class MainActivity
                     break;
                 case "update_light":
                     swapVibrantGradient();
+                    break;
             }
         }
     }

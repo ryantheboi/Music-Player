@@ -5,6 +5,7 @@ import static com.example.musicplayer.Notifications.CHANNEL_ID_1;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -12,6 +13,7 @@ import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.media.AudioManager;
@@ -21,6 +23,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.support.v4.media.session.MediaSessionCompat;
+import android.view.MotionEvent;
 import android.view.View;
 
 import androidx.core.app.NotificationCompat;
@@ -33,6 +36,8 @@ import androidx.palette.graphics.Palette;
 import android.app.Notification;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -49,6 +54,9 @@ public class MainActivity
 
     private boolean largeAlbumArt;
     private ImageView albumArt;
+    private ImageView pauseplay_background;
+    private Animation pauseplayAnim;
+    private Animation pauseplayBackgroundAnim;
     private Button albumArt_btn;
     private ImageButton musicList;
     private ImageButton pauseplay;
@@ -58,6 +66,7 @@ public class MainActivity
     private AnimationDrawable mainAnimation;
     private GradientDrawable gradient1;
     private GradientDrawable gradient2;
+    private GradientDrawable pauseplay_background_gradient;
     private SeekBar seekBar;
     private TextView musicPosition;
     private TextView musicDuration;
@@ -169,19 +178,65 @@ public class MainActivity
      * Pauseplay, previous, and next
      * Each one will trigger a unique event from MusicPlayerService
      */
+    @SuppressLint("ClickableViewAccessibility")
     public void initMainButtons(){
         Messenger mainMessenger = new Messenger(new MessageHandler());
 
-        // init pauseplay, prev, and next buttons
+        // init pauseplay button with touch and click, and appropriate animations
         pauseplay = findViewById((R.id.btn_play));
+        pauseplay_background = findViewById((R.id.round_play_background));
         mainPausePlayIntent = new Intent(this, MusicPlayerService.class);
         mainPausePlayIntent.putExtra("pauseplay", mainMessenger);
+
+        pauseplayAnim = AnimationUtils.loadAnimation(this, R.anim.blink_animation);
+        pauseplayBackgroundAnim = AnimationUtils.loadAnimation(this, R.anim.blink_animation_background);
+        pauseplay_background_gradient = (GradientDrawable) pauseplay_background.getBackground().getCurrent();
         pauseplay.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
+                pauseplay.startAnimation(pauseplayAnim);
+                pauseplay_background.setVisibility(View.VISIBLE);
+                pauseplay_background.startAnimation(pauseplayBackgroundAnim);
+                pauseplay_background.setVisibility(View.INVISIBLE);
                 startService(mainPausePlayIntent);
             }
         });
+        pauseplay.setOnTouchListener(new View.OnTouchListener() {
+            private Rect viewBoundary;
+            private boolean ignore; // true to ignore all touches, false otherwise
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        ignore = false;
+                        viewBoundary = new Rect(v.getLeft(), v.getTop(), v.getRight(), v.getBottom());
+                        pauseplay_background.setVisibility(View.VISIBLE);
+                        pauseplay_background.animate().alpha((float) 0.3).scaleX((float) 0.8).scaleY((float) 0.8);
+                        pauseplay.animate().scaleX((float) 0.8).scaleY((float) 0.8);
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        pauseplay_background.animate().scaleX(1).scaleY(1);
+                        pauseplay.animate().scaleX(1).scaleY(1);
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        // if movement is greater than 60 pixels from the original press point
+                        if (!ignore) {
+                            if (!viewBoundary.contains(v.getLeft() + (int) event.getX(), v.getTop() + (int) event.getY())) {
+                                pauseplay_background.setVisibility(View.VISIBLE);
+                                pauseplay_background.startAnimation(pauseplayBackgroundAnim);
+                                pauseplay_background.setVisibility(View.INVISIBLE);
+                                pauseplay_background.animate().scaleX(1).scaleY(1);
+                                pauseplay.animate().scaleX(1).scaleY(1);
+                                ignore = true;
+                            }
+                        }
+                        break;
+                }
+                return ignore;
+            }
+        });
+
+        // init prev and next buttons
         prev_btn = findViewById((R.id.btn_prev));
         mainPrevIntent = new Intent(this, MusicPlayerService.class);
         mainPrevIntent.putExtra("prev", mainMessenger);
@@ -303,6 +358,14 @@ public class MainActivity
             gradient2.setColors(new int[]{Color.WHITE, Color.YELLOW});
             gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
         }
+
+        // change background gradient of buttons to contrast with light theme
+        if (darkVibrantSwatch != null){
+            pauseplay_background_gradient.setColor(darkVibrantSwatch.getRgb());
+        }
+        else{
+            pauseplay_background_gradient.setColor(Color.parseColor(MusicPlayerService.DARK_BACKGROUND));
+        }
     }
 
     /**
@@ -330,6 +393,14 @@ public class MainActivity
             gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
             gradient2.setColors(new int[]{Color.parseColor(MusicPlayerService.DARK_BACKGROUND), Color.parseColor(MusicPlayerService.GREY_BACKGROUND)});
             gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
+        }
+
+        // change background gradient of buttons to contrast with dark theme
+        if (vibrantSwatch != null){
+            pauseplay_background_gradient.setColor(vibrantSwatch.getRgb());
+        }
+        else{
+            pauseplay_background_gradient.setColor(Color.WHITE);
         }
     }
 

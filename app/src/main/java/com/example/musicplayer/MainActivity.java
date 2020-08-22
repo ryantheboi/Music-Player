@@ -55,7 +55,7 @@ public class MainActivity
     private ImageButton next_btn;
     private ImageButton prev_btn;
     private RelativeLayout relativeLayout;
-    private AnimationDrawable animationDrawable;
+    private AnimationDrawable mainAnimation;
     private GradientDrawable gradient1;
     private GradientDrawable gradient2;
     private SeekBar seekBar;
@@ -71,6 +71,7 @@ public class MainActivity
     private Intent mainPrevIntent;
     private Intent mainNextIntent;
     private Intent pauseplayIntent;
+    private Intent musicListIntent;
     private Intent prevIntent;
     private Intent nextIntent;
     private Intent seekBarProgressIntent;
@@ -85,6 +86,28 @@ public class MainActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        initMainAnimation();
+
+        initAlbumArt();
+
+        initMainButtons();
+
+        initSeekbar();
+
+        initMusicList();
+
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
+        mediaSession = new MediaSessionCompat(this, "media");
+        notificationManager = NotificationManagerCompat.from(this);
+        showNotification();
+    }
+
+    /**
+     * Initialize the animated gradient based on night mode and album art
+     * Gradients are set up to be mutated, here
+     */
+    @TargetApi(16)
+    public void initMainAnimation(){
         // set up gradients that can be mutated
         gradient1 = (GradientDrawable) ResourcesCompat.getDrawable(this.getResources(), R.drawable.gradient_default1, null);
         gradient2 = (GradientDrawable) ResourcesCompat.getDrawable(this.getResources(), R.drawable.gradient_default2, null);
@@ -93,15 +116,21 @@ public class MainActivity
 
         // 6 second animated gradients with 3 second transitions
         relativeLayout = findViewById(R.id.layout);
-        animationDrawable = new AnimationDrawable();
-        animationDrawable.addFrame(gradient1, 6000);
-        animationDrawable.addFrame(gradient2, 6000);
-        animationDrawable.setEnterFadeDuration(3000);
-        animationDrawable.setExitFadeDuration(3000);
-        animationDrawable.setOneShot(false);
-        relativeLayout.setBackground(animationDrawable);
-        animationDrawable.start();
+        mainAnimation = new AnimationDrawable();
+        mainAnimation.addFrame(gradient1, 6000);
+        mainAnimation.addFrame(gradient2, 6000);
+        mainAnimation.setEnterFadeDuration(3000);
+        mainAnimation.setExitFadeDuration(3000);
+        mainAnimation.setOneShot(false);
+        relativeLayout.setBackground(mainAnimation);
+        mainAnimation.start();
+    }
 
+    /**
+     * Initialize the mutable album art view and the transparent button
+     * On button click, scales the view and button with an animation
+     */
+    public void initAlbumArt(){
         // init album art button and textviews for song details
         albumArt = findViewById(R.id.circularImageView);
         albumArt_btn = findViewById(R.id.toggle_largeAlbumArt);
@@ -114,21 +143,71 @@ public class MainActivity
                 toggleLargeAlbumArt();
             }
         });
+    }
 
-        setVolumeControlStream(AudioManager.STREAM_MUSIC);
-        mediaSession = new MediaSessionCompat(this, "media");
-        notificationManager = NotificationManagerCompat.from(this);
-        showNotification();
-
+    /**
+     * Initialize the button to display the music list activity
+     * Creates messenger and initializes intent specifically for the activity
+     */
+    public void initMusicList(){
         // init button for displaying music list
         musicList = findViewById(R.id.btn_musiclist);
+        Messenger musicListMessenger = new Messenger(new MessageHandler());
+        musicListIntent = new Intent(this, MusicListActivity.class);
+        musicListIntent.putExtra("mainActivity", musicListMessenger);
+        musicListIntent.addFlags(FLAG_ACTIVITY_REORDER_TO_FRONT);
         musicList.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
-                openMusicList();
+                startActivity(musicListIntent);
             }
         });
+    }
 
+    /**
+     * Initializes the three main buttons in main activity:
+     * Pauseplay, previous, and next
+     * Each one will trigger a unique event from MusicPlayerService
+     */
+    public void initMainButtons(){
+        Messenger mainMessenger = new Messenger(new MessageHandler());
+
+        // init pauseplay, prev, and next buttons
+        pauseplay = findViewById((R.id.btn_play));
+        mainPausePlayIntent = new Intent(this, MusicPlayerService.class);
+        mainPausePlayIntent.putExtra("pauseplay", mainMessenger);
+        pauseplay.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                startService(mainPausePlayIntent);
+            }
+        });
+        prev_btn = findViewById((R.id.btn_prev));
+        mainPrevIntent = new Intent(this, MusicPlayerService.class);
+        mainPrevIntent.putExtra("prev", mainMessenger);
+        prev_btn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                startService(mainPrevIntent);
+            }
+        });
+        next_btn = findViewById((R.id.btn_next));
+        mainNextIntent = new Intent(this, MusicPlayerService.class);
+        mainNextIntent.putExtra("next", mainMessenger);
+        next_btn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                startService(mainNextIntent);
+            }
+        });
+    }
+
+    /**
+     * Initializes the seekbar and the textviews for current position and max duration
+     * Time is converted from milliseconds to HH:MM:SS format
+     * Textview for current position is updated upon user changing the seekbar
+     */
+    public void initSeekbar(){
         // init seekbar and textviews
         seekBar = findViewById(R.id.seekBar);
         musicPosition = findViewById(R.id.music_position);
@@ -163,83 +242,6 @@ public class MainActivity
 
             }
         });
-
-        // init pauseplay, prev, and next buttons
-        pauseplay = findViewById((R.id.btn_play));
-        mainPausePlayIntent = new Intent(this, MusicPlayerService.class);
-        mainPausePlayIntent.putExtra("pauseplay", mainMessenger);
-        pauseplay.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view){
-                startService(mainPausePlayIntent);
-            }
-        });
-        prev_btn = findViewById((R.id.btn_prev));
-        mainPrevIntent = new Intent(this, MusicPlayerService.class);
-        mainPrevIntent.putExtra("prev", mainMessenger);
-        prev_btn.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view){
-                startService(mainPrevIntent);
-            }
-        });
-        next_btn = findViewById((R.id.btn_next));
-        mainNextIntent = new Intent(this, MusicPlayerService.class);
-        mainNextIntent.putExtra("next", mainMessenger);
-        next_btn.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view){
-                startService(mainNextIntent);
-            }
-        });
-
-    }
-
-    // helper function to convert time in milliseconds to HH:MM:SS format
-    public static String convertTime(int timeInMS){
-        int timeInSeconds = timeInMS / 1000;
-
-        int seconds = timeInSeconds % 3600 % 60;
-        int minutes = timeInSeconds % 3600 / 60;
-        int hours = timeInSeconds / 3600;
-
-        String HH, MM, SS;
-        if (hours == 0){
-            MM = ((minutes  < 10) ? "" : "") + minutes;
-            SS = ((seconds  < 10) ? "0" : "") + seconds;
-            return MM + ":" + SS;
-        }
-        else {
-            HH = ((hours    < 10) ? "0" : "") + hours;
-            MM = ((minutes  < 10) ? "0" : "") + minutes;
-            SS = ((seconds  < 10) ? "0" : "") + seconds;
-        }
-
-        return HH + ":" + MM + ":" + SS;
-    }
-
-    @TargetApi(16)
-    public void toggleLargeAlbumArt(){
-        if (largeAlbumArt) {
-            largeAlbumArt = false;
-            albumArt.animate().scaleX(0.6f).scaleY(0.6f);
-            albumArt_btn.setScaleX((float)0.65);
-            albumArt_btn.setScaleY((float)0.65);
-            songName.setVisibility(View.VISIBLE);
-            artistName.setVisibility(View.VISIBLE);
-
-
-
-        }
-        else{
-            largeAlbumArt = true;
-            albumArt.animate().scaleX(1f).scaleY(1f);
-            albumArt_btn.setScaleX(1);
-            albumArt_btn.setScaleY(1);
-            songName.setVisibility(View.INVISIBLE);
-            artistName.setVisibility(View.INVISIBLE);
-
-        }
     }
 
     @TargetApi(19)
@@ -275,14 +277,11 @@ public class MainActivity
         notificationManager.notify(1, notificationChannel1);
     }
 
-    // function to launch the music list activity
-    public void openMusicList(){
-        Messenger musicListMessenger = new Messenger(new MessageHandler());
-        Intent musicListIntent = new Intent(this, MusicListActivity.class).putExtra("mainActivity", musicListMessenger);
-        musicListIntent.addFlags(FLAG_ACTIVITY_REORDER_TO_FRONT);
-        startActivity(musicListIntent);
-    }
-
+    /**
+     * helper method used to swap the two main gradients to white and vibrant swatch, if it exists
+     * swaps to white and dominant if vibrant swatch doesn't exist
+     * swaps to white and yellow if neither swatch exists
+     */
     @TargetApi(16)
     public void swapVibrantGradient(){
         songName.setTextColor(Color.parseColor(MusicPlayerService.DARK_TEXT));
@@ -306,6 +305,11 @@ public class MainActivity
         }
     }
 
+    /**
+     * helper method used to swap the two main gradients to dark and darkvibrant swatch, if it exists
+     * swaps to dark and dominant if vibrant swatch doesn't exist
+     * swaps to dark and grey if neither swatch exists
+     */
     @TargetApi(16)
     public void swapDarkVibrantGradient(){
         songName.setTextColor(Color.parseColor(MusicPlayerService.ALMOST_WHITE));
@@ -329,6 +333,61 @@ public class MainActivity
         }
     }
 
+    /**
+     * helper function to convert time in milliseconds to HH:MM:SS format
+     */
+    public static String convertTime(int timeInMS){
+        int timeInSeconds = timeInMS / 1000;
+
+        int seconds = timeInSeconds % 3600 % 60;
+        int minutes = timeInSeconds % 3600 / 60;
+        int hours = timeInSeconds / 3600;
+
+        String HH, MM, SS;
+        if (hours == 0){
+            MM = ((minutes  < 10) ? "" : "") + minutes;
+            SS = ((seconds  < 10) ? "0" : "") + seconds;
+            return MM + ":" + SS;
+        }
+        else {
+            HH = ((hours    < 10) ? "0" : "") + hours;
+            MM = ((minutes  < 10) ? "0" : "") + minutes;
+            SS = ((seconds  < 10) ? "0" : "") + seconds;
+        }
+
+        return HH + ":" + MM + ":" + SS;
+    }
+
+    /**
+     * helper method to enable scaling of album art and visibility of song name & artist
+     * based on largeAlbumArt boolean conditions:
+     * false - album art is not large and song name & artist are visible
+     * true - album art is large and hides song name & artist
+     */
+    @TargetApi(16)
+    public void toggleLargeAlbumArt(){
+        if (largeAlbumArt) {
+            largeAlbumArt = false;
+            albumArt.animate().scaleX(0.6f).scaleY(0.6f);
+            albumArt_btn.setScaleX((float)0.65);
+            albumArt_btn.setScaleY((float)0.65);
+            songName.setVisibility(View.VISIBLE);
+            artistName.setVisibility(View.VISIBLE);
+        }
+        else{
+            largeAlbumArt = true;
+            albumArt.animate().scaleX(1f).scaleY(1f);
+            albumArt_btn.setScaleX(1);
+            albumArt_btn.setScaleY(1);
+            songName.setVisibility(View.INVISIBLE);
+            artistName.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    /**
+     * Class is used to handle messages (mainly about updates) sent from other activities
+     * in order to keep the main activity most updated
+     */
     public class MessageHandler extends Handler
     {
         @Override
@@ -338,18 +397,14 @@ public class MainActivity
             Bundle bundle = msg.getData();
             int updateOperation = (int) bundle.get("update");
             switch (updateOperation) {
-                case MusicPlayerService.UPDATE_MAIN_PLAY:
+                case MusicPlayerService.UPDATE_PLAY:
                     pauseplay.setImageResource(R.drawable.ic_play);
-                    break;
-                case MusicPlayerService.UPDATE_MAIN_PAUSE:
-                    pauseplay.setImageResource(R.drawable.ic_pause);
-                    break;
-                case MusicPlayerService.UPDATE_NOTIFICATION_PLAY:
                     notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_play24dp, "play", PendingIntent.getService(getApplicationContext(), 1, pauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);
                     break;
-                case MusicPlayerService.UPDATE_NOTIFICATION_PAUSE:
+                case MusicPlayerService.UPDATE_PAUSE:
+                    pauseplay.setImageResource(R.drawable.ic_pause);
                     notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_pause24dp, "pause", PendingIntent.getService(getApplicationContext(), 1, pauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);

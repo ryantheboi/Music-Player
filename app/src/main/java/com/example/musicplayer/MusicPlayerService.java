@@ -37,15 +37,13 @@ public class MusicPlayerService
     public static final String DARK_TEXT = "#030303";
     public static final String ALMOST_WHITE = "#F4F4F4";
 
-    public static final int UPDATE_MAIN_PLAY = 0;
-    public static final int UPDATE_NOTIFICATION_PLAY = 1;
-    public static final int UPDATE_MAIN_PAUSE = 2;
-    public static final int UPDATE_NOTIFICATION_PAUSE = 3;
-    public static final int UPDATE_SEEKBAR_DURATION = 4;
-    public static final int UPDATE_SEEKBAR_PROGRESS = 5;
-    public static final int UPDATE_SONG = 6;
-    public static final int UPDATE_NIGHT = 7;
-    public static final int UPDATE_LIGHT = 8;
+    public static final int UPDATE_PLAY = 0;
+    public static final int UPDATE_PAUSE = 1;
+    public static final int UPDATE_SEEKBAR_DURATION = 2;
+    public static final int UPDATE_SEEKBAR_PROGRESS = 3;
+    public static final int UPDATE_SONG = 4;
+    public static final int UPDATE_NIGHT = 5;
+    public static final int UPDATE_LIGHT = 6;
 
 
 
@@ -119,12 +117,10 @@ public class MusicPlayerService
                         // update the pauseplay button icon via messenger and toggle music
                         messenger = intent.getParcelableExtra("pauseplay");
                         if (mediaPlayer.isPlaying()) {
-                            sendUpdateMessage(messenger, UPDATE_MAIN_PLAY);
-                            sendUpdateMessage(messenger, UPDATE_NOTIFICATION_PLAY);
+                            sendUpdateMessage(messenger, UPDATE_PLAY);
                         }
                         else{
-                            sendUpdateMessage(messenger, UPDATE_MAIN_PAUSE);
-                            sendUpdateMessage(messenger, UPDATE_NOTIFICATION_PAUSE);
+                            sendUpdateMessage(messenger, UPDATE_PAUSE);
 
                         }
                         audioFocusToggleMedia();
@@ -177,8 +173,7 @@ public class MusicPlayerService
                         songMessage[0] = UPDATE_SONG;
                         songMessage[1] = song;
                         sendSongUpdateMessage(messenger, songMessage);
-                        sendUpdateMessage(messenger, UPDATE_MAIN_PAUSE);
-                        sendUpdateMessage(messenger, UPDATE_NOTIFICATION_PAUSE);
+                        sendUpdateMessage(messenger, UPDATE_PAUSE);
                         break;
                     case "musicListNightToggle":
                         musicListbundle = intent.getBundleExtra("musicListNightToggle");

@@ -37,7 +37,9 @@ public class MusicListActivity extends AppCompatActivity {
     private ArrayList<Song> songList;
     private SongListAdapter adapter;
     private Messenger mainActivityMessenger;
-    private Intent musicListIntent;
+    private Intent musicServiceIntent;
+    private Intent nightModeServiceIntent;
+
 
 
     @Override
@@ -56,7 +58,7 @@ public class MusicListActivity extends AppCompatActivity {
                     case "mainActivity":
                         // get the mainActivity's messenger and forward it to MusicPlayerService
                         mainActivityMessenger = intent.getParcelableExtra("mainActivity");
-                        musicListIntent = new Intent(this, MusicPlayerService.class);
+                        musicServiceIntent = new Intent(this, MusicPlayerService.class);
                         break;
                 }
             }
@@ -105,8 +107,8 @@ public class MusicListActivity extends AppCompatActivity {
                 Bundle bundle = new Bundle();
                 bundle.putParcelable("mainActivityMessenger", mainActivityMessenger);
                 bundle.putParcelable("song", song);
-                musicListIntent.putExtra("musicListActivity", bundle);
-                startService(musicListIntent);
+                musicServiceIntent.putExtra("musicListActivity", bundle);
+                startService(musicServiceIntent);
             }
         });
     }
@@ -114,6 +116,7 @@ public class MusicListActivity extends AppCompatActivity {
     public void initNightMode(){
         nightMode = false;
         nightModeButton = findViewById(R.id.btn_nightmode);
+        nightModeServiceIntent = new Intent(this, MusicPlayerService.class);
         nightModeButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
@@ -123,7 +126,6 @@ public class MusicListActivity extends AppCompatActivity {
     }
 
     public void toggleNightMode(){
-        Intent nightModeIntent;
         if (!nightMode){
             listView.setBackgroundColor(Color.parseColor(MusicPlayerService.DARK_BACKGROUND));
             relativeLayout.setBackgroundColor(Color.parseColor(MusicPlayerService.DARK_BACKGROUND));
@@ -132,12 +134,11 @@ public class MusicListActivity extends AppCompatActivity {
             nightMode = true;
 
             // notify music player service with the main activity messenger
-            nightModeIntent = new Intent(this, MusicPlayerService.class);
             Bundle bundle = new Bundle();
             bundle.putParcelable("mainActivityMessenger", mainActivityMessenger);
             bundle.putBoolean("nightmode", true);
-            nightModeIntent.putExtra("musicListNightToggle", bundle);
-            startService(nightModeIntent);
+            nightModeServiceIntent.putExtra("musicListNightToggle", bundle);
+            startService(nightModeServiceIntent);
         }
         else{
             listView.setBackgroundColor(Color.parseColor(MusicPlayerService.ALMOST_WHITE));
@@ -147,12 +148,11 @@ public class MusicListActivity extends AppCompatActivity {
             nightMode = false;
 
             // notify music player service with the main activity messenger
-            nightModeIntent = new Intent(this, MusicPlayerService.class);
             Bundle bundle = new Bundle();
             bundle.putParcelable("mainActivityMessenger", mainActivityMessenger);
             bundle.putBoolean("nightmode", false);
-            nightModeIntent.putExtra("musicListNightToggle", bundle);
-            startService(nightModeIntent);
+            nightModeServiceIntent.putExtra("musicListNightToggle", bundle);
+            startService(nightModeServiceIntent);
         }
     }
 

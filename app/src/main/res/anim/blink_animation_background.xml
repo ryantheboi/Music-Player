@@ -1,6 +1,32 @@
 <set xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Blink the background's alpha from 1 to 0 -->
     <alpha android:fromAlpha="1.0"
         android:toAlpha="0.0"
         android:interpolator="@android:anim/accelerate_interpolator"
         android:duration="600"/>
+
+    <!-- Zoom out by 20% -->
+    <scale
+        android:duration="200"
+        android:fromXScale="1"
+        android:fromYScale="1"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:toXScale="0.8"
+        android:toYScale="0.8" >
+    </scale>
+
+    <!-- Zoom back in by 20% after a 200 ms offset -->
+    <scale
+        android:duration="200"
+        android:startOffset="200"
+        android:fromXScale="1.0"
+        android:fromYScale="1.0"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:toXScale="1.2"
+        android:toYScale="1.2" >
+    </scale>
+
 </set>

@@ -1,11 +1,5 @@
 <set xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Blink alpha from 0 to 1 -->
-    <alpha android:fromAlpha="0.0"
-        android:toAlpha="1.0"
-        android:interpolator="@android:anim/accelerate_interpolator"
-        android:duration="600"/>
-
     <!-- Zoom out by 20% -->
     <scale
         android:duration="200"
@@ -28,4 +22,5 @@
         android:toXScale="1.2"
         android:toYScale="1.2" >
     </scale>
+
 </set>

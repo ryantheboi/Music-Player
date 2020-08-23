@@ -58,6 +58,8 @@ public class MainActivity
     private ImageView nextbtn_background;
     private ImageView prevbtn_background;
     private Animation pauseplayAnim;
+    private Animation nextbtnAnim;
+    private Animation prevbtnAnim;
     private Animation pauseplayBackgroundAnim;
     private Animation nextbtnBackgroundAnim;
     private Animation prevbtnBackgroundAnim;
@@ -217,6 +219,7 @@ public class MainActivity
                     case MotionEvent.ACTION_DOWN:
                         ignore = false;
                         viewBoundary = new Rect(v.getLeft(), v.getTop(), v.getRight(), v.getBottom());
+                        pauseplay_background.clearAnimation();
                         pauseplay_background.setVisibility(View.VISIBLE);
                         pauseplay_background.animate().alpha((float) 0.3).scaleX((float) 0.8).scaleY((float) 0.8);
                         pauseplay.animate().scaleX((float) 0.8).scaleY((float) 0.8);
@@ -246,6 +249,7 @@ public class MainActivity
         // init next button with touch and click, and appropriate animations
         next_btn = findViewById((R.id.btn_next));
         nextbtn_background = findViewById((R.id.round_next_background));
+        nextbtnAnim = AnimationUtils.loadAnimation(this, R.anim.zoom_inout_animation);
         nextbtnBackgroundAnim = AnimationUtils.loadAnimation(this, R.anim.blink_animation_background);
         nextbtn_background_gradient = (GradientDrawable) nextbtn_background.getBackground().getCurrent();
 
@@ -256,6 +260,7 @@ public class MainActivity
             @Override
             public void onClick(View view){
                 nextbtn_background.setVisibility(View.VISIBLE);
+                next_btn.startAnimation(nextbtnAnim);
                 nextbtn_background.startAnimation(nextbtnBackgroundAnim);
                 nextbtn_background.setVisibility(View.INVISIBLE);
                 startService(mainNextIntent);
@@ -271,6 +276,7 @@ public class MainActivity
                     case MotionEvent.ACTION_DOWN:
                         ignore = false;
                         viewBoundary = new Rect(v.getLeft(), v.getTop(), v.getRight(), v.getBottom());
+                        nextbtn_background.clearAnimation();
                         nextbtn_background.setVisibility(View.VISIBLE);
                         nextbtn_background.animate().alpha((float) 0.3).scaleX((float) 0.8).scaleY((float) 0.8);
                         next_btn.animate().scaleX((float) 0.8).scaleY((float) 0.8);
@@ -300,6 +306,7 @@ public class MainActivity
         // init prev button with touch and click, and appropriate animations
         prev_btn = findViewById((R.id.btn_prev));
         prevbtn_background = findViewById((R.id.round_prev_background));
+        prevbtnAnim = AnimationUtils.loadAnimation(this, R.anim.zoom_inout_animation);
         prevbtnBackgroundAnim = AnimationUtils.loadAnimation(this, R.anim.blink_animation_background);
         prevbtn_background_gradient = (GradientDrawable) prevbtn_background.getBackground().getCurrent();
 
@@ -310,6 +317,7 @@ public class MainActivity
             @Override
             public void onClick(View view){
                 prevbtn_background.setVisibility(View.VISIBLE);
+                prev_btn.startAnimation(prevbtnAnim);
                 prevbtn_background.startAnimation(prevbtnBackgroundAnim);
                 prevbtn_background.setVisibility(View.INVISIBLE);
                 startService(mainPrevIntent);
@@ -325,6 +333,7 @@ public class MainActivity
                     case MotionEvent.ACTION_DOWN:
                         ignore = false;
                         viewBoundary = new Rect(v.getLeft(), v.getTop(), v.getRight(), v.getBottom());
+                        prevbtn_background.clearAnimation();
                         prevbtn_background.setVisibility(View.VISIBLE);
                         prevbtn_background.animate().alpha((float) 0.3).scaleX((float) 0.8).scaleY((float) 0.8);
                         prev_btn.animate().scaleX((float) 0.8).scaleY((float) 0.8);

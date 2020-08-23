@@ -55,8 +55,12 @@ public class MainActivity
     private boolean largeAlbumArt;
     private ImageView albumArt;
     private ImageView pauseplay_background;
+    private ImageView nextbtn_background;
+    private ImageView prevbtn_background;
     private Animation pauseplayAnim;
     private Animation pauseplayBackgroundAnim;
+    private Animation nextbtnBackgroundAnim;
+    private Animation prevbtnBackgroundAnim;
     private Button albumArt_btn;
     private ImageButton musicList;
     private ImageButton pauseplay;
@@ -67,6 +71,8 @@ public class MainActivity
     private GradientDrawable gradient1;
     private GradientDrawable gradient2;
     private GradientDrawable pauseplay_background_gradient;
+    private GradientDrawable nextbtn_background_gradient;
+    private GradientDrawable prevbtn_background_gradient;
     private SeekBar seekBar;
     private TextView musicPosition;
     private TextView musicDuration;
@@ -185,12 +191,13 @@ public class MainActivity
         // init pauseplay button with touch and click, and appropriate animations
         pauseplay = findViewById((R.id.btn_play));
         pauseplay_background = findViewById((R.id.round_play_background));
-        mainPausePlayIntent = new Intent(this, MusicPlayerService.class);
-        mainPausePlayIntent.putExtra("pauseplay", mainMessenger);
-
         pauseplayAnim = AnimationUtils.loadAnimation(this, R.anim.blink_animation);
         pauseplayBackgroundAnim = AnimationUtils.loadAnimation(this, R.anim.blink_animation_background);
         pauseplay_background_gradient = (GradientDrawable) pauseplay_background.getBackground().getCurrent();
+
+        mainPausePlayIntent = new Intent(this, MusicPlayerService.class);
+        mainPausePlayIntent.putExtra("pauseplay", mainMessenger);
+
         pauseplay.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
@@ -236,23 +243,111 @@ public class MainActivity
             }
         });
 
-        // init prev and next buttons
-        prev_btn = findViewById((R.id.btn_prev));
-        mainPrevIntent = new Intent(this, MusicPlayerService.class);
-        mainPrevIntent.putExtra("prev", mainMessenger);
-        prev_btn.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View view){
-                startService(mainPrevIntent);
-            }
-        });
+        // init next button with touch and click, and appropriate animations
         next_btn = findViewById((R.id.btn_next));
+        nextbtn_background = findViewById((R.id.round_next_background));
+        nextbtnBackgroundAnim = AnimationUtils.loadAnimation(this, R.anim.blink_animation_background);
+        nextbtn_background_gradient = (GradientDrawable) nextbtn_background.getBackground().getCurrent();
+
         mainNextIntent = new Intent(this, MusicPlayerService.class);
         mainNextIntent.putExtra("next", mainMessenger);
+
         next_btn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view){
+                nextbtn_background.setVisibility(View.VISIBLE);
+                nextbtn_background.startAnimation(nextbtnBackgroundAnim);
+                nextbtn_background.setVisibility(View.INVISIBLE);
                 startService(mainNextIntent);
+            }
+        });
+
+        next_btn.setOnTouchListener(new View.OnTouchListener() {
+            private Rect viewBoundary;
+            private boolean ignore; // true to ignore all touches, false otherwise
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        ignore = false;
+                        viewBoundary = new Rect(v.getLeft(), v.getTop(), v.getRight(), v.getBottom());
+                        nextbtn_background.setVisibility(View.VISIBLE);
+                        nextbtn_background.animate().alpha((float) 0.3).scaleX((float) 0.8).scaleY((float) 0.8);
+                        next_btn.animate().scaleX((float) 0.8).scaleY((float) 0.8);
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        nextbtn_background.animate().scaleX(1).scaleY(1);
+                        next_btn.animate().scaleX(1).scaleY(1);
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        // if movement is greater than 60 pixels from the original press point
+                        if (!ignore) {
+                            if (!viewBoundary.contains(v.getLeft() + (int) event.getX(), v.getTop() + (int) event.getY())) {
+                                nextbtn_background.setVisibility(View.VISIBLE);
+                                nextbtn_background.startAnimation(nextbtnBackgroundAnim);
+                                nextbtn_background.setVisibility(View.INVISIBLE);
+                                nextbtn_background.animate().scaleX(1).scaleY(1);
+                                next_btn.animate().scaleX(1).scaleY(1);
+                                ignore = true;
+                            }
+                        }
+                        break;
+                }
+                return ignore;
+            }
+        });
+
+        // init prev button with touch and click, and appropriate animations
+        prev_btn = findViewById((R.id.btn_prev));
+        prevbtn_background = findViewById((R.id.round_prev_background));
+        prevbtnBackgroundAnim = AnimationUtils.loadAnimation(this, R.anim.blink_animation_background);
+        prevbtn_background_gradient = (GradientDrawable) prevbtn_background.getBackground().getCurrent();
+
+        mainPrevIntent = new Intent(this, MusicPlayerService.class);
+        mainPrevIntent.putExtra("prev", mainMessenger);
+
+        prev_btn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                prevbtn_background.setVisibility(View.VISIBLE);
+                prevbtn_background.startAnimation(prevbtnBackgroundAnim);
+                prevbtn_background.setVisibility(View.INVISIBLE);
+                startService(mainPrevIntent);
+            }
+        });
+
+        prev_btn.setOnTouchListener(new View.OnTouchListener() {
+            private Rect viewBoundary;
+            private boolean ignore; // true to ignore all touches, false otherwise
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        ignore = false;
+                        viewBoundary = new Rect(v.getLeft(), v.getTop(), v.getRight(), v.getBottom());
+                        prevbtn_background.setVisibility(View.VISIBLE);
+                        prevbtn_background.animate().alpha((float) 0.3).scaleX((float) 0.8).scaleY((float) 0.8);
+                        prev_btn.animate().scaleX((float) 0.8).scaleY((float) 0.8);
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        prevbtn_background.animate().scaleX(1).scaleY(1);
+                        prev_btn.animate().scaleX(1).scaleY(1);
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        // if movement is greater than 60 pixels from the original press point
+                        if (!ignore) {
+                            if (!viewBoundary.contains(v.getLeft() + (int) event.getX(), v.getTop() + (int) event.getY())) {
+                                prevbtn_background.setVisibility(View.VISIBLE);
+                                prevbtn_background.startAnimation(prevbtnBackgroundAnim);
+                                prevbtn_background.setVisibility(View.INVISIBLE);
+                                prevbtn_background.animate().scaleX(1).scaleY(1);
+                                prev_btn.animate().scaleX(1).scaleY(1);
+                                ignore = true;
+                            }
+                        }
+                        break;
+                }
+                return ignore;
             }
         });
     }
@@ -362,9 +457,13 @@ public class MainActivity
         // change background gradient of buttons to contrast with light theme
         if (darkVibrantSwatch != null){
             pauseplay_background_gradient.setColor(darkVibrantSwatch.getRgb());
+            nextbtn_background_gradient.setColor(darkVibrantSwatch.getRgb());
+            prevbtn_background_gradient.setColor(darkVibrantSwatch.getRgb());
         }
         else{
             pauseplay_background_gradient.setColor(Color.parseColor(MusicPlayerService.DARK_BACKGROUND));
+            nextbtn_background_gradient.setColor(Color.parseColor(MusicPlayerService.DARK_BACKGROUND));
+            prevbtn_background_gradient.setColor(Color.parseColor(MusicPlayerService.DARK_BACKGROUND));
         }
     }
 
@@ -398,9 +497,13 @@ public class MainActivity
         // change background gradient of buttons to contrast with dark theme
         if (vibrantSwatch != null){
             pauseplay_background_gradient.setColor(vibrantSwatch.getRgb());
+            nextbtn_background_gradient.setColor(vibrantSwatch.getRgb());
+            prevbtn_background_gradient.setColor(vibrantSwatch.getRgb());
         }
         else{
             pauseplay_background_gradient.setColor(Color.WHITE);
+            nextbtn_background_gradient.setColor(Color.WHITE);
+            prevbtn_background_gradient.setColor(Color.WHITE);
         }
     }
 

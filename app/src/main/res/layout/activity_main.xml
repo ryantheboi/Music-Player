@@ -92,6 +92,26 @@
         android:layout_marginTop="555dp"
         android:background="@drawable/round_press"/>
 
+    <ImageView
+        android:id="@+id/round_next_background"
+        android:alpha="0.3"
+        android:visibility="invisible"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="555dp"
+        android:layout_marginLeft="275dp"
+        android:background="@drawable/round_press"/>
+
+    <ImageView
+        android:id="@+id/round_prev_background"
+        android:alpha="0.3"
+        android:visibility="invisible"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="555dp"
+        android:layout_marginLeft="35dp"
+        android:background="@drawable/round_press"/>
+
     <ImageButton
         android:id="@+id/btn_play"
         android:layout_width="70dp"

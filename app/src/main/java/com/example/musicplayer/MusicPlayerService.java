@@ -34,8 +34,11 @@ public class MusicPlayerService
 
     public static final String DARK_BACKGROUND = "#232123";
     public static final String GREY_BACKGROUND = "#8a8a8a";
+    public static final String GREY_TEXT = "#737373";
+    public static final String BLUE_TEXT = "#008BFF";
     public static final String DARK_TEXT = "#030303";
     public static final String ALMOST_WHITE = "#F4F4F4";
+    public static final Uri artURI = Uri.parse("content://media/external/audio/albumart");
 
     public static final int UPDATE_PLAY = 0;
     public static final int UPDATE_PAUSE = 1;

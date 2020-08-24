@@ -7,14 +7,13 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
+import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
@@ -22,12 +21,14 @@ public class SongListAdapter extends ArrayAdapter {
 
     private Context mContext;
     private int mResource;
-    private ArrayList<ViewItem> items;
+    private SparseArray<ViewItem> items;
+    private ViewItem selectedItem;
 
     /**
-     * Holds variables in a View
+     * Holds variables about an item (song) in a View
      */
     static class ViewItem{
+        int position;
         TextView title;
         TextView artist;
         TextView album;
@@ -38,7 +39,7 @@ public class SongListAdapter extends ArrayAdapter {
         super(context, resource, objects);
         mContext = context;
         mResource = resource;
-        items = new ArrayList<>();
+        items = new SparseArray<>();
     }
 
     @Override
@@ -58,6 +59,7 @@ public class SongListAdapter extends ArrayAdapter {
             convertView = inflater.inflate(mResource, parent, false);
 
             item = new ViewItem();
+            item.position = position;
             item.title = convertView.findViewById(R.id.textView1);
             item.artist = convertView.findViewById(R.id.textView2);
             item.album = convertView.findViewById(R.id.textView3);
@@ -87,29 +89,66 @@ public class SongListAdapter extends ArrayAdapter {
             item.albumArt.setImageResource(defaultImage);
         }
 
-        items.add(item);
+        // put item in sparse array with key: position, value: item
+        items.put(position, item);
         return convertView;
     }
 
     public Bitmap getAlbumArt(int albumId){
         Bitmap albumArt = null;
         // get album art for song
-        Uri artURI = Uri.parse("content://media/external/audio/albumart");
-        Uri albumArtURI = ContentUris.withAppendedId(artURI, albumId);
+        Uri albumArtURI = ContentUris.withAppendedId(MusicPlayerService.artURI, albumId);
         ContentResolver res = mContext.getContentResolver();
         try {
             InputStream in = res.openInputStream(albumArtURI);
             albumArt = BitmapFactory.decodeStream(in);
-        }catch(FileNotFoundException e){
+            if (in != null) {
+                in.close();
+            }
+        }catch(Exception e){
             e.printStackTrace();
         }
 
         return albumArt;
     }
 
-    public void setItemTitleTextColor(String code){
-        for (ViewItem item : items){
-            item.title.setTextColor(Color.parseColor(code));
+    /**
+     * sets the color of the title of every item, excluding the selected item, in the list view
+     * @param code the html color code to set the title
+     */
+    public void setItemsTitleTextColor(String code){
+        int size = items.size();
+        for (int i = 0; i < size; i++){
+            ViewItem item = items.valueAt(i);
+            if (item.position != selectedItem.position) {
+                item.title.setTextColor(Color.parseColor(code));
+            }
         }
     }
+
+    /**
+     * highlights an item selected from the list view, given a position and html color code
+     * @param position the position of the selected item from the list view
+     */
+    public void highlightItem(int position){
+        // un-highlight the previously selected item
+        if (selectedItem != null){
+            if (MusicListActivity.nightMode){
+                selectedItem.title.setTextColor(Color.parseColor(MusicPlayerService.ALMOST_WHITE));
+            }
+            else {
+                selectedItem.title.setTextColor(Color.parseColor(MusicPlayerService.DARK_TEXT));
+            }
+            selectedItem.artist.setTextColor(Color.parseColor(MusicPlayerService.GREY_TEXT));
+            selectedItem.album.setTextColor(Color.parseColor(MusicPlayerService.GREY_TEXT));
+        }
+
+        // highlight new selected item with blue
+        selectedItem = items.get(position);
+        selectedItem.title.setTextColor(Color.parseColor(MusicPlayerService.BLUE_TEXT));
+        selectedItem.artist.setTextColor(Color.parseColor(MusicPlayerService.BLUE_TEXT));
+        selectedItem.album.setTextColor(Color.parseColor(MusicPlayerService.BLUE_TEXT));
+
+    }
+
 }

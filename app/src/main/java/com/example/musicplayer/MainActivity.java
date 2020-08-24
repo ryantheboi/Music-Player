@@ -628,13 +628,15 @@ public class MainActivity
                     // grab song album art and duration
                     int albumID = song.getAlbumID();
                     Bitmap albumImage;
-                    Uri artURI = Uri.parse("content://media/external/audio/albumart");
-                    Uri albumArtURI = ContentUris.withAppendedId(artURI, albumID);
+                    Uri albumArtURI = ContentUris.withAppendedId(MusicPlayerService.artURI, albumID);
                     ContentResolver res = getContentResolver();
                     try {
                         InputStream in = res.openInputStream(albumArtURI);
                         albumImage = BitmapFactory.decodeStream(in);
-                    }catch(FileNotFoundException e){
+                        if (in != null){
+                            in.close();
+                        }
+                    }catch(Exception e){
                         albumImage = BitmapFactory.decodeResource(getResources(), R.drawable.default_image);
                         e.printStackTrace();
                     }

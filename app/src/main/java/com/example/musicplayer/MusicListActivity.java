@@ -31,7 +31,7 @@ public class MusicListActivity extends AppCompatActivity {
     private static final int MY_PERMISSION_REQUEST = 1;
     private ImageButton mainActivity;
     private ImageButton nightModeButton;
-    public static boolean nightMode;
+    public static boolean nightMode = false;
     private ListView listView;
     private RelativeLayout relativeLayout;
     private ArrayList<Song> songList;
@@ -85,12 +85,12 @@ public class MusicListActivity extends AppCompatActivity {
                         new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
             }
         } else {
-            createMusicList();
+            initMusicList();
             initNightMode();
         }
     }
 
-    public void createMusicList() {
+    public void initMusicList() {
         listView = findViewById(R.id.listView);
         songList = new ArrayList<>();
         getMusic();
@@ -102,6 +102,9 @@ public class MusicListActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
                 // obtain the selected song object
                 Song song = (Song) listView.getItemAtPosition(position);
+
+                // visually highlight the song in the list view
+                adapter.highlightItem(position);
 
                 // notify music player service with the main activity messenger and the selected song
                 Bundle bundle = new Bundle();
@@ -129,7 +132,7 @@ public class MusicListActivity extends AppCompatActivity {
         if (!nightMode){
             listView.setBackgroundColor(Color.parseColor(MusicPlayerService.DARK_BACKGROUND));
             relativeLayout.setBackgroundColor(Color.parseColor(MusicPlayerService.DARK_BACKGROUND));
-            adapter.setItemTitleTextColor(MusicPlayerService.ALMOST_WHITE);
+            adapter.setItemsTitleTextColor(MusicPlayerService.ALMOST_WHITE);
             nightModeButton.setImageResource(R.drawable.night);
             nightMode = true;
 
@@ -143,7 +146,7 @@ public class MusicListActivity extends AppCompatActivity {
         else{
             listView.setBackgroundColor(Color.parseColor(MusicPlayerService.ALMOST_WHITE));
             relativeLayout.setBackgroundColor(Color.parseColor(MusicPlayerService.ALMOST_WHITE));
-            adapter.setItemTitleTextColor(MusicPlayerService.DARK_TEXT);
+            adapter.setItemsTitleTextColor(MusicPlayerService.DARK_TEXT);
             nightModeButton.setImageResource(R.drawable.light);
             nightMode = false;
 
@@ -199,7 +202,8 @@ public class MusicListActivity extends AppCompatActivity {
                     if (ContextCompat.checkSelfPermission(MusicListActivity.this,
                             Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
                         Toast.makeText(this, "Permission granted!", Toast.LENGTH_SHORT).show();
-                        createMusicList();
+                        initMusicList();
+                        initNightMode();
                     }
                 }
                 else{

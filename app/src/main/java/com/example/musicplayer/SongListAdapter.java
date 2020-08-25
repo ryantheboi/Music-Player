@@ -118,9 +118,17 @@ public class SongListAdapter extends ArrayAdapter {
      */
     public void setItemsTitleTextColor(String code){
         int size = items.size();
-        for (int i = 0; i < size; i++){
-            ViewItem item = items.valueAt(i);
-            if (item.position != selectedItem.position) {
+        if (selectedItem != null) {
+            for (int i = 0; i < size; i++) {
+                ViewItem item = items.valueAt(i);
+                if (item.position != selectedItem.position) {
+                    item.title.setTextColor(Color.parseColor(code));
+                }
+            }
+        }
+        else {
+            for (int i = 0; i < size; i++) {
+                ViewItem item = items.valueAt(i);
                 item.title.setTextColor(Color.parseColor(code));
             }
         }

@@ -2,6 +2,7 @@ package com.example.musicplayer;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Spannable;
@@ -10,6 +11,7 @@ import android.text.style.RelativeSizeSpan;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 public class MusicDetailsActivity extends Activity {
@@ -51,7 +53,20 @@ public class MusicDetailsActivity extends Activity {
 
         getWindow().setAttributes(params);
 
+        TextView heading = findViewById(R.id.music_details_heading);
         TextView msgWindow = findViewById(R.id.music_details);
+        ImageView details_background = findViewById(R.id.music_details_background);
+        if (MusicListActivity.nightMode){
+            heading.setTextColor(Color.WHITE);
+            msgWindow.setTextColor(Color.parseColor(MusicPlayerService.ALMOST_WHITE));
+            details_background.setBackgroundColor(Color.parseColor(MusicPlayerService.DARK_BACKGROUND));
+        }
+        else{
+            heading.setTextColor(Color.BLACK);
+            msgWindow.setTextColor(Color.parseColor(MusicPlayerService.DARK_TEXT));
+            details_background.setBackgroundColor(Color.parseColor(MusicPlayerService.ALMOST_WHITE));
+
+        }
         for (int i = 0; i < 6; i ++){
             int detail_length = 0;
             switch(i){

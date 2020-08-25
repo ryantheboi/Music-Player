@@ -698,9 +698,11 @@ public class MainActivity
                     break;
                 case MusicPlayerService.UPDATE_NIGHT:
                     swapDarkVibrantGradient();
+                    info_btn.setImageResource(R.drawable.info_light);
                     break;
                 case MusicPlayerService.UPDATE_LIGHT:
                     swapVibrantGradient();
+                    info_btn.setImageResource(R.drawable.info_night);
                     break;
             }
         }

@@ -172,6 +172,20 @@ public class MusicListActivity extends AppCompatActivity {
             int songAlbumID = songCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID);
             int songDuration = songCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
 
+            int bucketID = songCursor.getColumnIndex(MediaStore.Audio.Media.BUCKET_ID);
+            int bucketDisplayName = songCursor.getColumnIndex(MediaStore.Audio.Media.BUCKET_DISPLAY_NAME);
+            int dataPath = songCursor.getColumnIndex(MediaStore.Audio.Media.DATA);
+            int dateAdded = songCursor.getColumnIndex(MediaStore.Audio.Media.DATE_ADDED);
+            int dateModified = songCursor.getColumnIndex(MediaStore.Audio.Media.DATE_MODIFIED);
+            int displayName = songCursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME);
+            int documentID = songCursor.getColumnIndex(MediaStore.Audio.Media.DOCUMENT_ID);
+            int instanceID = songCursor.getColumnIndex(MediaStore.Audio.Media.INSTANCE_ID);
+            int mimeType = songCursor.getColumnIndex(MediaStore.Audio.Media.MIME_TYPE);
+            int originalDocumentID = songCursor.getColumnIndex(MediaStore.Audio.Media.ORIGINAL_DOCUMENT_ID);
+            int relativePath = songCursor.getColumnIndex(MediaStore.Audio.Media.RELATIVE_PATH);
+            int size = songCursor.getColumnIndex(MediaStore.Audio.Media.SIZE);
+
+
             do {
                 int currentID = songCursor.getInt(songID);
                 String currentTitle = songCursor.getString(songTitle);
@@ -180,12 +194,37 @@ public class MusicListActivity extends AppCompatActivity {
                 int currentAlbumID = songCursor.getInt(songAlbumID);
                 int currentSongDuration = songCursor.getInt(songDuration);
 
+                String currentBucketID = songCursor.getString(bucketID);
+                String currentBucketDisplayName = songCursor.getString(bucketDisplayName);
+                String currentDataPath = songCursor.getString(dataPath);
+                String currentDateAdded = songCursor.getString(dateAdded);
+                String currentDateModified = songCursor.getString(dateModified);
+                String currentDisplayName = songCursor.getString(displayName);
+                String currentDocumentID = songCursor.getString(documentID);
+                String currentInstanceID = songCursor.getString(instanceID);
+                String currentMimeType = songCursor.getString(mimeType);
+                String currentOriginalDocumentID = songCursor.getString(originalDocumentID);
+                String currentRelativePath = songCursor.getString(relativePath);
+                String currentSize = songCursor.getString(size);
+
                 Song song = new Song(currentID,
                                     currentTitle,
                                     currentArtist,
                                     currentAlbum,
                                     currentAlbumID,
-                                    currentSongDuration
+                                    currentSongDuration,
+                                    currentBucketID,
+                                    currentBucketDisplayName,
+                                    currentDataPath,
+                                    currentDateAdded,
+                                    currentDateModified,
+                                    currentDisplayName,
+                                    currentDocumentID,
+                                    currentInstanceID,
+                                    currentMimeType,
+                                    currentOriginalDocumentID,
+                                    currentRelativePath,
+                                    currentSize
                                     );
                 songList.add(song);
             } while (songCursor.moveToNext());

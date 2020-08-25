@@ -10,15 +10,46 @@ public class Song implements Parcelable {
     private String album;
     private int albumID;
     private int duration;
-    public static Song EMPTY_SONG = new Song(0, "0", "0", "0", 0, 0);
 
-    public Song(int id, String title, String artist, String album, int albumID, int duration) {
+    private String bucketID;
+    private String bucketDisplayName;
+    private String dateAdded;
+    private String dateModified;
+    private String dataPath;
+    private String displayName;
+    private String documentID;
+    private String instanceID;
+    private String mimeType;
+    private String originalDocumentID;
+    private String relativePath;
+    private String size;
+
+    public static Song EMPTY_SONG = new Song(0, "0", "0", "0", 0, 0, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");
+
+    public Song(int id, String title, String artist, String album, int albumID, int duration,
+                String bucketID, String bucketDisplayName, String dataPath, String dateAdded,
+                String dateModified, String displayName, String documentID,
+                String instanceID, String mimeType, String originalDocumentID,
+                String relativePath, String size) {
         this.id = id;
         this.title = title;
         this.artist = artist;
         this.album = album;
         this.albumID = albumID;
         this.duration = duration;
+
+        this.bucketID = bucketID;
+        this.bucketDisplayName = bucketDisplayName;
+        this.dataPath = dataPath;
+        this.dateAdded = dateAdded;
+        this.dateModified = dateModified;
+        this.displayName = displayName;
+        this.originalDocumentID = originalDocumentID;
+        this.documentID = documentID;
+        this.instanceID = instanceID;
+        this.mimeType = mimeType;
+        this.relativePath = relativePath;
+        this.size = size;
     }
 
     public int getID() {
@@ -45,6 +76,54 @@ public class Song implements Parcelable {
         return duration;
     }
 
+    public String getBucketID() {
+        return bucketID;
+    }
+
+    public String getBucketDisplayName() {
+        return bucketDisplayName;
+    }
+
+    public String getDateAdded() {
+        return dateAdded;
+    }
+
+    public String getDataPath() {
+        return dataPath;
+    }
+
+    public String getDateModified() {
+        return dateModified;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public String getDocumentID() {
+        return documentID;
+    }
+
+    public String getInstanceID() {
+        return instanceID;
+    }
+
+    public String getMimeType() {
+        return mimeType;
+    }
+
+    public String getOriginalDocumentID() {
+        return originalDocumentID;
+    }
+
+    public String getRelativePath() {
+        return relativePath;
+    }
+
+    public String getSize() {
+        return size;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -63,6 +142,18 @@ public class Song implements Parcelable {
         dest.writeString(this.album);
         dest.writeInt(this.albumID);
         dest.writeInt(this.duration);
+        dest.writeString(this.bucketID);
+        dest.writeString(this.bucketDisplayName);
+        dest.writeString(this.dataPath);
+        dest.writeString(this.dateAdded);
+        dest.writeString(this.dateModified);
+        dest.writeString(this.displayName);
+        dest.writeString(this.documentID);
+        dest.writeString(this.instanceID);
+        dest.writeString(this.mimeType);
+        dest.writeString(this.originalDocumentID);
+        dest.writeString(this.relativePath);
+        dest.writeString(this.size);
     }
 
     public Song(Parcel in) {
@@ -72,6 +163,18 @@ public class Song implements Parcelable {
         this.album = in.readString();
         this.albumID = in.readInt();
         this.duration = in.readInt();
+        this.bucketID = in.readString();
+        this.bucketDisplayName = in.readString();
+        this.dataPath = in.readString();
+        this.dateAdded = in.readString();
+        this.dateModified = in.readString();
+        this.displayName = in.readString();
+        this.documentID = in.readString();
+        this.instanceID = in.readString();
+        this.mimeType = in.readString();
+        this.originalDocumentID = in.readString();
+        this.relativePath = in.readString();
+        this.size = in.readString();
     }
 
     public static Creator<Song> CREATOR = new Creator<Song>() {
@@ -83,4 +186,6 @@ public class Song implements Parcelable {
             return new Song[size];
         }
     };
+
+
 }

@@ -151,5 +151,13 @@
         android:src="@drawable/ic_chevron_left"
         android:background="#00000000"/>
 
+    <ImageButton
+        android:id="@+id/btn_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/info_light"
+        android:background="#00000000"
+        android:layout_marginLeft="300dp"/>
+
 </RelativeLayout>
 

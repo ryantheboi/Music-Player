@@ -46,7 +46,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 public class MainActivity
@@ -65,6 +64,7 @@ public class MainActivity
     private Animation prevbtnBackgroundAnim;
     private Button albumArt_btn;
     private ImageButton musicList;
+    private ImageButton info_btn;
     private ImageButton pauseplay;
     private ImageButton next_btn;
     private ImageButton prev_btn;
@@ -87,12 +87,14 @@ public class MainActivity
     private Intent mainPausePlayIntent;
     private Intent mainPrevIntent;
     private Intent mainNextIntent;
-    private Intent pauseplayIntent;
     private Intent musicListIntent;
+    private Intent infoIntent;
+    private Intent pauseplayIntent;
     private Intent prevIntent;
     private Intent nextIntent;
     private Intent seekBarProgressIntent;
     private Intent seekBarSeekIntent;
+    private Song current_song = Song.EMPTY_SONG;
     private Palette.Swatch vibrantSwatch;
     private Palette.Swatch darkVibrantSwatch;
     private Palette.Swatch dominantSwatch;
@@ -112,6 +114,8 @@ public class MainActivity
         initSeekbar();
 
         initMusicList();
+
+        initInfoButton();
 
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
         mediaSession = new MediaSessionCompat(this, "media");
@@ -403,6 +407,23 @@ public class MainActivity
         });
     }
 
+    /**
+     * Initializes the button for displaying details about a song in a scrollview
+     * Upon clicking the button, the current song will be sent in the intent
+     */
+    public void initInfoButton(){
+        info_btn = findViewById(R.id.btn_info);
+        infoIntent = new Intent(this, MusicDetailsActivity.class);
+        info_btn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+                infoIntent.putExtra("currentSong", current_song);
+                startActivity(infoIntent);
+            }
+        });
+    }
+
+
     @TargetApi(19)
     public void showNotification(){
         Bitmap largeImage = BitmapFactory.decodeResource(getResources(), R.drawable.kaminomanimani);
@@ -623,10 +644,10 @@ public class MainActivity
                     break;
                 case MusicPlayerService.UPDATE_SONG:
                     // update main activitiy with the selected song from music list
-                    Song song = (Song) bundle.get("song");
+                    current_song = (Song) bundle.get("song");
 
                     // grab song album art and duration
-                    int albumID = song.getAlbumID();
+                    int albumID = current_song.getAlbumID();
                     Bitmap albumImage;
                     Uri albumArtURI = ContentUris.withAppendedId(MusicPlayerService.artURI, albumID);
                     ContentResolver res = getContentResolver();
@@ -640,21 +661,21 @@ public class MainActivity
                         albumImage = BitmapFactory.decodeResource(getResources(), R.drawable.default_image);
                         e.printStackTrace();
                     }
-                    int songDuration = song.getDuration();
+                    int songDuration = current_song.getDuration();
 
 
                     // update notification details
                     notificationBuilder
-                            .setContentTitle(song.getTitle())
+                            .setContentTitle(current_song.getTitle())
                             .setPriority(NotificationManager.IMPORTANCE_LOW)
-                            .setContentText(song.getArtist())
+                            .setContentText(current_song.getArtist())
                             .setLargeIcon(albumImage);
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);
 
                     // update main activity details
-                    songName.setText(song.getTitle());
-                    artistName.setText(song.getArtist());
+                    songName.setText(current_song.getTitle());
+                    artistName.setText(current_song.getArtist());
                     albumArt.setImageBitmap(albumImage);
                     seekBar.setMax(songDuration);
                     musicDuration.setText(convertTime(songDuration));

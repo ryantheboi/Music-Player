@@ -10,6 +10,7 @@ public class Song implements Parcelable {
     private String album;
     private int albumID;
     private int duration;
+    public static Song EMPTY_SONG = new Song(0, "0", "0", "0", 0, 0);
 
     public Song(int id, String title, String artist, String album, int albumID, int duration) {
         this.id = id;

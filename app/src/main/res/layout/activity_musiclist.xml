@@ -7,7 +7,7 @@
     android:paddingLeft="0dp"
     android:paddingRight="0dp"
     android:paddingTop="0dp"
-    android:background="#F4F4F4">
+    android:background="@color/lightPrimaryWhite">
 
     <ListView
         android:id="@+id/listView"
@@ -15,7 +15,7 @@
         android:layout_height="550dp"
         android:dividerHeight="20dp"
         android:divider="@drawable/list_divider"
-        android:background="#F4F4F4"/>
+        android:background="@color/lightPrimaryWhite"/>
 
     <ImageButton
         android:id="@+id/btn_mainactivity"

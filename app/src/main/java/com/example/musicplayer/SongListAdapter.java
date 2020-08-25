@@ -114,22 +114,22 @@ public class SongListAdapter extends ArrayAdapter {
 
     /**
      * sets the color of the title of every item, excluding the selected item, in the list view
-     * @param code the html color code to set the title
+     * @param code the color resource code to set the title
      */
-    public void setItemsTitleTextColor(String code){
+    public void setItemsTitleTextColor(int code){
         int size = items.size();
         if (selectedItem != null) {
             for (int i = 0; i < size; i++) {
                 ViewItem item = items.valueAt(i);
                 if (item.position != selectedItem.position) {
-                    item.title.setTextColor(Color.parseColor(code));
+                    item.title.setTextColor(code);
                 }
             }
         }
         else {
             for (int i = 0; i < size; i++) {
                 ViewItem item = items.valueAt(i);
-                item.title.setTextColor(Color.parseColor(code));
+                item.title.setTextColor(code);
             }
         }
     }
@@ -142,20 +142,20 @@ public class SongListAdapter extends ArrayAdapter {
         // un-highlight the previously selected item
         if (selectedItem != null){
             if (MusicListActivity.nightMode){
-                selectedItem.title.setTextColor(Color.parseColor(MusicPlayerService.ALMOST_WHITE));
+                selectedItem.title.setTextColor(mContext.getResources().getColor(R.color.lightPrimaryWhite));
             }
             else {
-                selectedItem.title.setTextColor(Color.parseColor(MusicPlayerService.DARK_TEXT));
+                selectedItem.title.setTextColor(mContext.getResources().getColor(R.color.colorTextDark));
             }
-            selectedItem.artist.setTextColor(Color.parseColor(MusicPlayerService.GREY_TEXT));
-            selectedItem.album.setTextColor(Color.parseColor(MusicPlayerService.GREY_TEXT));
+            selectedItem.artist.setTextColor(mContext.getResources().getColor(R.color.colorTextGrey));
+            selectedItem.album.setTextColor(mContext.getResources().getColor(R.color.colorTextGrey));
         }
 
         // highlight new selected item with blue
         selectedItem = items.get(position);
-        selectedItem.title.setTextColor(Color.parseColor(MusicPlayerService.BLUE_TEXT));
-        selectedItem.artist.setTextColor(Color.parseColor(MusicPlayerService.BLUE_TEXT));
-        selectedItem.album.setTextColor(Color.parseColor(MusicPlayerService.BLUE_TEXT));
+        selectedItem.title.setTextColor(mContext.getResources().getColor(R.color.colorTextBlue));
+        selectedItem.artist.setTextColor(mContext.getResources().getColor(R.color.colorTextBlue));
+        selectedItem.album.setTextColor(mContext.getResources().getColor(R.color.colorTextBlue));
 
     }
 

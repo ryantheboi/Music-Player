@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">Music Player</string>
+    <string name="TextView1">TextView1</string>
+    <string name="TextView2">TextView2</string>
+    <string name="TextView3">TextView3</string>
+    <string name="InitialTime">0:00</string>
+    <string name="Song">Song</string>
+    <string name="Artist">Artist</string>
+    <string name="Details">Details</string>
+    <string name="Stuff">stuff</string>
+
+
 </resources>

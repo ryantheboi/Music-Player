@@ -464,7 +464,7 @@ public class MainActivity
      */
     @TargetApi(16)
     public void swapVibrantGradient(){
-        songName.setTextColor(Color.parseColor(MusicPlayerService.DARK_TEXT));
+        songName.setTextColor(getResources().getColor(R.color.colorTextDark));
         if (vibrantSwatch != null){
             gradient1.setColors(new int[]{Color.WHITE, vibrantSwatch.getRgb()});
             gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
@@ -491,9 +491,9 @@ public class MainActivity
             prevbtn_background_gradient.setColor(darkVibrantSwatch.getRgb());
         }
         else{
-            pauseplay_background_gradient.setColor(Color.parseColor(MusicPlayerService.DARK_BACKGROUND));
-            nextbtn_background_gradient.setColor(Color.parseColor(MusicPlayerService.DARK_BACKGROUND));
-            prevbtn_background_gradient.setColor(Color.parseColor(MusicPlayerService.DARK_BACKGROUND));
+            pauseplay_background_gradient.setColor(Color.BLACK);
+            nextbtn_background_gradient.setColor(Color.BLACK);
+            prevbtn_background_gradient.setColor(Color.BLACK);
         }
     }
 
@@ -504,23 +504,23 @@ public class MainActivity
      */
     @TargetApi(16)
     public void swapDarkVibrantGradient(){
-        songName.setTextColor(Color.parseColor(MusicPlayerService.ALMOST_WHITE));
+        songName.setTextColor(getResources().getColor(R.color.lightPrimaryWhite));
         if (darkVibrantSwatch != null) {
-            gradient1.setColors(new int[]{Color.parseColor(MusicPlayerService.DARK_BACKGROUND), darkVibrantSwatch.getRgb()});
+            gradient1.setColors(new int[]{getResources().getColor(R.color.nightPrimaryDark), darkVibrantSwatch.getRgb()});
             gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
-            gradient2.setColors(new int[]{Color.parseColor(MusicPlayerService.DARK_BACKGROUND), darkVibrantSwatch.getRgb()});
+            gradient2.setColors(new int[]{getResources().getColor(R.color.nightPrimaryDark), darkVibrantSwatch.getRgb()});
             gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
         }
         else if (dominantSwatch != null){
-            gradient1.setColors(new int[]{Color.parseColor(MusicPlayerService.DARK_BACKGROUND), dominantSwatch.getRgb()});
+            gradient1.setColors(new int[]{getResources().getColor(R.color.nightPrimaryDark), dominantSwatch.getRgb()});
             gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
-            gradient2.setColors(new int[]{Color.parseColor(MusicPlayerService.DARK_BACKGROUND), dominantSwatch.getRgb()});
+            gradient2.setColors(new int[]{getResources().getColor(R.color.nightPrimaryDark), dominantSwatch.getRgb()});
             gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
         }
         else {
-            gradient1.setColors(new int[]{Color.parseColor(MusicPlayerService.DARK_BACKGROUND), Color.parseColor(MusicPlayerService.GREY_BACKGROUND)});
+            gradient1.setColors(new int[]{getResources().getColor(R.color.nightPrimaryDark), getResources().getColor(R.color.nightPrimaryGrey)});
             gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
-            gradient2.setColors(new int[]{Color.parseColor(MusicPlayerService.DARK_BACKGROUND), Color.parseColor(MusicPlayerService.GREY_BACKGROUND)});
+            gradient2.setColors(new int[]{getResources().getColor(R.color.nightPrimaryDark), getResources().getColor(R.color.nightPrimaryGrey)});
             gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
         }
 

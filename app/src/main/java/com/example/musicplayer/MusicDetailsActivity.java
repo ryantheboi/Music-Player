@@ -62,73 +62,33 @@ public class MusicDetailsActivity extends Activity {
         ImageView details_background = findViewById(R.id.music_details_background);
         if (MusicListActivity.nightMode){
             heading.setTextColor(Color.WHITE);
-            msgWindow.setTextColor(Color.parseColor(MusicPlayerService.ALMOST_WHITE));
-            details_background.setBackgroundColor(Color.parseColor(MusicPlayerService.DARK_BACKGROUND));
+            msgWindow.setTextColor(getResources().getColor(R.color.lightPrimaryWhite));
+            details_background.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
         }
         else{
             heading.setTextColor(Color.BLACK);
-            msgWindow.setTextColor(Color.parseColor(MusicPlayerService.DARK_TEXT));
-            details_background.setBackgroundColor(Color.parseColor(MusicPlayerService.ALMOST_WHITE));
+            msgWindow.setTextColor(getResources().getColor(R.color.colorTextDark));
+            details_background.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
 
         }
-        for (int i = 0; i < 20; i ++){
-            switch(i){
-                case 0:
-                    appendDetail("ID", Integer.toString(song.getID()));
-                    break;
-                case 1:
-                    appendDetail("Title", song.getTitle());
-                    break;
-                case 2:
-                    appendDetail("Artist", song.getArtist());
-                    break;
-                case 3:
-                    appendDetail("Album", song.getAlbum());
-                    break;
-                case 4:
-                    appendDetail("Album ID", Integer.toString(song.getAlbumID()));
-                    break;
-                case 5:
-                    appendDetail("Duration", MainActivity.convertTime(song.getDuration()));
-                    break;
-                case 6:
-                    appendDetail("Bucket ID", song.getBucketID());
-                    break;
-                case 7:
-                    appendDetail("Bucket Display Name", song.getBucketDisplayName());
-                    break;
-                case 8:
-                    appendDetail("Data Path", song.getDataPath());
-                    break;
-                case 9:
-                    appendDetail("Date Added", convertDateTimeString(song.getDateAdded()));
-                    break;
-                case 10:
-                    appendDetail("Date Modified", convertDateTimeString(song.getDateModified()));
-                    break;
-                case 11:
-                    appendDetail("Display Name", song.getDisplayName());
-                    break;
-                case 12:
-                    appendDetail("Original Document ID", song.getOriginalDocumentID());
-                    break;
-                case 13:
-                    appendDetail("Document ID", song.getDocumentID());
-                    break;
-                case 14:
-                    appendDetail("Instance ID", song.getInstanceID());
-                    break;
-                case 15:
-                    appendDetail("Mime Type", song.getMimeType());
-                    break;
-                case 16:
-                    appendDetail("Relative Path", song.getRelativePath());
-                    break;
-                case 17:
-                    appendDetail("Size", convertMegabytesString(song.getSize()));
-                    break;
-            }
-        }
+        appendDetail("ID", Integer.toString(song.getID()));
+        appendDetail("Title", song.getTitle());
+        appendDetail("Artist", song.getArtist());
+        appendDetail("Album", song.getAlbum());
+        appendDetail("Album ID", Integer.toString(song.getAlbumID()));
+        appendDetail("Duration", MainActivity.convertTime(song.getDuration()));
+        appendDetail("Data Path", song.getDataPath());
+        appendDetail("Size", convertMegabytesString(song.getSize()));
+        appendDetail("Relative Path", song.getRelativePath());
+        appendDetail("Display Name", song.getDisplayName());
+        appendDetail("Date Added", convertDateTimeString(song.getDateAdded()));
+        appendDetail("Date Modified", convertDateTimeString(song.getDateModified()));
+        appendDetail("MIME Type", song.getMimeType());
+        appendDetail("Document ID", song.getDocumentID());
+        appendDetail("Original Document ID", song.getOriginalDocumentID());
+        appendDetail("Instance ID", song.getInstanceID());
+        appendDetail("Bucket ID", song.getBucketID());
+        appendDetail("Bucket Display Name", song.getBucketDisplayName());
         msgWindow.setText(details);
     }
 

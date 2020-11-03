@@ -94,7 +94,7 @@ public class MainActivity
     private Intent nextIntent;
     private Intent seekBarProgressIntent;
     private Intent seekBarSeekIntent;
-    private Song current_song = Song.EMPTY_SONG;
+    private static Song current_song = Song.EMPTY_SONG;
     private Palette.Swatch vibrantSwatch;
     private Palette.Swatch darkVibrantSwatch;
     private Palette.Swatch dominantSwatch;
@@ -588,12 +588,17 @@ public class MainActivity
         }
     }
 
+    public static Song getCurrent_song(){
+        return current_song;
+    }
+
     /**
      * Class is used to handle messages (mainly about updates) sent from other activities
      * in order to keep the main activity most updated
      */
     public class MessageHandler extends Handler
     {
+        @SuppressLint("RestrictedApi")
         @Override
         @TargetApi(24)
         public void handleMessage(Message msg) {
@@ -647,9 +652,10 @@ public class MainActivity
                     current_song = (Song) bundle.get("song");
 
                     // grab song album art and duration
-                    int albumID = current_song.getAlbumID();
+                    String albumID = current_song.getAlbumID();
+                    long albumID_long = Long.parseLong(albumID);
                     Bitmap albumImage;
-                    Uri albumArtURI = ContentUris.withAppendedId(MusicPlayerService.artURI, albumID);
+                    Uri albumArtURI = ContentUris.withAppendedId(MusicPlayerService.artURI, albumID_long);
                     ContentResolver res = getContentResolver();
                     try {
                         InputStream in = res.openInputStream(albumArtURI);

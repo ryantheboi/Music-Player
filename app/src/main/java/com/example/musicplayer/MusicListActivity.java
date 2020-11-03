@@ -10,7 +10,6 @@ import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Messenger;
@@ -22,6 +21,7 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import static android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT;
 import static android.os.Build.VERSION_CODES.Q;
@@ -35,6 +35,7 @@ public class MusicListActivity extends AppCompatActivity {
     private ListView listView;
     private RelativeLayout relativeLayout;
     private ArrayList<Song> songList;
+    public static HashMap<Song, SongNode> playlist;
     private SongListAdapter adapter;
     private Messenger mainActivityMessenger;
     private Intent musicServiceIntent;
@@ -84,6 +85,8 @@ public class MusicListActivity extends AppCompatActivity {
                 ActivityCompat.requestPermissions(MusicListActivity.this,
                         new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
             }
+            ActivityCompat.requestPermissions(MusicListActivity.this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
         } else {
             initMusicList();
             initNightMode();
@@ -93,7 +96,9 @@ public class MusicListActivity extends AppCompatActivity {
     public void initMusicList() {
         listView = findViewById(R.id.listView);
         songList = new ArrayList<>();
+        playlist = new HashMap<>();
         getMusic();
+        createPlaylist();
         adapter = new SongListAdapter(this, R.layout.adapter_view_layout, songList);
         listView.setAdapter(adapter);
 
@@ -191,7 +196,7 @@ public class MusicListActivity extends AppCompatActivity {
                 String currentTitle = songCursor.getString(songTitle);
                 String currentArtist = songCursor.getString(songArtist);
                 String currentAlbum = songCursor.getString(songAlbum);
-                int currentAlbumID = songCursor.getInt(songAlbumID);
+                String currentAlbumID = songCursor.getString(songAlbumID);
                 int currentSongDuration = songCursor.getInt(songDuration);
 
                 String currentBucketID = songCursor.getString(bucketID);
@@ -208,28 +213,57 @@ public class MusicListActivity extends AppCompatActivity {
                 String currentSize = songCursor.getString(size);
 
                 Song song = new Song(currentID,
-                                    currentTitle,
-                                    currentArtist,
-                                    currentAlbum,
-                                    currentAlbumID,
-                                    currentSongDuration,
-                                    currentBucketID,
-                                    currentBucketDisplayName,
-                                    currentDataPath,
-                                    currentDateAdded,
-                                    currentDateModified,
-                                    currentDisplayName,
-                                    currentDocumentID,
-                                    currentInstanceID,
-                                    currentMimeType,
-                                    currentOriginalDocumentID,
-                                    currentRelativePath,
-                                    currentSize
-                                    );
+                        currentTitle,
+                        currentArtist,
+                        currentAlbum,
+                        currentAlbumID,
+                        currentSongDuration,
+                        currentBucketID,
+                        currentBucketDisplayName,
+                        currentDataPath,
+                        currentDateAdded,
+                        currentDateModified,
+                        currentDisplayName,
+                        currentDocumentID,
+                        currentInstanceID,
+                        currentMimeType,
+                        currentOriginalDocumentID,
+                        currentRelativePath,
+                        currentSize
+                );
                 songList.add(song);
             } while (songCursor.moveToNext());
 
             songCursor.close();
+        }
+    }
+
+    public void createPlaylist(){
+        int size = songList.size();
+        if (size != 0) {
+            Song head = songList.get(0);
+            Song tail = songList.get(size - 1);
+            if (size == 1) {
+                SongNode songNode = new SongNode(tail, head, tail);
+                playlist.put(head, songNode);
+            } else {
+                for (int i = 0; i < size; i++) {
+                    Song song = songList.get(i);
+                    SongNode songNode;
+                    if (song.equals(tail)) {
+                        Song prevSong = songList.get(i - 1);
+                        songNode = new SongNode(prevSong, song, head);
+                    } else if (song.equals(head)) {
+                        Song nextSong = songList.get(i + 1);
+                        songNode = new SongNode(tail, song, nextSong);
+                    } else {
+                        Song prevSong = songList.get(i - 1);
+                        Song nextSong = songList.get(i + 1);
+                        songNode = new SongNode(prevSong, song, nextSong);
+                    }
+                    playlist.put(song, songNode);
+                }
+            }
         }
     }
 

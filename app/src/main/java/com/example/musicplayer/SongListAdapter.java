@@ -49,7 +49,7 @@ public class SongListAdapter extends ArrayAdapter {
         String title = ((Song) getItem(position)).getTitle();
         String artist = ((Song) getItem(position)).getArtist();
         String album = ((Song) getItem(position)).getAlbum();
-        int albumID = ( (Song) getItem(position)).getAlbumID();
+        String albumID = ( (Song) getItem(position)).getAlbumID();
 
         Bitmap albumArt = getAlbumArt(albumID);
         ViewItem item;
@@ -94,10 +94,11 @@ public class SongListAdapter extends ArrayAdapter {
         return convertView;
     }
 
-    public Bitmap getAlbumArt(int albumId){
+    public Bitmap getAlbumArt(String albumId){
+        long albumId_long = Long.parseLong(albumId);
         Bitmap albumArt = null;
         // get album art for song
-        Uri albumArtURI = ContentUris.withAppendedId(MusicPlayerService.artURI, albumId);
+        Uri albumArtURI = ContentUris.withAppendedId(MusicPlayerService.artURI, albumId_long);
         ContentResolver res = mContext.getContentResolver();
         try {
             InputStream in = res.openInputStream(albumArtURI);

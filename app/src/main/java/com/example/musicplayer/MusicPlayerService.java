@@ -30,7 +30,6 @@ public class MusicPlayerService
     AudioAttributes mAudioAttributes;
     AudioFocusRequest mAudioFocusRequest;
     boolean mPlayOnAudioFocus;
-    int pauseCurrentPosition;
 
     public static final Uri artURI = Uri.parse("content://media/external/audio/albumart");
 
@@ -72,7 +71,6 @@ public class MusicPlayerService
                                         switch (focusChange) {
                                             case AudioManager.AUDIOFOCUS_GAIN:
                                                 if (mPlayOnAudioFocus && !mediaPlayer.isPlaying()) {
-                                                    mediaPlayer.seekTo(pauseCurrentPosition);
                                                     mediaPlayer.start();
                                                 } else if (mediaPlayer.isPlaying()) {
                                                     mediaPlayer.setVolume(1.0f, 1.0f);
@@ -87,7 +85,6 @@ public class MusicPlayerService
                                                 if (mediaPlayer.isPlaying()) {
                                                     mPlayOnAudioFocus = true;
                                                     mediaPlayer.pause();
-                                                    pauseCurrentPosition = mediaPlayer.getCurrentPosition();
                                                 }
                                                 break;
                                             case AudioManager.AUDIOFOCUS_LOSS:
@@ -118,17 +115,49 @@ public class MusicPlayerService
                         }
                         else{
                             sendUpdateMessage(messenger, UPDATE_PAUSE);
-
                         }
                         audioFocusToggleMedia();
                         break;
                     case "prev":
                         messenger = intent.getParcelableExtra("prev");
-                        Toast.makeText(this, "received notification: prev", Toast.LENGTH_SHORT).show();
+                        if (MusicListActivity.playlist != null){
+                            Song current_song = MainActivity.getCurrent_song();
+                            SongNode songNode = MusicListActivity.playlist.get(current_song);
+                            Song prev_song = songNode.getPrev();
+                            if (mediaPlayer.isPlaying()) {
+                                sendSongUpdateMessage(messenger, prev_song);
+                                sendUpdateMessage(messenger, UPDATE_PAUSE);
+                            }
+                            else{
+                                sendSongUpdateMessage(messenger, prev_song);
+                                mediaPlayer.pause();
+                                sendUpdateMessage(messenger, UPDATE_PLAY);
+                            }
+
+                        }
+                        else {
+                            Toast.makeText(this, "received notification: prev", Toast.LENGTH_SHORT).show();
+                        }
                         break;
                     case "next":
                         messenger = intent.getParcelableExtra("next");
-                        Toast.makeText(this, "received notification: next", Toast.LENGTH_SHORT).show();
+                        if (MusicListActivity.playlist != null){
+                            Song current_song = MainActivity.getCurrent_song();
+                            SongNode songNode = MusicListActivity.playlist.get(current_song);
+                            Song next_song = songNode.getNext();
+                            if (mediaPlayer.isPlaying()) {
+                                sendSongUpdateMessage(messenger, next_song);
+                                sendUpdateMessage(messenger, UPDATE_PAUSE);
+                            }
+                            else{
+                                sendSongUpdateMessage(messenger, next_song);
+                                mediaPlayer.pause();
+                                sendUpdateMessage(messenger, UPDATE_PLAY);
+                            }
+                        }
+                        else {
+                            Toast.makeText(this, "received notification: next", Toast.LENGTH_SHORT).show();
+                        }
                         break;
                     case "seekbarDuration":
                         messenger = intent.getParcelableExtra("seekbarDuration");
@@ -145,31 +174,15 @@ public class MusicPlayerService
                         sendUpdateMessage(messenger, progressMessage);
                         break;
                     case "seekbarSeek":
-                        pauseCurrentPosition = intent.getIntExtra("seekbarSeek", 0);
-                        mediaPlayer.seekTo(pauseCurrentPosition);
+                        int seekbar_position = intent.getIntExtra("seekbarSeek", 0);
+                        mediaPlayer.seekTo(seekbar_position);
                         break;
                     case "musicListActivity":
                         musicListbundle = intent.getBundleExtra("musicListActivity");
                         messenger = (Messenger) musicListbundle.get("mainActivityMessenger");
                         Song song = (Song) musicListbundle.get("song");
 
-                        // find the song uri and start playing the song
-                        int songID = song.getID();
-                        Uri audioURI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-                        Uri songURI = ContentUris.withAppendedId(audioURI, songID);
-                        try {
-                            mediaPlayer.reset();
-                            mediaPlayer.setDataSource(this, songURI);
-                            mediaPlayer.prepare();
-                            mediaPlayer.start();
-                        }
-                        catch (Exception e){
-                            e.printStackTrace();
-                        }
-                        Object[] songMessage = new Object[2];
-                        songMessage[0] = UPDATE_SONG;
-                        songMessage[1] = song;
-                        sendSongUpdateMessage(messenger, songMessage);
+                        sendSongUpdateMessage(messenger, song);
                         sendUpdateMessage(messenger, UPDATE_PAUSE);
                         break;
                     case "musicListNightToggle":
@@ -258,13 +271,25 @@ public class MusicPlayerService
     }
 
     // function to send a message containing a string and Song
-    private void sendSongUpdateMessage(Messenger messenger, Object[] message) {
+    private void sendSongUpdateMessage(Messenger messenger, Song song) {
+        // find the song uri and start playing the song
+        int songID = song.getID();
+        Uri audioURI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        Uri songURI = ContentUris.withAppendedId(audioURI, songID);
+        try {
+            mediaPlayer.reset();
+            mediaPlayer.setDataSource(this, songURI);
+            mediaPlayer.prepare();
+            audioFocusToggleMedia();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+
         Message msg = Message.obtain();
         Bundle bundle = new Bundle();
-        int updateMessage = (int) message[0];
-        Song songMessage = (Song) message[1];
-        bundle.putInt("update", updateMessage);
-        bundle.putParcelable("song", songMessage);
+        bundle.putInt("update", UPDATE_SONG);
+        bundle.putParcelable("song", song);
         msg.setData(bundle);
         try {
             messenger.send(msg);
@@ -289,12 +314,10 @@ public class MusicPlayerService
 
     private void toggleMedia() {
         if (!mediaPlayer.isPlaying()) {
-            mediaPlayer.seekTo(pauseCurrentPosition);
             mediaPlayer.start();
         }
         else if (mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
-            pauseCurrentPosition = mediaPlayer.getCurrentPosition();
         }
 
     }

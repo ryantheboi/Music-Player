@@ -3,12 +3,14 @@ package com.example.musicplayer;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import androidx.annotation.NonNull;
+
 public class Song implements Parcelable {
     private int id;
     private String title;
     private String artist;
     private String album;
-    private int albumID;
+    private String albumID;
     private int duration;
 
     private String bucketID;
@@ -24,9 +26,9 @@ public class Song implements Parcelable {
     private String relativePath;
     private String size;
 
-    public static Song EMPTY_SONG = new Song(0, "0", "0", "0", 0, 0, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");
+    public static Song EMPTY_SONG = new Song(0, "0", "0", "0", "0", 0, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");
 
-    public Song(int id, String title, String artist, String album, int albumID, int duration,
+    public Song(int id, String title, String artist, String album, String albumID, int duration,
                 String bucketID, String bucketDisplayName, String dataPath, String dateAdded,
                 String dateModified, String displayName, String documentID,
                 String instanceID, String mimeType, String originalDocumentID,
@@ -68,7 +70,7 @@ public class Song implements Parcelable {
         return album;
     }
 
-    public int getAlbumID() {
+    public String getAlbumID() {
         return albumID;
     }
 
@@ -140,7 +142,7 @@ public class Song implements Parcelable {
         dest.writeString(this.title);
         dest.writeString(this.artist);
         dest.writeString(this.album);
-        dest.writeInt(this.albumID);
+        dest.writeString(this.albumID);
         dest.writeInt(this.duration);
         dest.writeString(this.bucketID);
         dest.writeString(this.bucketDisplayName);
@@ -161,7 +163,7 @@ public class Song implements Parcelable {
         this.title = in.readString();
         this.artist = in.readString();
         this.album = in.readString();
-        this.albumID = in.readInt();
+        this.albumID = in.readString();
         this.duration = in.readInt();
         this.bucketID = in.readString();
         this.bucketDisplayName = in.readString();
@@ -187,5 +189,46 @@ public class Song implements Parcelable {
         }
     };
 
+    @Override
+    public int hashCode() {
+        try {
+            int prime = 31;
+            int result = 1;
+            result = prime * result + id;
+            result = prime * result + duration;
+            result = prime * result + albumID.hashCode();
+            result = prime * result + title.hashCode();
+            result = prime * result + artist.hashCode();
+            result = prime * result + album.hashCode();
+            result = prime * result + dateAdded.hashCode();
+            result = prime * result + dateModified.hashCode();
+            result = prime * result + size.hashCode();
+            return result;
+        }catch (Exception e){
+            return super.hashCode();
+        }
+    }
 
+    @Override
+    public boolean equals(Object obj) {
+        try {
+            return this.id == ((Song) obj).id &&
+                    this.duration == ((Song) obj).duration &&
+                    this.albumID.equals(((Song) obj).albumID) &&
+                    this.title.equals(((Song) obj).title) &&
+                    this.artist.equals(((Song) obj).artist) &&
+                    this.album.equals(((Song) obj).album) &&
+                    this.dateAdded.equals(((Song) obj).dateAdded) &&
+                    this.dateModified.equals(((Song) obj).dateModified) &&
+                    this.size.equals(((Song) obj).size);
+        }catch (Exception e){
+            return super.equals(obj);
+        }
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return title;
+    }
 }

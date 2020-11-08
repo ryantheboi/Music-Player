@@ -5,9 +5,7 @@ import android.content.ContentUris;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.net.Uri;
-import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,19 +14,19 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class SongListAdapter extends ArrayAdapter {
 
     private Context mContext;
     private int mResource;
-    private SparseArray<ViewItem> items;
+    private HashMap<Song, ViewItem> items;
     private ViewItem selectedItem;
 
     /**
      * Holds variables about an item (song) in a View
      */
     static class ViewItem{
-        int position;
         TextView title;
         TextView artist;
         TextView album;
@@ -39,17 +37,18 @@ public class SongListAdapter extends ArrayAdapter {
         super(context, resource, objects);
         mContext = context;
         mResource = resource;
-        items = new SparseArray<>();
+        items = new HashMap<>();
     }
 
     @Override
     public View getView(int position,  View convertView, ViewGroup parent) {
 
         // get song info and create Song object
-        String title = ((Song) getItem(position)).getTitle();
-        String artist = ((Song) getItem(position)).getArtist();
-        String album = ((Song) getItem(position)).getAlbum();
-        String albumID = ( (Song) getItem(position)).getAlbumID();
+        Song song = (Song) getItem(position);
+        String title = song.getTitle();
+        String artist = song.getArtist();
+        String album = song.getAlbum();
+        String albumID = song.getAlbumID();
 
         Bitmap albumArt = getAlbumArt(albumID);
         ViewItem item;
@@ -59,7 +58,6 @@ public class SongListAdapter extends ArrayAdapter {
             convertView = inflater.inflate(mResource, parent, false);
 
             item = new ViewItem();
-            item.position = position;
             item.title = convertView.findViewById(R.id.textView1);
             item.artist = convertView.findViewById(R.id.textView2);
             item.album = convertView.findViewById(R.id.textView3);
@@ -90,7 +88,7 @@ public class SongListAdapter extends ArrayAdapter {
         }
 
         // put item in sparse array with key: position, value: item
-        items.put(position, item);
+        items.put(song, item);
         return convertView;
     }
 
@@ -118,28 +116,27 @@ public class SongListAdapter extends ArrayAdapter {
      * @param code the color resource code to set the title
      */
     public void setItemsTitleTextColor(int code){
-        int size = items.size();
         if (selectedItem != null) {
-            for (int i = 0; i < size; i++) {
-                ViewItem item = items.valueAt(i);
-                if (item.position != selectedItem.position) {
+            for (Song song : items.keySet()){
+                ViewItem item = items.get(song);
+                if (item != selectedItem) {
                     item.title.setTextColor(code);
                 }
             }
         }
         else {
-            for (int i = 0; i < size; i++) {
-                ViewItem item = items.valueAt(i);
+            for (Song song : items.keySet()){
+                ViewItem item = items.get(song);
                 item.title.setTextColor(code);
             }
         }
     }
 
     /**
-     * highlights an item selected from the list view, given a position and html color code
-     * @param position the position of the selected item from the list view
+     * highlights item selected from the list view to blue and unhighlights any previously selected
+     * @param song the song object of the selected item from the list view
      */
-    public void highlightItem(int position){
+    public void highlightItem(Song song){
         // un-highlight the previously selected item
         if (selectedItem != null){
             if (MusicListActivity.nightMode){
@@ -153,7 +150,7 @@ public class SongListAdapter extends ArrayAdapter {
         }
 
         // highlight new selected item with blue
-        selectedItem = items.get(position);
+        selectedItem = items.get(song);
         selectedItem.title.setTextColor(mContext.getResources().getColor(R.color.colorTextBlue));
         selectedItem.artist.setTextColor(mContext.getResources().getColor(R.color.colorTextBlue));
         selectedItem.album.setTextColor(mContext.getResources().getColor(R.color.colorTextBlue));

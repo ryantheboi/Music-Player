@@ -109,7 +109,7 @@ public class MusicListActivity extends AppCompatActivity {
                 Song song = (Song) listView.getItemAtPosition(position);
 
                 // visually highlight the song in the list view
-                adapter.highlightItem(position);
+                adapter.highlightItem(song);
 
                 // notify music player service with the main activity messenger and the selected song
                 Bundle bundle = new Bundle();

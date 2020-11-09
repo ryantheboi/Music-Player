@@ -98,6 +98,7 @@ public class MainActivity
     private Palette.Swatch vibrantSwatch;
     private Palette.Swatch darkVibrantSwatch;
     private Palette.Swatch dominantSwatch;
+    private Messenger musicListActivityMessenger;
 
     @Override
     @TargetApi(26)
@@ -173,9 +174,9 @@ public class MainActivity
     public void initMusicList(){
         // init button for displaying music list
         musicList = findViewById(R.id.btn_musiclist);
-        Messenger musicListMessenger = new Messenger(new MessageHandler());
+        Messenger musicList_mainMessenger = new Messenger(new MessageHandler());
         musicListIntent = new Intent(this, MusicListActivity.class);
-        musicListIntent.putExtra("mainActivity", musicListMessenger);
+        musicListIntent.putExtra("mainActivity", musicList_mainMessenger);
         musicListIntent.addFlags(FLAG_ACTIVITY_REORDER_TO_FRONT);
         musicList.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -258,7 +259,9 @@ public class MainActivity
         nextbtn_background_gradient = (GradientDrawable) nextbtn_background.getBackground().getCurrent();
 
         mainNextIntent = new Intent(this, MusicPlayerService.class);
-        mainNextIntent.putExtra("next", mainMessenger);
+        final Bundle next_bundle = new Bundle();
+        next_bundle.putParcelable("mainActivityMessenger", mainMessenger);
+        mainNextIntent.putExtra("next", next_bundle);
 
         next_btn.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -267,6 +270,7 @@ public class MainActivity
                 next_btn.startAnimation(nextbtnAnim);
                 nextbtn_background.startAnimation(nextbtnBackgroundAnim);
                 nextbtn_background.setVisibility(View.INVISIBLE);
+                next_bundle.putParcelable("musicListActivityMessenger", musicListActivityMessenger);
                 startService(mainNextIntent);
             }
         });
@@ -315,7 +319,9 @@ public class MainActivity
         prevbtn_background_gradient = (GradientDrawable) prevbtn_background.getBackground().getCurrent();
 
         mainPrevIntent = new Intent(this, MusicPlayerService.class);
-        mainPrevIntent.putExtra("prev", mainMessenger);
+        final Bundle prev_bundle = new Bundle();
+        prev_bundle.putParcelable("mainActivityMessenger", mainMessenger);
+        mainPrevIntent.putExtra("prev", prev_bundle);
 
         prev_btn.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -324,6 +330,7 @@ public class MainActivity
                 prev_btn.startAnimation(prevbtnAnim);
                 prevbtn_background.startAnimation(prevbtnBackgroundAnim);
                 prevbtn_background.setVisibility(View.INVISIBLE);
+                prev_bundle.putParcelable("musicListActivityMessenger", musicListActivityMessenger);
                 startService(mainPrevIntent);
             }
         });
@@ -709,6 +716,9 @@ public class MainActivity
                 case MusicPlayerService.UPDATE_LIGHT:
                     swapVibrantGradient();
                     info_btn.setImageResource(R.drawable.info_night);
+                    break;
+                case MusicPlayerService.UPDATE_MESSENGER_MUSICLISTACTIVITY:
+                    musicListActivityMessenger = (Messenger) bundle.get("messenger");
                     break;
             }
         }

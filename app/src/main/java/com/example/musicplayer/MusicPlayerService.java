@@ -40,6 +40,8 @@ public class MusicPlayerService
     public static final int UPDATE_SONG = 4;
     public static final int UPDATE_NIGHT = 5;
     public static final int UPDATE_LIGHT = 6;
+    public static final int UPDATE_MESSENGER_MUSICLISTACTIVITY = 7;
+    public static final int UPDATE_HIGHLIGHT = 8;
 
 
 
@@ -103,7 +105,8 @@ public class MusicPlayerService
         Bundle b = intent.getExtras();
         if (b != null) {
             Messenger messenger;
-            Bundle musicListbundle;
+            Messenger musicList_messenger;
+            Bundle bundle_extra;
             for (String key : b.keySet()) {
                 //System.out.println(key);
                 switch (key){
@@ -119,41 +122,52 @@ public class MusicPlayerService
                         audioFocusToggleMedia();
                         break;
                     case "prev":
-                        messenger = intent.getParcelableExtra("prev");
+                        bundle_extra = intent.getBundleExtra("prev");
+                        messenger = bundle_extra.getParcelable("mainActivityMessenger");
+                        musicList_messenger = bundle_extra.getParcelable("musicListActivityMessenger");
                         if (MusicListActivity.playlist != null){
+                            // change current song in main activity
                             Song current_song = MainActivity.getCurrent_song();
                             SongNode songNode = MusicListActivity.playlist.get(current_song);
                             Song prev_song = songNode.getPrev();
-                            if (mediaPlayer.isPlaying()) {
+                            if (mediaPlayer.isPlaying()) { // keep it playing
                                 sendSongUpdateMessage(messenger, prev_song);
                                 sendUpdateMessage(messenger, UPDATE_PAUSE);
                             }
-                            else{
+                            else{ // keep it paused
                                 sendSongUpdateMessage(messenger, prev_song);
                                 mediaPlayer.pause();
                                 sendUpdateMessage(messenger, UPDATE_PLAY);
                             }
 
+                            // change highlighted song from list view
+                            sendUpdateMessage(musicList_messenger, UPDATE_HIGHLIGHT);
                         }
                         else {
                             Toast.makeText(this, "received notification: prev", Toast.LENGTH_SHORT).show();
                         }
                         break;
                     case "next":
-                        messenger = intent.getParcelableExtra("next");
+                        bundle_extra = intent.getBundleExtra("next");
+                        messenger = bundle_extra.getParcelable("mainActivityMessenger");
+                        musicList_messenger = bundle_extra.getParcelable("musicListActivityMessenger");
                         if (MusicListActivity.playlist != null){
+                            // change current song in main activity
                             Song current_song = MainActivity.getCurrent_song();
                             SongNode songNode = MusicListActivity.playlist.get(current_song);
                             Song next_song = songNode.getNext();
-                            if (mediaPlayer.isPlaying()) {
+                            if (mediaPlayer.isPlaying()) { // keep it playing
                                 sendSongUpdateMessage(messenger, next_song);
                                 sendUpdateMessage(messenger, UPDATE_PAUSE);
                             }
-                            else{
+                            else{ // keep it paused
                                 sendSongUpdateMessage(messenger, next_song);
                                 mediaPlayer.pause();
                                 sendUpdateMessage(messenger, UPDATE_PLAY);
                             }
+
+                            // change highlighted song from list view
+                            sendUpdateMessage(musicList_messenger, UPDATE_HIGHLIGHT);
                         }
                         else {
                             Toast.makeText(this, "received notification: next", Toast.LENGTH_SHORT).show();
@@ -178,17 +192,23 @@ public class MusicPlayerService
                         mediaPlayer.seekTo(seekbar_position);
                         break;
                     case "musicListActivity":
-                        musicListbundle = intent.getBundleExtra("musicListActivity");
-                        messenger = (Messenger) musicListbundle.get("mainActivityMessenger");
-                        Song song = (Song) musicListbundle.get("song");
+                        bundle_extra = intent.getBundleExtra("musicListActivity");
+                        messenger = (Messenger) bundle_extra.get("mainActivityMessenger");
+                        Song song = (Song) bundle_extra.get("song");
 
                         sendSongUpdateMessage(messenger, song);
                         sendUpdateMessage(messenger, UPDATE_PAUSE);
                         break;
+                    case "musicListMessenger":
+                        bundle_extra = intent.getBundleExtra("musicListMessenger");
+                        messenger = (Messenger) bundle_extra.get("mainActivityMessenger");
+                        musicList_messenger = (Messenger) bundle_extra.get("musicListActivityMessenger");
+                        sendMessengerUpdateMessage(messenger, musicList_messenger, UPDATE_MESSENGER_MUSICLISTACTIVITY);
+                        break;
                     case "musicListNightToggle":
-                        musicListbundle = intent.getBundleExtra("musicListNightToggle");
-                        messenger = (Messenger) musicListbundle.get("mainActivityMessenger");
-                        boolean nightMode = (boolean) musicListbundle.get("nightmode");
+                        bundle_extra = intent.getBundleExtra("musicListNightToggle");
+                        messenger = (Messenger) bundle_extra.get("mainActivityMessenger");
+                        boolean nightMode = (boolean) bundle_extra.get("nightmode");
                         if (nightMode){
                             sendUpdateMessage(messenger, UPDATE_NIGHT);
                         }
@@ -240,7 +260,11 @@ public class MusicPlayerService
         return false;
     }
 
-    // sends an int message to the main thread
+    /**
+     * sends an int message to the main thread
+     * @param messenger the messenger to send update to
+     * @param message the update code
+     */
     private void sendUpdateMessage(Messenger messenger, int message) {
         Message msg = Message.obtain();
         Bundle bundle = new Bundle();
@@ -254,7 +278,11 @@ public class MusicPlayerService
         }
     }
 
-    // overloaded function to send a message containing an update and int
+    /**
+     * overloaded method to send a message containing an update and int
+     * @param messenger the messenger to send update to
+     * @param message 2-part message containing update code and seekbar time
+     */
     private void sendUpdateMessage(Messenger messenger, Object[] message) {
         Message msg = Message.obtain();
         Bundle bundle = new Bundle();
@@ -270,7 +298,11 @@ public class MusicPlayerService
         }
     }
 
-    // function to send a message containing a string and Song
+    /**
+     * send a message containing a string and Song
+     * @param messenger the messenger to send update to
+     * @param song the song to update the messenger's activity with
+     */
     private void sendSongUpdateMessage(Messenger messenger, Song song) {
         // find the song uri and start playing the song
         int songID = song.getID();
@@ -290,6 +322,26 @@ public class MusicPlayerService
         Bundle bundle = new Bundle();
         bundle.putInt("update", UPDATE_SONG);
         bundle.putParcelable("song", song);
+        msg.setData(bundle);
+        try {
+            messenger.send(msg);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * send a message to the messenger's activity to update its messenger
+     * @param messenger - the messenger to receive the update messenger from another activity
+     * @param update - the messenger from the other activity
+     * @param message - the update code
+     */
+    private void sendMessengerUpdateMessage(Messenger messenger, Messenger update, int message){
+        Message msg = Message.obtain();
+        Bundle bundle = new Bundle();
+
+        bundle.putInt("update", message);
+        bundle.putParcelable("messenger", update);
         msg.setData(bundle);
         try {
             messenger.send(msg);

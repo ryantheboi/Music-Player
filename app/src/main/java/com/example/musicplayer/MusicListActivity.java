@@ -12,6 +12,8 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.os.Messenger;
 import android.provider.MediaStore;
 import android.view.View;
@@ -20,6 +22,7 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -57,9 +60,17 @@ public class MusicListActivity extends AppCompatActivity {
             for (String key : b.keySet()) {
                 switch (key) {
                     case "mainActivity":
-                        // get the mainActivity's messenger and forward it to MusicPlayerService
+                        // get mainActivity's messenger and prepare intent for MusicPlayerService
                         mainActivityMessenger = intent.getParcelableExtra("mainActivity");
                         musicServiceIntent = new Intent(this, MusicPlayerService.class);
+
+                        // send musicList's messenger to MusicPlayerService
+                        Messenger musicListMessenger = new Messenger(new MusicListMessageHandler());
+                        Bundle bundle = new Bundle();
+                        bundle.putParcelable("mainActivityMessenger", mainActivityMessenger);
+                        bundle.putParcelable("musicListActivityMessenger", musicListMessenger);
+                        musicServiceIntent.putExtra("musicListMessenger", bundle);
+                        startService(musicServiceIntent);
                         break;
                 }
             }
@@ -289,5 +300,21 @@ public class MusicListActivity extends AppCompatActivity {
         Intent mainActivityIntent = new Intent(this, MainActivity.class);
         mainActivityIntent.addFlags(FLAG_ACTIVITY_REORDER_TO_FRONT );
         startActivity(mainActivityIntent);
+    }
+
+    public class MusicListMessageHandler extends Handler {
+        @Override
+        @TargetApi(24)
+        public void handleMessage(Message msg) {
+
+            Bundle bundle = msg.getData();
+            int updateOperation = (int) bundle.get("update");
+            switch (updateOperation) {
+                case MusicPlayerService.UPDATE_HIGHLIGHT:
+                    Song curr_song = MainActivity.getCurrent_song();
+                    adapter.highlightItem(curr_song);
+                    break;
+            }
+        }
     }
 }

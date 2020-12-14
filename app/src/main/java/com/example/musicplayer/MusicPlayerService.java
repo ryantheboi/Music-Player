@@ -30,6 +30,8 @@ public class MusicPlayerService
     AudioAttributes mAudioAttributes;
     AudioFocusRequest mAudioFocusRequest;
     boolean mPlayOnAudioFocus;
+    private Messenger mainActivity_messenger;
+    private Messenger musicList_messenger;
 
     public static final Uri artURI = Uri.parse("content://media/external/audio/albumart");
 
@@ -104,26 +106,24 @@ public class MusicPlayerService
         // begin responding to the messenger based on message received
         Bundle b = intent.getExtras();
         if (b != null) {
-            Messenger messenger;
-            Messenger musicList_messenger;
             Bundle bundle_extra;
             for (String key : b.keySet()) {
                 //System.out.println(key);
                 switch (key){
                     case "pauseplay":
                         // update the pauseplay button icon via messenger and toggle music
-                        messenger = intent.getParcelableExtra("pauseplay");
+                        mainActivity_messenger = intent.getParcelableExtra("pauseplay");
                         if (mediaPlayer.isPlaying()) {
-                            sendUpdateMessage(messenger, UPDATE_PLAY);
+                            sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY);
                         }
                         else{
-                            sendUpdateMessage(messenger, UPDATE_PAUSE);
+                            sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE);
                         }
                         audioFocusToggleMedia();
                         break;
                     case "prev":
                         bundle_extra = intent.getBundleExtra("prev");
-                        messenger = bundle_extra.getParcelable("mainActivityMessenger");
+                        mainActivity_messenger = bundle_extra.getParcelable("mainActivityMessenger");
                         musicList_messenger = bundle_extra.getParcelable("musicListActivityMessenger");
                         if (MusicListActivity.playlist != null){
                             // change current song in main activity
@@ -131,13 +131,13 @@ public class MusicPlayerService
                             SongNode songNode = MusicListActivity.playlist.get(current_song);
                             Song prev_song = songNode.getPrev();
                             if (mediaPlayer.isPlaying()) { // keep it playing
-                                sendSongUpdateMessage(messenger, prev_song);
-                                sendUpdateMessage(messenger, UPDATE_PAUSE);
+                                sendSongUpdateMessage(mainActivity_messenger, prev_song);
+                                sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE);
                             }
                             else{ // keep it paused
-                                sendSongUpdateMessage(messenger, prev_song);
+                                sendSongUpdateMessage(mainActivity_messenger, prev_song);
                                 mediaPlayer.pause();
-                                sendUpdateMessage(messenger, UPDATE_PLAY);
+                                sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY);
                             }
 
                             // change highlighted song from list view
@@ -149,7 +149,7 @@ public class MusicPlayerService
                         break;
                     case "next":
                         bundle_extra = intent.getBundleExtra("next");
-                        messenger = bundle_extra.getParcelable("mainActivityMessenger");
+                        mainActivity_messenger = bundle_extra.getParcelable("mainActivityMessenger");
                         musicList_messenger = bundle_extra.getParcelable("musicListActivityMessenger");
                         if (MusicListActivity.playlist != null){
                             // change current song in main activity
@@ -157,13 +157,13 @@ public class MusicPlayerService
                             SongNode songNode = MusicListActivity.playlist.get(current_song);
                             Song next_song = songNode.getNext();
                             if (mediaPlayer.isPlaying()) { // keep it playing
-                                sendSongUpdateMessage(messenger, next_song);
-                                sendUpdateMessage(messenger, UPDATE_PAUSE);
+                                sendSongUpdateMessage(mainActivity_messenger, next_song);
+                                sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE);
                             }
                             else{ // keep it paused
-                                sendSongUpdateMessage(messenger, next_song);
+                                sendSongUpdateMessage(mainActivity_messenger, next_song);
                                 mediaPlayer.pause();
-                                sendUpdateMessage(messenger, UPDATE_PLAY);
+                                sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY);
                             }
 
                             // change highlighted song from list view
@@ -174,18 +174,18 @@ public class MusicPlayerService
                         }
                         break;
                     case "seekbarDuration":
-                        messenger = intent.getParcelableExtra("seekbarDuration");
+                        mainActivity_messenger = intent.getParcelableExtra("seekbarDuration");
                         Object[] durationMessage = new Object[2];
                         durationMessage[0] = UPDATE_SEEKBAR_DURATION;
                         durationMessage[1] = mediaPlayer.getDuration();
-                        sendUpdateMessage(messenger, durationMessage);
+                        sendUpdateMessage(mainActivity_messenger, durationMessage);
                         break;
                     case "seekbarProgress":
-                        messenger = intent.getParcelableExtra("seekbarProgress");
+                        mainActivity_messenger = intent.getParcelableExtra("seekbarProgress");
                         Object[] progressMessage = new Object[2];
                         progressMessage[0] = UPDATE_SEEKBAR_PROGRESS;
                         progressMessage[1] = mediaPlayer.getCurrentPosition();
-                        sendUpdateMessage(messenger, progressMessage);
+                        sendUpdateMessage(mainActivity_messenger, progressMessage);
                         break;
                     case "seekbarSeek":
                         int seekbar_position = intent.getIntExtra("seekbarSeek", 0);
@@ -193,27 +193,27 @@ public class MusicPlayerService
                         break;
                     case "musicListActivity":
                         bundle_extra = intent.getBundleExtra("musicListActivity");
-                        messenger = (Messenger) bundle_extra.get("mainActivityMessenger");
+                        mainActivity_messenger = (Messenger) bundle_extra.get("mainActivityMessenger");
                         Song song = (Song) bundle_extra.get("song");
 
-                        sendSongUpdateMessage(messenger, song);
-                        sendUpdateMessage(messenger, UPDATE_PAUSE);
+                        sendSongUpdateMessage(mainActivity_messenger, song);
+                        sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE);
                         break;
                     case "musicListMessenger":
                         bundle_extra = intent.getBundleExtra("musicListMessenger");
-                        messenger = (Messenger) bundle_extra.get("mainActivityMessenger");
+                        mainActivity_messenger = (Messenger) bundle_extra.get("mainActivityMessenger");
                         musicList_messenger = (Messenger) bundle_extra.get("musicListActivityMessenger");
-                        sendMessengerUpdateMessage(messenger, musicList_messenger, UPDATE_MESSENGER_MUSICLISTACTIVITY);
+                        sendMessengerUpdateMessage(mainActivity_messenger, musicList_messenger, UPDATE_MESSENGER_MUSICLISTACTIVITY);
                         break;
                     case "musicListNightToggle":
                         bundle_extra = intent.getBundleExtra("musicListNightToggle");
-                        messenger = (Messenger) bundle_extra.get("mainActivityMessenger");
+                        mainActivity_messenger = (Messenger) bundle_extra.get("mainActivityMessenger");
                         boolean nightMode = (boolean) bundle_extra.get("nightmode");
                         if (nightMode){
-                            sendUpdateMessage(messenger, UPDATE_NIGHT);
+                            sendUpdateMessage(mainActivity_messenger, UPDATE_NIGHT);
                         }
                         else{
-                            sendUpdateMessage(messenger, UPDATE_LIGHT);
+                            sendUpdateMessage(mainActivity_messenger, UPDATE_LIGHT);
                         }
                         break;
                 }
@@ -233,7 +233,7 @@ public class MusicPlayerService
             }
             mediaPlayer.release();
         }
-
+        stopSelf();
     }
 
     @Override
@@ -351,8 +351,10 @@ public class MusicPlayerService
     }
 
 
+    /**
+     *  checks for audio focus before toggling media
+     */
     @TargetApi(26)
-    // checks for audio focus before toggling media
     private void audioFocusToggleMedia(){
         int focusRequest = mAudioManager.requestAudioFocus(mAudioFocusRequest);
         switch (focusRequest) {
@@ -380,10 +382,28 @@ public class MusicPlayerService
         }
     }
 
+    /**
+     * what to do when the current song finishes playing
+     * @param mp (unused) the mediaplayer object responsible for playing the song
+     */
     @Override
     public void onCompletion(MediaPlayer mp) {
-        stopMedia();
-        stopSelf();
+        if (MusicListActivity.playlist != null){
+            // change current song in main activity
+            Song current_song = MainActivity.getCurrent_song();
+            SongNode songNode = MusicListActivity.playlist.get(current_song);
+            Song next_song = songNode.getNext();
 
+            // notify main activity of the next song and keep it playing
+            if (mainActivity_messenger != null) {
+                sendSongUpdateMessage(mainActivity_messenger, next_song);
+                sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE);
+            }
+
+            // change highlighted song from list view
+            if (musicList_messenger != null) {
+                sendUpdateMessage(musicList_messenger, UPDATE_HIGHLIGHT);
+            }
+        }
     }
 }

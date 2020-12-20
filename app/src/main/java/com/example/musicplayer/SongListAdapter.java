@@ -3,6 +3,7 @@ package com.example.musicplayer;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -26,7 +27,7 @@ public class SongListAdapter extends ArrayAdapter {
     /**
      * Holds variables about an item (song) in a View
      */
-    static class ViewItem{
+    class ViewItem{
         TextView title;
         TextView artist;
         TextView album;
@@ -42,21 +43,18 @@ public class SongListAdapter extends ArrayAdapter {
 
     @Override
     public View getView(int position,  View convertView, ViewGroup parent) {
-
         // get song info and create Song object
         Song song = (Song) getItem(position);
         String title = song.getTitle();
         String artist = song.getArtist();
         String album = song.getAlbum();
         String albumID = song.getAlbumID();
-
         Bitmap albumArt = getAlbumArt(albumID);
         ViewItem item;
 
         if (convertView == null){
             LayoutInflater inflater = LayoutInflater.from(mContext);
             convertView = inflater.inflate(mResource, parent, false);
-
             item = new ViewItem();
             item.title = convertView.findViewById(R.id.textView1);
             item.artist = convertView.findViewById(R.id.textView2);
@@ -87,7 +85,7 @@ public class SongListAdapter extends ArrayAdapter {
             item.albumArt.setImageResource(defaultImage);
         }
 
-        // put item in sparse array with key: position, value: item
+        // put item in hashmap with key: song, value: item
         items.put(song, item);
         return convertView;
     }
@@ -112,23 +110,13 @@ public class SongListAdapter extends ArrayAdapter {
     }
 
     /**
-     * sets the color of the title of every item, excluding the selected item, in the list view
+     * sets the color of the title of every item in the list view
      * @param code the color resource code to set the title
      */
-    public void setItemsTitleTextColor(int code){
-        if (selectedItem != null) {
-            for (Song song : items.keySet()){
-                ViewItem item = items.get(song);
-                if (item != selectedItem) {
-                    item.title.setTextColor(code);
-                }
-            }
-        }
-        else {
-            for (Song song : items.keySet()){
-                ViewItem item = items.get(song);
-                item.title.setTextColor(code);
-            }
+    public void setItemsTitleTextColor(ColorStateList code){
+        for (Song song : items.keySet()){
+            ViewItem item = items.get(song);
+            item.title.setTextColor(code);
         }
     }
 
@@ -137,24 +125,23 @@ public class SongListAdapter extends ArrayAdapter {
      * @param song the song object of the selected item from the list view
      */
     public void highlightItem(Song song){
-        // un-highlight the previously selected item
-        if (selectedItem != null){
-            if (MusicListActivity.nightMode){
-                selectedItem.title.setTextColor(mContext.getResources().getColor(R.color.lightPrimaryWhite));
-            }
-            else {
-                selectedItem.title.setTextColor(mContext.getResources().getColor(R.color.colorTextDark));
-            }
-            selectedItem.artist.setTextColor(mContext.getResources().getColor(R.color.colorTextGrey));
-            selectedItem.album.setTextColor(mContext.getResources().getColor(R.color.colorTextGrey));
-        }
-
-        // highlight new selected item with blue
-        selectedItem = items.get(song);
-        selectedItem.title.setTextColor(mContext.getResources().getColor(R.color.colorTextBlue));
-        selectedItem.artist.setTextColor(mContext.getResources().getColor(R.color.colorTextBlue));
-        selectedItem.album.setTextColor(mContext.getResources().getColor(R.color.colorTextBlue));
-
+//        // un-highlight the previously selected item
+//        if (selectedItem != null){
+//            if (MusicListActivity.nightMode){
+//                selectedItem.title.setTextColor(mContext.getResources().getColor(R.color.lightPrimaryWhite));
+//            }
+//            else {
+//                selectedItem.title.setTextColor(mContext.getResources().getColor(R.color.colorTextDark));
+//            }
+//            selectedItem.artist.setTextColor(mContext.getResources().getColor(R.color.colorTextGrey));
+//            selectedItem.album.setTextColor(mContext.getResources().getColor(R.color.colorTextGrey));
+//        }
+//
+//        // highlight new selected item with blue
+//        selectedItem = items.get(song);
+//        selectedItem.title.setTextColor(mContext.getResources().getColor(R.color.colorTextBlue));
+//        selectedItem.artist.setTextColor(mContext.getResources().getColor(R.color.colorTextBlue));
+//        selectedItem.album.setTextColor(mContext.getResources().getColor(R.color.colorTextBlue));
     }
 
 }

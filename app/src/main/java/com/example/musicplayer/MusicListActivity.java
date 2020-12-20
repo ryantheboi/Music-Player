@@ -16,7 +16,11 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.provider.MediaStore;
+import android.view.ActionMode;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.ListView;
@@ -43,7 +47,8 @@ public class MusicListActivity extends AppCompatActivity {
     private Messenger mainActivityMessenger;
     private Intent musicServiceIntent;
     private Intent nightModeServiceIntent;
-
+    public static boolean isActionMode = false;
+    private ActionMode actionMode = null;
 
 
     @Override
@@ -118,7 +123,6 @@ public class MusicListActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
                 // obtain the selected song object
                 Song song = (Song) listView.getItemAtPosition(position);
-
                 // visually highlight the song in the list view
                 adapter.highlightItem(song);
 
@@ -128,6 +132,53 @@ public class MusicListActivity extends AppCompatActivity {
                 bundle.putParcelable("song", song);
                 musicServiceIntent.putExtra("musicListActivity", bundle);
                 startService(musicServiceIntent);
+            }
+        });
+
+        listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
+        listView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
+            @Override
+            public void onItemCheckedStateChanged(android.view.ActionMode mode, int position, long id, boolean checked) {
+                // obtain the selected song object
+                Song song = (Song) listView.getItemAtPosition(position);
+                // visually highlight the song in the list view
+                adapter.highlightItem(song);
+            }
+
+            @Override
+            public boolean onCreateActionMode(android.view.ActionMode mode, Menu menu) {
+                mode.getMenuInflater().inflate(R.menu.example_menu, menu);
+                mode.setTitle("Choose option for selected items");
+                isActionMode = true;
+                actionMode = mode;
+                return true;
+            }
+
+            @Override
+            public boolean onPrepareActionMode(android.view.ActionMode mode, Menu menu) {
+                return false;
+            }
+
+            @Override
+            public boolean onActionItemClicked(android.view.ActionMode mode, MenuItem item) {
+                switch (item.getItemId()){
+                    case R.id.createqueue:
+                        Toast.makeText(MusicListActivity.this, "Creating Queue...", Toast.LENGTH_SHORT).show();
+                        mode.finish(); // Action picked, so close the CAB
+                        return true;
+                    case R.id.createplaylist:
+                        Toast.makeText(MusicListActivity.this, "Creating Playlist...", Toast.LENGTH_SHORT).show();
+                        mode.finish(); // Action picked, so close the CAB
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+            @Override
+            public void onDestroyActionMode(android.view.ActionMode mode) {
+                isActionMode = false;
+                actionMode = null;
             }
         });
     }
@@ -148,7 +199,7 @@ public class MusicListActivity extends AppCompatActivity {
         if (!nightMode){
             listView.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
             relativeLayout.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
-            adapter.setItemsTitleTextColor(getResources().getColor(R.color.lightPrimaryWhite));
+            adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemnightselectorblue));
             nightModeButton.setImageResource(R.drawable.night);
             nightMode = true;
 
@@ -162,7 +213,7 @@ public class MusicListActivity extends AppCompatActivity {
         else{
             listView.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
             relativeLayout.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
-            adapter.setItemsTitleTextColor(getResources().getColor(R.color.colorTextDark));
+            adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemlightselectorblue));
             nightModeButton.setImageResource(R.drawable.light);
             nightMode = false;
 
@@ -200,7 +251,6 @@ public class MusicListActivity extends AppCompatActivity {
             int originalDocumentID = songCursor.getColumnIndex(MediaStore.Audio.Media.ORIGINAL_DOCUMENT_ID);
             int relativePath = songCursor.getColumnIndex(MediaStore.Audio.Media.RELATIVE_PATH);
             int size = songCursor.getColumnIndex(MediaStore.Audio.Media.SIZE);
-
 
             do {
                 int currentID = songCursor.getInt(songID);

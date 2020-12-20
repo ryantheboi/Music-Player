@@ -22,7 +22,7 @@
         <TextView
             android:id="@+id/textView1"
             android:textSize="16sp"
-            android:textColor="@color/colorTextDark"
+            android:textColor="@color/itemlightselectorblue"
             android:textStyle="bold"
             android:gravity="start"
             android:textAlignment="viewStart"
@@ -32,7 +32,7 @@
         <TextView
             android:id="@+id/textView2"
             android:textSize="14sp"
-            android:textColor="@color/colorTextGrey"
+            android:textColor="@color/itemdefaultselectorblue"
             android:gravity="start"
             android:textAlignment="viewStart"
             android:text="@string/TextView2"
@@ -41,7 +41,7 @@
         <TextView
             android:id="@+id/textView3"
             android:textSize="14sp"
-            android:textColor="@color/colorTextGrey"
+            android:textColor="@color/itemdefaultselectorblue"
             android:gravity="start"
             android:textAlignment="viewStart"
             android:text="@string/TextView3"

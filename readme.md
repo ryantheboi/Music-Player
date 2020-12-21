@@ -14,7 +14,7 @@
 ![Main Activity](./app/src/main/Screenshots/mainactivity.png "Main Activity")
 
 ## Main Display Expanded
-![Main Activity Expanded](./Screenshots/mainactivity_expanded.png "Main Activity Expanded")
+![Main Activity Expanded](./app/src/main/Screenshots/mainactivity_expanded.png "Main Activity Expanded")
 
 ## Music Details
 ![Music Details](./app/src/main/Screenshots/musicdetails.png "Music Details")

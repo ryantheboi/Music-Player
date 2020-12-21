@@ -49,6 +49,7 @@ public class MusicListActivity extends AppCompatActivity {
     private Intent nightModeServiceIntent;
     public static boolean isActionMode = false;
     private ActionMode actionMode = null;
+    private ArrayList<Song> userSelection;
 
 
     @Override
@@ -111,6 +112,7 @@ public class MusicListActivity extends AppCompatActivity {
 
     public void initMusicList() {
         listView = findViewById(R.id.listView);
+        userSelection = new ArrayList<>();
         songList = new ArrayList<>();
         playlist = new HashMap<>();
         getMusic();
@@ -139,16 +141,27 @@ public class MusicListActivity extends AppCompatActivity {
         listView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
             @Override
             public void onItemCheckedStateChanged(android.view.ActionMode mode, int position, long id, boolean checked) {
-                // obtain the selected song object
+                // obtain the selected song object and add to user selection arraylist
                 Song song = (Song) listView.getItemAtPosition(position);
-                // visually highlight the song in the list view
-                adapter.highlightItem(song);
+
+                if (!checked){
+                    userSelection.remove(song);
+                }
+                else{
+                    userSelection.add(song);
+                }
+
+                if (userSelection.size() == 1){
+                    mode.setTitle(userSelection.get(0).getTitle());
+                }
+                else{
+                    mode.setTitle(userSelection.size() + " songs selected");
+                }
             }
 
             @Override
             public boolean onCreateActionMode(android.view.ActionMode mode, Menu menu) {
                 mode.getMenuInflater().inflate(R.menu.example_menu, menu);
-                mode.setTitle("Choose option for selected items");
                 isActionMode = true;
                 actionMode = mode;
                 return true;
@@ -163,11 +176,11 @@ public class MusicListActivity extends AppCompatActivity {
             public boolean onActionItemClicked(android.view.ActionMode mode, MenuItem item) {
                 switch (item.getItemId()){
                     case R.id.createqueue:
-                        Toast.makeText(MusicListActivity.this, "Creating Queue...", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MusicListActivity.this, "Creating Queue of " + userSelection.size() + " songs", Toast.LENGTH_SHORT).show();
                         mode.finish(); // Action picked, so close the CAB
                         return true;
                     case R.id.createplaylist:
-                        Toast.makeText(MusicListActivity.this, "Creating Playlist...", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MusicListActivity.this, "Creating Playlist of " + userSelection.size() + " songs", Toast.LENGTH_SHORT).show();
                         mode.finish(); // Action picked, so close the CAB
                         return true;
                     default:
@@ -179,6 +192,7 @@ public class MusicListActivity extends AppCompatActivity {
             public void onDestroyActionMode(android.view.ActionMode mode) {
                 isActionMode = false;
                 actionMode = null;
+                userSelection.clear();
             }
         });
     }

@@ -43,6 +43,7 @@ public class MusicListActivity extends AppCompatActivity {
     private RelativeLayout relativeLayout;
     private ArrayList<Song> songList;
     public static HashMap<Song, SongNode> playlist;
+    public static HashMap<Song, SongNode> fullPlaylist;
     private SongListAdapter adapter;
     private Messenger mainActivityMessenger;
     private Intent musicServiceIntent;
@@ -114,9 +115,10 @@ public class MusicListActivity extends AppCompatActivity {
         listView = findViewById(R.id.listView);
         userSelection = new ArrayList<>();
         songList = new ArrayList<>();
+        fullPlaylist = new HashMap<>();
         playlist = new HashMap<>();
-        getMusic();
-        createPlaylist();
+        getMusic(); // populates songList
+        fullPlaylist = createPlaylist(songList);
         adapter = new SongListAdapter(this, R.layout.adapter_view_layout, songList);
         listView.setAdapter(adapter);
 
@@ -125,6 +127,10 @@ public class MusicListActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
                 // obtain the selected song object
                 Song song = (Song) listView.getItemAtPosition(position);
+
+                // redirect the current playlist to reference the full (original) playlist
+                playlist = fullPlaylist;
+
                 // visually highlight the song in the list view
                 adapter.highlightItem(song);
 
@@ -177,6 +183,16 @@ public class MusicListActivity extends AppCompatActivity {
                 switch (item.getItemId()){
                     case R.id.createqueue:
                         Toast.makeText(MusicListActivity.this, "Creating Queue of " + userSelection.size() + " songs", Toast.LENGTH_SHORT).show();
+                        // construct new current playlist, given the user selections
+                        playlist = createPlaylist(userSelection);
+
+                        // notify music player service to start the new song in the new playlist (queue)
+                        Bundle bundle = new Bundle();
+                        bundle.putParcelable("mainActivityMessenger", mainActivityMessenger);
+                        bundle.putParcelable("song", userSelection.get(0));
+                        musicServiceIntent.putExtra("musicListActivity", bundle);
+                        startService(musicServiceIntent);
+
                         mode.finish(); // Action picked, so close the CAB
                         return true;
                     case R.id.createplaylist:
@@ -313,7 +329,17 @@ public class MusicListActivity extends AppCompatActivity {
         }
     }
 
-    public void createPlaylist(){
+    /**
+     * creates a playlist given an arraylist of songs
+     * the playlist is a hashmap of Song to SongNode
+     * the SongNodes are created to form a circular doubly linked list
+     *
+     * @param songList arraylist containing the songs to populate the playlist
+     * @return playlist hashmap that contains every Song in songList, each mapping to a SongNode
+     */
+    public HashMap<Song, SongNode> createPlaylist(ArrayList<Song> songList){
+        HashMap<Song, SongNode> playlist = new HashMap<>();
+
         int size = songList.size();
         if (size != 0) {
             Song head = songList.get(0);
@@ -340,6 +366,7 @@ public class MusicListActivity extends AppCompatActivity {
                 }
             }
         }
+        return playlist;
     }
 
     @Override

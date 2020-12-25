@@ -173,6 +173,58 @@ public class MusicPlayerService
                             Toast.makeText(this, "received notification: next", Toast.LENGTH_SHORT).show();
                         }
                         break;
+                    case "notificationPrev":
+                        mainActivity_messenger = intent.getParcelableExtra("notificationPrev");
+                        if (MusicListActivity.playlist != null){
+                            // change current song in main activity
+                            Song current_song = MainActivity.getCurrent_song();
+                            SongNode songNode = MusicListActivity.playlist.get(current_song);
+                            Song next_song = songNode.getPrev();
+                            if (mediaPlayer.isPlaying()) { // keep it playing
+                                sendSongUpdateMessage(mainActivity_messenger, next_song);
+                                sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE);
+                            }
+                            else{ // keep it paused
+                                sendSongUpdateMessage(mainActivity_messenger, next_song);
+                                mediaPlayer.pause();
+                                sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY);
+                            }
+
+                            // change highlighted song from list view (if it exists)
+                            if (musicList_messenger != null) {
+                                sendUpdateMessage(musicList_messenger, UPDATE_HIGHLIGHT);
+                            }
+                        }
+                        else {
+                            Toast.makeText(this, "received notification: prev", Toast.LENGTH_SHORT).show();
+                        }
+                        break;
+                    case "notificationNext":
+                        mainActivity_messenger = intent.getParcelableExtra("notificationNext");
+                        if (MusicListActivity.playlist != null){
+                            // change current song in main activity
+                            Song current_song = MainActivity.getCurrent_song();
+                            SongNode songNode = MusicListActivity.playlist.get(current_song);
+                            Song next_song = songNode.getNext();
+                            if (mediaPlayer.isPlaying()) { // keep it playing
+                                sendSongUpdateMessage(mainActivity_messenger, next_song);
+                                sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE);
+                            }
+                            else{ // keep it paused
+                                sendSongUpdateMessage(mainActivity_messenger, next_song);
+                                mediaPlayer.pause();
+                                sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY);
+                            }
+
+                            // change highlighted song from list view (if it exists)
+                            if (musicList_messenger != null) {
+                                sendUpdateMessage(musicList_messenger, UPDATE_HIGHLIGHT);
+                            }
+                        }
+                        else {
+                            Toast.makeText(this, "received notification: next", Toast.LENGTH_SHORT).show();
+                        }
+                        break;
                     case "seekbarDuration":
                         mainActivity_messenger = intent.getParcelableExtra("seekbarDuration");
                         Object[] durationMessage = new Object[2];

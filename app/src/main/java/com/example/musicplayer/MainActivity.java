@@ -89,9 +89,9 @@ public class MainActivity
     private Intent mainNextIntent;
     private Intent musicListIntent;
     private Intent infoIntent;
-    private Intent pauseplayIntent;
-    private Intent prevIntent;
-    private Intent nextIntent;
+    private Intent notificationPauseplayIntent;
+    private Intent notificationPrevIntent;
+    private Intent notificationNextIntent;
     private Intent seekBarProgressIntent;
     private Intent seekBarSeekIntent;
     private static Song current_song = Song.EMPTY_SONG;
@@ -439,9 +439,9 @@ public class MainActivity
 
         // create intents for the notification action buttons
         Messenger notificationMessenger = new Messenger(new MessageHandler());
-        prevIntent = new Intent(this, MusicPlayerService.class).putExtra("prev", notificationMessenger);
-        pauseplayIntent =  new Intent(this, MusicPlayerService.class).putExtra("pauseplay", notificationMessenger);
-        nextIntent = new Intent(this, MusicPlayerService.class).putExtra("next", notificationMessenger);
+        notificationPrevIntent = new Intent(this, MusicPlayerService.class).putExtra("notificationPrev", notificationMessenger);
+        notificationPauseplayIntent =  new Intent(this, MusicPlayerService.class).putExtra("pauseplay", notificationMessenger);
+        notificationNextIntent = new Intent(this, MusicPlayerService.class).putExtra("notificationNext", notificationMessenger);
 
         notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID_1)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -450,9 +450,9 @@ public class MainActivity
                 .setContentTitle("song")
                 .setContentText("artist")
                 .setLargeIcon(largeImage)
-                .addAction(R.drawable.ic_prev24dp, "prev", PendingIntent.getService(this, 0, prevIntent, PendingIntent.FLAG_UPDATE_CURRENT))
-                .addAction(R.drawable.ic_play24dp, "play", PendingIntent.getService(this, 1, pauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT))
-                .addAction(R.drawable.ic_next24dp, "next", PendingIntent.getService(this, 2, nextIntent, PendingIntent.FLAG_UPDATE_CURRENT))
+                .addAction(R.drawable.ic_prev24dp, "prev", PendingIntent.getService(this, 0, notificationPrevIntent, PendingIntent.FLAG_UPDATE_CURRENT))
+                .addAction(R.drawable.ic_play24dp, "play", PendingIntent.getService(this, 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT))
+                .addAction(R.drawable.ic_next24dp, "next", PendingIntent.getService(this, 2, notificationNextIntent, PendingIntent.FLAG_UPDATE_CURRENT))
                 .setPriority(NotificationCompat.PRIORITY_MIN)
                 .setOngoing(true)
                 .setContentIntent(contentIntent)
@@ -615,13 +615,13 @@ public class MainActivity
             switch (updateOperation) {
                 case MusicPlayerService.UPDATE_PLAY:
                     pauseplay.setImageResource(R.drawable.ic_play);
-                    notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_play24dp, "play", PendingIntent.getService(getApplicationContext(), 1, pauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
+                    notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_play24dp, "play", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);
                     break;
                 case MusicPlayerService.UPDATE_PAUSE:
                     pauseplay.setImageResource(R.drawable.ic_pause);
-                    notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_pause24dp, "pause", PendingIntent.getService(getApplicationContext(), 1, pauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
+                    notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_pause24dp, "pause", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);
                     break;
@@ -675,7 +675,6 @@ public class MainActivity
                         e.printStackTrace();
                     }
                     int songDuration = current_song.getDuration();
-
 
                     // update notification details
                     notificationBuilder

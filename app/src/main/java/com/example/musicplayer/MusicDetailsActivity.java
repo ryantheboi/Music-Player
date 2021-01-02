@@ -76,7 +76,7 @@ public class MusicDetailsActivity extends Activity {
         appendDetail("Artist", song.getArtist());
         appendDetail("Album", song.getAlbum());
         appendDetail("Album ID", (song.getAlbumID()));
-        appendDetail("Duration", MainActivity.convertTime(song.getDuration()));
+        appendDetail("Duration", MusicListActivity.convertTime(song.getDuration()));
         appendDetail("Data Path", song.getDataPath());
         appendDetail("Size", convertMegabytesString(song.getSize()));
         appendDetail("Relative Path", song.getRelativePath());

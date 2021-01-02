@@ -127,7 +127,7 @@ public class MusicPlayerService
                         musicList_messenger = bundle_extra.getParcelable("musicListActivityMessenger");
                         if (MusicListActivity.playlist != null){
                             // change current song in main activity
-                            Song current_song = MainActivity.getCurrent_song();
+                            Song current_song = MusicListActivity.getCurrent_song();
                             SongNode songNode = MusicListActivity.playlist.get(current_song);
                             Song prev_song = songNode.getPrev();
                             if (mediaPlayer.isPlaying()) { // keep it playing
@@ -153,7 +153,7 @@ public class MusicPlayerService
                         musicList_messenger = bundle_extra.getParcelable("musicListActivityMessenger");
                         if (MusicListActivity.playlist != null){
                             // change current song in main activity
-                            Song current_song = MainActivity.getCurrent_song();
+                            Song current_song = MusicListActivity.getCurrent_song();
                             SongNode songNode = MusicListActivity.playlist.get(current_song);
                             Song next_song = songNode.getNext();
                             if (mediaPlayer.isPlaying()) { // keep it playing
@@ -177,7 +177,7 @@ public class MusicPlayerService
                         mainActivity_messenger = intent.getParcelableExtra("notificationPrev");
                         if (MusicListActivity.playlist != null){
                             // change current song in main activity
-                            Song current_song = MainActivity.getCurrent_song();
+                            Song current_song = MusicListActivity.getCurrent_song();
                             SongNode songNode = MusicListActivity.playlist.get(current_song);
                             Song next_song = songNode.getPrev();
                             if (mediaPlayer.isPlaying()) { // keep it playing
@@ -203,7 +203,7 @@ public class MusicPlayerService
                         mainActivity_messenger = intent.getParcelableExtra("notificationNext");
                         if (MusicListActivity.playlist != null){
                             // change current song in main activity
-                            Song current_song = MainActivity.getCurrent_song();
+                            Song current_song = MusicListActivity.getCurrent_song();
                             SongNode songNode = MusicListActivity.playlist.get(current_song);
                             Song next_song = songNode.getNext();
                             if (mediaPlayer.isPlaying()) { // keep it playing
@@ -442,7 +442,7 @@ public class MusicPlayerService
     public void onCompletion(MediaPlayer mp) {
         if (MusicListActivity.playlist != null){
             // change current song in main activity
-            Song current_song = MainActivity.getCurrent_song();
+            Song current_song = MusicListActivity.getCurrent_song();
             SongNode songNode = MusicListActivity.playlist.get(current_song);
             Song next_song = songNode.getNext();
 

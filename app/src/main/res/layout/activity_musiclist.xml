@@ -99,7 +99,7 @@
                 android:layout_height="match_parent"
                 android:background="@drawable/gradient_default_list"
                 android:id="@+id/layout"
-                android:visibility="invisible"
+                android:visibility="visible"
                 tools:context=".MainActivity">
 
                 <com.mikhaellopez.circularimageview.CircularImageView

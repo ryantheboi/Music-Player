@@ -597,9 +597,7 @@ public class MusicListActivity extends AppCompatActivity {
         nextbtn_background_gradient = (GradientDrawable) nextbtn_background.getBackground().getCurrent();
 
         mainNextIntent = new Intent(this, MusicPlayerService.class);
-        final Bundle next_bundle = new Bundle();
-        next_bundle.putParcelable("mainActivityMessenger", mainMessenger);
-        mainNextIntent.putExtra("next", next_bundle);
+        mainNextIntent.putExtra("next", mainMessenger);
 
         next_btn.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -608,7 +606,6 @@ public class MusicListActivity extends AppCompatActivity {
                 next_btn.startAnimation(nextbtnAnim);
                 nextbtn_background.startAnimation(nextbtnBackgroundAnim);
                 nextbtn_background.setVisibility(View.INVISIBLE);
-                next_bundle.putParcelable("musicListActivityMessenger", musicListActivityMessenger);
                 startService(mainNextIntent);
             }
         });
@@ -657,9 +654,7 @@ public class MusicListActivity extends AppCompatActivity {
         prevbtn_background_gradient = (GradientDrawable) prevbtn_background.getBackground().getCurrent();
 
         mainPrevIntent = new Intent(this, MusicPlayerService.class);
-        final Bundle prev_bundle = new Bundle();
-        prev_bundle.putParcelable("mainActivityMessenger", mainMessenger);
-        mainPrevIntent.putExtra("prev", prev_bundle);
+        mainPrevIntent.putExtra("prev", mainMessenger);
 
         prev_btn.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -668,7 +663,6 @@ public class MusicListActivity extends AppCompatActivity {
                 prev_btn.startAnimation(prevbtnAnim);
                 prevbtn_background.startAnimation(prevbtnBackgroundAnim);
                 prevbtn_background.setVisibility(View.INVISIBLE);
-                prev_bundle.putParcelable("musicListActivityMessenger", musicListActivityMessenger);
                 startService(mainPrevIntent);
             }
         });
@@ -777,9 +771,9 @@ public class MusicListActivity extends AppCompatActivity {
 
         // create intents for the notification action buttons
         Messenger notificationMessenger = new Messenger(new MessageHandler());
-        notificationPrevIntent = new Intent(this, MusicPlayerService.class).putExtra("notificationPrev", notificationMessenger);
+        notificationPrevIntent = new Intent(this, MusicPlayerService.class).putExtra("prev", notificationMessenger);
         notificationPauseplayIntent =  new Intent(this, MusicPlayerService.class).putExtra("pauseplay", notificationMessenger);
-        notificationNextIntent = new Intent(this, MusicPlayerService.class).putExtra("notificationNext", notificationMessenger);
+        notificationNextIntent = new Intent(this, MusicPlayerService.class).putExtra("next", notificationMessenger);
 
         notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID_1)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)

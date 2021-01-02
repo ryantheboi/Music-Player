@@ -68,6 +68,7 @@ public class MusicListActivity extends AppCompatActivity {
     public static boolean nightMode = false;
     private ListView listView;
     private RelativeLayout relativeLayout;
+    private RelativeLayout slideupRelativeLayout;
     private ArrayList<Song> songList;
     public static HashMap<Song, SongNode> playlist;
     public static HashMap<Song, SongNode> fullPlaylist;
@@ -494,14 +495,14 @@ public class MusicListActivity extends AppCompatActivity {
         gradient2.mutate();
 
         // 6 second animated gradients with 3 second transitions
-        relativeLayout = findViewById(R.id.layout);
+        slideupRelativeLayout = findViewById(R.id.layout);
         mainAnimation = new AnimationDrawable();
         mainAnimation.addFrame(gradient1, 6000);
         mainAnimation.addFrame(gradient2, 6000);
         mainAnimation.setEnterFadeDuration(3000);
         mainAnimation.setExitFadeDuration(3000);
         mainAnimation.setOneShot(false);
-        relativeLayout.setBackground(mainAnimation);
+        slideupRelativeLayout.setBackground(mainAnimation);
         mainAnimation.start();
     }
 

@@ -189,12 +189,6 @@ public class MusicPlayerService
                         sendSongUpdateMessage(mainActivity_messenger, song);
                         sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE);
                         break;
-                    case "musicListMessenger":
-                        bundle_extra = intent.getBundleExtra("musicListMessenger");
-                        mainActivity_messenger = (Messenger) bundle_extra.get("mainActivityMessenger");
-                        musicList_messenger = (Messenger) bundle_extra.get("musicListActivityMessenger");
-                        sendMessengerUpdateMessage(mainActivity_messenger, musicList_messenger, UPDATE_MESSENGER_MUSICLISTACTIVITY);
-                        break;
                     case "musicListNightToggle":
                         bundle_extra = intent.getBundleExtra("musicListNightToggle");
                         mainActivity_messenger = (Messenger) bundle_extra.get("mainActivityMessenger");

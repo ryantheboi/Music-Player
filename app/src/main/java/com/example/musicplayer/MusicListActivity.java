@@ -46,11 +46,14 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -67,8 +70,7 @@ public class MusicListActivity extends AppCompatActivity {
     private ImageButton nightModeButton;
     public static boolean nightMode = false;
     private ListView listView;
-    private RelativeLayout relativeLayout;
-    private RelativeLayout slideupRelativeLayout;
+    private RelativeLayout musicListRelativeLayout;
     private ArrayList<Song> songList;
     public static HashMap<Song, SongNode> playlist;
     public static HashMap<Song, SongNode> fullPlaylist;
@@ -93,7 +95,6 @@ public class MusicListActivity extends AppCompatActivity {
     private Animation nextbtnBackgroundAnim;
     private Animation prevbtnBackgroundAnim;
     private Button albumArt_btn;
-    private ImageButton musicList;
     private ImageButton info_btn;
     private ImageButton pauseplay;
     private ImageButton next_btn;
@@ -116,7 +117,6 @@ public class MusicListActivity extends AppCompatActivity {
     private Intent mainPausePlayIntent;
     private Intent mainPrevIntent;
     private Intent mainNextIntent;
-    private Intent musicListIntent;
     private Intent infoIntent;
     private Intent notificationPauseplayIntent;
     private Intent notificationPrevIntent;
@@ -127,16 +127,19 @@ public class MusicListActivity extends AppCompatActivity {
     private Palette.Swatch vibrantSwatch;
     private Palette.Swatch darkVibrantSwatch;
     private Palette.Swatch dominantSwatch;
-    private Messenger musicListActivityMessenger;
+    private RelativeLayout mainActivityRelativeLayout;
+    private LinearLayout slidingUpMenuLayout;
+    private SlidingUpPanelLayout slidingUpPanelLayout;
 
     @Override
     @TargetApi(16)
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_musiclist);
-        relativeLayout = findViewById(R.id.activity_musiclist);
+        musicListRelativeLayout = findViewById(R.id.activity_musiclist);
+        initMusicList();
 
-        // initialize
+        // initialize main sliding up panel
         initMainAnimation();
 
         initAlbumArt();
@@ -145,9 +148,9 @@ public class MusicListActivity extends AppCompatActivity {
 
         initSeekbar();
 
-        initMusicList();
-
         initInfoButton();
+
+        initSlidingUpPanel();
 
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
         mediaSession = new MediaSessionCompat(this, "media");
@@ -317,7 +320,7 @@ public class MusicListActivity extends AppCompatActivity {
     public void toggleNightMode(){
         if (!nightMode){
             listView.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
-            relativeLayout.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
+            musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
             adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemnightselectorblue));
             nightModeButton.setImageResource(R.drawable.night);
             nightMode = true;
@@ -331,7 +334,7 @@ public class MusicListActivity extends AppCompatActivity {
         }
         else{
             listView.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
-            relativeLayout.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
+            musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
             adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemlightselectorblue));
             nightModeButton.setImageResource(R.drawable.light);
             nightMode = false;
@@ -483,6 +486,36 @@ public class MusicListActivity extends AppCompatActivity {
     }
 
     /**
+     * Initialize the sliding up panel for controlling the visibility of the main activity
+     */
+    public void initSlidingUpPanel(){
+        slidingUpMenuLayout = findViewById(R.id.sliding_menu);
+        slidingUpPanelLayout = findViewById(R.id.slidingPanel);
+        slidingUpPanelLayout.addPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
+            @Override
+            public void onPanelSlide(View panel, float slideOffset) {
+                slidingUpMenuLayout.setAlpha(1 - slideOffset);
+                mainActivityRelativeLayout.setAlpha(slideOffset);
+            }
+
+            @Override
+            public void onPanelStateChanged(View panel, SlidingUpPanelLayout.PanelState previousState, SlidingUpPanelLayout.PanelState newState) {
+            }
+        });
+
+        // enables expand clicking only for the menu (and disables it for the entire relativelayout)
+        slidingUpPanelLayout.getChildAt(1).setOnClickListener(null);
+        slidingUpMenuLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (slidingUpPanelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.COLLAPSED) {
+                    slidingUpPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
+                }
+            }
+        });
+    }
+
+    /**
      * Initialize the animated gradient based on night mode and album art
      * Gradients are set up to be mutated, here
      */
@@ -495,14 +528,14 @@ public class MusicListActivity extends AppCompatActivity {
         gradient2.mutate();
 
         // 6 second animated gradients with 3 second transitions
-        slideupRelativeLayout = findViewById(R.id.layout);
+        mainActivityRelativeLayout = findViewById(R.id.mainlayout);
         mainAnimation = new AnimationDrawable();
         mainAnimation.addFrame(gradient1, 6000);
         mainAnimation.addFrame(gradient2, 6000);
         mainAnimation.setEnterFadeDuration(3000);
         mainAnimation.setExitFadeDuration(3000);
         mainAnimation.setOneShot(false);
-        slideupRelativeLayout.setBackground(mainAnimation);
+        mainActivityRelativeLayout.setBackground(mainAnimation);
         mainAnimation.start();
     }
 
@@ -1048,9 +1081,6 @@ public class MusicListActivity extends AppCompatActivity {
                 case MusicPlayerService.UPDATE_LIGHT:
                     swapVibrantGradient();
                     info_btn.setImageResource(R.drawable.info_night);
-                    break;
-                case MusicPlayerService.UPDATE_MESSENGER_MUSICLISTACTIVITY:
-                    musicListActivityMessenger = (Messenger) bundle.get("messenger");
                     break;
             }
         }

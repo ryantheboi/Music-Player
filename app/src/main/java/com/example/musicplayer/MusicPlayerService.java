@@ -42,8 +42,7 @@ public class MusicPlayerService
     public static final int UPDATE_SONG = 4;
     public static final int UPDATE_NIGHT = 5;
     public static final int UPDATE_LIGHT = 6;
-    public static final int UPDATE_MESSENGER_MUSICLISTACTIVITY = 7;
-    public static final int UPDATE_HIGHLIGHT = 8;
+    public static final int UPDATE_HIGHLIGHT = 7;
 
 
 

@@ -130,6 +130,12 @@ public class MusicListActivity extends AppCompatActivity {
     private RelativeLayout mainActivityRelativeLayout;
     private LinearLayout slidingUpMenuLayout;
     private SlidingUpPanelLayout slidingUpPanelLayout;
+    private ImageView slidingUp_albumArt;
+    private TextView slidingUp_songName;
+    private TextView slidingUp_artistName;
+    private ImageButton slidingUp_prev;
+    private ImageButton slidingUp_pauseplay;
+    private ImageButton slidingUp_next;
 
     @Override
     @TargetApi(16)
@@ -321,6 +327,8 @@ public class MusicListActivity extends AppCompatActivity {
         if (!nightMode){
             listView.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
             musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
+            slidingUpPanelLayout.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
+            slidingUp_songName.setTextColor(getResources().getColor(R.color.lightPrimaryWhite));
             adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemnightselectorblue));
             nightModeButton.setImageResource(R.drawable.night);
             nightMode = true;
@@ -335,6 +343,8 @@ public class MusicListActivity extends AppCompatActivity {
         else{
             listView.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
             musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
+            slidingUpPanelLayout.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
+            slidingUp_songName.setTextColor(getResources().getColor(R.color.colorTextDark));
             adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemlightselectorblue));
             nightModeButton.setImageResource(R.drawable.light);
             nightMode = false;
@@ -489,7 +499,16 @@ public class MusicListActivity extends AppCompatActivity {
      * Initialize the sliding up panel for controlling the visibility of the main activity
      */
     public void initSlidingUpPanel(){
+        // init image, text, and buttons on sliding menu
         slidingUpMenuLayout = findViewById(R.id.sliding_menu);
+        slidingUp_albumArt = findViewById(R.id.sliding_albumart);
+        slidingUp_songName = findViewById(R.id.sliding_title);
+        slidingUp_artistName = findViewById(R.id.sliding_artist);
+        slidingUp_prev = findViewById(R.id.sliding_prev);
+        slidingUp_pauseplay = findViewById(R.id.sliding_play);
+        slidingUp_next = findViewById(R.id.sliding_next);
+
+        // init slide and click controls for slide panel layout
         slidingUpPanelLayout = findViewById(R.id.slidingPanel);
         slidingUpPanelLayout.addPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
             @Override
@@ -1050,6 +1069,11 @@ public class MusicListActivity extends AppCompatActivity {
                             .setLargeIcon(albumImage);
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);
+
+                    // update sliding menu details
+                    slidingUp_songName.setText(current_song.getTitle());
+                    slidingUp_artistName.setText(current_song.getArtist());
+                    slidingUp_albumArt.setImageBitmap(albumImage);
 
                     // update main activity details
                     songName.setText(current_song.getTitle());

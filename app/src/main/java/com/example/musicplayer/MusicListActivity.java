@@ -82,7 +82,7 @@ public class MusicListActivity extends AppCompatActivity {
     private ActionMode actionMode = null;
     private ArrayList<Song> userSelection;
 
-    // main activity
+    // sliding up panel
     private boolean largeAlbumArt;
     private ImageView albumArt;
     private ImageView pauseplay_background;
@@ -133,9 +133,16 @@ public class MusicListActivity extends AppCompatActivity {
     private ImageView slidingUp_albumArt;
     private TextView slidingUp_songName;
     private TextView slidingUp_artistName;
-    private ImageButton slidingUp_prev;
-    private ImageButton slidingUp_pauseplay;
-    private ImageButton slidingUp_next;
+    private Intent slidingUp_pauseplayIntent;
+    private Intent slidingUp_prevIntent;
+    private Intent slidingUp_nextIntent;
+    private ImageButton slidingUp_prev_btn;
+    private ImageButton slidingUp_pauseplay_btn;
+    private ImageButton slidingUp_next_btn;
+    private Animation slidingUp_pauseplaybtnAnim;
+    private Animation slidingUp_nextbtnAnim;
+    private Animation slidingUp_prevbtnAnim;
+
 
     @Override
     @TargetApi(16)
@@ -504,9 +511,8 @@ public class MusicListActivity extends AppCompatActivity {
         slidingUp_albumArt = findViewById(R.id.sliding_albumart);
         slidingUp_songName = findViewById(R.id.sliding_title);
         slidingUp_artistName = findViewById(R.id.sliding_artist);
-        slidingUp_prev = findViewById(R.id.sliding_prev);
-        slidingUp_pauseplay = findViewById(R.id.sliding_play);
-        slidingUp_next = findViewById(R.id.sliding_next);
+        initSlidingUpPanelButtons();
+
 
         // init slide and click controls for slide panel layout
         slidingUpPanelLayout = findViewById(R.id.slidingPanel);
@@ -530,6 +536,144 @@ public class MusicListActivity extends AppCompatActivity {
                 if (slidingUpPanelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.COLLAPSED) {
                     slidingUpPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.EXPANDED);
                 }
+            }
+        });
+    }
+
+    /**
+     * Initializes the three main buttons in sliding up panel:
+     * Pauseplay, previous, and next
+     * Each one will trigger a unique event from MusicPlayerService
+     */
+    @SuppressLint("ClickableViewAccessibility")
+    public void initSlidingUpPanelButtons(){
+        Messenger slidingUpPanelMessenger = new Messenger(new MessageHandler());
+
+        // init pauseplay button with touch and click, and appropriate animations
+        slidingUp_pauseplay_btn = findViewById(R.id.sliding_btn_play);
+        slidingUp_pauseplaybtnAnim = AnimationUtils.loadAnimation(this, R.anim.blink_animation);
+
+        slidingUp_pauseplayIntent = new Intent(this, MusicPlayerService.class);
+        slidingUp_pauseplayIntent.putExtra("pauseplay", slidingUpPanelMessenger);
+
+        slidingUp_pauseplay_btn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                slidingUp_pauseplay_btn.startAnimation(slidingUp_pauseplaybtnAnim);
+                startService(slidingUp_pauseplayIntent);
+            }
+        });
+        slidingUp_pauseplay_btn.setOnTouchListener(new View.OnTouchListener() {
+            private Rect viewBoundary;
+            private boolean ignore; // true to ignore all touches, false otherwise
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        ignore = false;
+                        viewBoundary = new Rect(v.getLeft(), v.getTop(), v.getRight(), v.getBottom());
+                        slidingUp_pauseplay_btn.animate().scaleX((float) 0.8).scaleY((float) 0.8);
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        slidingUp_pauseplay_btn.animate().scaleX(1).scaleY(1);
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        // if movement is greater than 60 pixels from the original press point
+                        if (!ignore) {
+                            if (!viewBoundary.contains(v.getLeft() + (int) event.getX(), v.getTop() + (int) event.getY())) {
+                                slidingUp_pauseplay_btn.animate().scaleX(1).scaleY(1);
+                                ignore = true;
+                            }
+                        }
+                        break;
+                }
+                return ignore;
+            }
+        });
+
+        // init next button with touch and click, and appropriate animations
+        slidingUp_next_btn = findViewById(R.id.sliding_btn_next);
+        slidingUp_nextbtnAnim = AnimationUtils.loadAnimation(this, R.anim.zoom_inout_animation);
+
+        slidingUp_nextIntent = new Intent(this, MusicPlayerService.class);
+        slidingUp_nextIntent.putExtra("next", slidingUpPanelMessenger);
+
+        slidingUp_next_btn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                slidingUp_next_btn.startAnimation(slidingUp_nextbtnAnim);
+                startService(slidingUp_nextIntent);
+            }
+        });
+
+        slidingUp_next_btn.setOnTouchListener(new View.OnTouchListener() {
+            private Rect viewBoundary;
+            private boolean ignore; // true to ignore all touches, false otherwise
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        ignore = false;
+                        viewBoundary = new Rect(v.getLeft(), v.getTop(), v.getRight(), v.getBottom());
+                        slidingUp_next_btn.animate().scaleX((float) 0.8).scaleY((float) 0.8);
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        slidingUp_next_btn.animate().scaleX(1).scaleY(1);
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        // if movement is greater than 60 pixels from the original press point
+                        if (!ignore) {
+                            if (!viewBoundary.contains(v.getLeft() + (int) event.getX(), v.getTop() + (int) event.getY())) {
+                                slidingUp_next_btn.animate().scaleX(1).scaleY(1);
+                                ignore = true;
+                            }
+                        }
+                        break;
+                }
+                return ignore;
+            }
+        });
+
+        // init prev button with touch and click, and appropriate animations
+        slidingUp_prev_btn = findViewById(R.id.sliding_btn_prev);
+        slidingUp_prevbtnAnim = AnimationUtils.loadAnimation(this, R.anim.zoom_inout_animation);
+
+        slidingUp_prevIntent = new Intent(this, MusicPlayerService.class);
+        slidingUp_prevIntent.putExtra("prev", slidingUpPanelMessenger);
+
+        slidingUp_prev_btn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view){
+                slidingUp_prev_btn.startAnimation(slidingUp_prevbtnAnim);
+                startService(slidingUp_prevIntent);
+            }
+        });
+
+        slidingUp_prev_btn.setOnTouchListener(new View.OnTouchListener() {
+            private Rect viewBoundary;
+            private boolean ignore; // true to ignore all touches, false otherwise
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        ignore = false;
+                        viewBoundary = new Rect(v.getLeft(), v.getTop(), v.getRight(), v.getBottom());
+                        slidingUp_prev_btn.animate().scaleX((float) 0.8).scaleY((float) 0.8);
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        slidingUp_prev_btn.animate().scaleX(1).scaleY(1);
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        // if movement is greater than 60 pixels from the original press point
+                        if (!ignore) {
+                            if (!viewBoundary.contains(v.getLeft() + (int) event.getX(), v.getTop() + (int) event.getY())) {
+                                slidingUp_prev_btn.animate().scaleX(1).scaleY(1);
+                                ignore = true;
+                            }
+                        }
+                        break;
+                }
+                return ignore;
             }
         });
     }
@@ -1000,12 +1144,14 @@ public class MusicListActivity extends AppCompatActivity {
             switch (updateOperation) {
                 case MusicPlayerService.UPDATE_PLAY:
                     pauseplay.setImageResource(R.drawable.ic_play);
+                    slidingUp_pauseplay_btn.setImageResource(R.drawable.ic_play24dp);
                     notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_play24dp, "play", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);
                     break;
                 case MusicPlayerService.UPDATE_PAUSE:
                     pauseplay.setImageResource(R.drawable.ic_pause);
+                    slidingUp_pauseplay_btn.setImageResource(R.drawable.ic_pause24dp);
                     notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_pause24dp, "pause", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);

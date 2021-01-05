@@ -66,7 +66,6 @@ import static com.example.musicplayer.Notifications.CHANNEL_ID_1;
 public class MusicListActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSION_REQUEST = 1;
-    private ImageButton mainActivity;
     private ImageButton nightModeButton;
     public static boolean nightMode = false;
     private ListView listView;
@@ -187,15 +186,6 @@ public class MusicListActivity extends AppCompatActivity {
 //        }
         mainActivityMessenger = new Messenger(new MessageHandler());
         musicServiceIntent = new Intent(this, MusicPlayerService.class);
-
-        // init button for returning to main activity
-        mainActivity = findViewById(R.id.btn_mainactivity);
-        mainActivity.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v){
-                openMainActivity();
-            }
-        });
 
         // check and request for read permissions
         if (ContextCompat.checkSelfPermission(MusicListActivity.this,
@@ -494,12 +484,6 @@ public class MusicListActivity extends AppCompatActivity {
                     Toast.makeText(this, "Permission denied..", Toast.LENGTH_SHORT).show();
                 }
         }
-    }
-
-    public void openMainActivity(){
-        Intent mainActivityIntent = new Intent(this, MainActivity.class);
-        mainActivityIntent.addFlags(FLAG_ACTIVITY_REORDER_TO_FRONT );
-        startActivity(mainActivityIntent);
     }
 
     /**

@@ -2,11 +2,13 @@ package com.example.musicplayer;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
+import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.palette.graphics.Palette;
 
 import android.Manifest;
@@ -25,6 +27,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.media.AudioManager;
 import android.net.Uri;
@@ -324,7 +327,7 @@ public class MusicListActivity extends AppCompatActivity {
         if (!nightMode){
             listView.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
             musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
-            slidingUpPanelLayout.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
+            slidingUpPanelLayout.setBackgroundColor(getResources().getColor(R.color.nightSecondaryDark));
             slidingUp_songName.setTextColor(getResources().getColor(R.color.lightPrimaryWhite));
             adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemnightselectorblue));
             nightModeButton.setImageResource(R.drawable.night);
@@ -340,7 +343,7 @@ public class MusicListActivity extends AppCompatActivity {
         else{
             listView.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
             musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
-            slidingUpPanelLayout.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
+            slidingUpPanelLayout.setBackgroundColor(getResources().getColor(R.color.lightSecondaryWhite));
             slidingUp_songName.setTextColor(getResources().getColor(R.color.colorTextDark));
             adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemlightselectorblue));
             nightModeButton.setImageResource(R.drawable.light);
@@ -497,6 +500,9 @@ public class MusicListActivity extends AppCompatActivity {
         slidingUp_artistName = findViewById(R.id.sliding_artist);
         initSlidingUpPanelButtons();
 
+//        Drawable unwrappedDrawable = slidingUp_pauseplay_btn.getDrawable();
+//        Drawable wrappedDrawable = DrawableCompat.wrap(unwrappedDrawable);
+//        DrawableCompat.setTint(wrappedDrawable, Color.RED);
 
         // init slide and click controls for slide panel layout
         slidingUpPanelLayout = findViewById(R.id.slidingPanel);

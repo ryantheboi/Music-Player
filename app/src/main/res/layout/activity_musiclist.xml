@@ -12,15 +12,15 @@
         <RelativeLayout
             android:id="@+id/activity_musiclist"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:background="@color/lightPrimaryWhite">
             <ListView
                 android:id="@+id/listView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginTop="50dp"
                 android:dividerHeight="20dp"
-                android:divider="@drawable/list_divider"
-                android:background="@color/lightPrimaryWhite"/>
+                android:divider="@drawable/list_divider"/>
 
             <ImageButton
                 android:id="@+id/btn_nightmode"
@@ -40,6 +40,7 @@
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:background="@color/lightSecondaryWhite"
                 android:weightSum="100">
                 <com.mikhaellopez.circularimageview.CircularImageView
                     android:id="@+id/sliding_albumart"

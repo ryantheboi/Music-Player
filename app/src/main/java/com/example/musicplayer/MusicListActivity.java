@@ -2,7 +2,6 @@ package com.example.musicplayer;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -61,6 +60,7 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import static android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT;
 import static android.os.Build.VERSION_CODES.Q;
@@ -129,6 +129,8 @@ public class MusicListActivity extends AppCompatActivity {
     private Palette.Swatch vibrantSwatch;
     private Palette.Swatch darkVibrantSwatch;
     private Palette.Swatch dominantSwatch;
+    private Palette.Swatch contrastSwatch;
+    private List<Palette.Swatch> swatchList;
     private RelativeLayout mainActivityRelativeLayout;
     private LinearLayout slidingUpMenuLayout;
     private SlidingUpPanelLayout slidingUpPanelLayout;
@@ -172,21 +174,6 @@ public class MusicListActivity extends AppCompatActivity {
         notificationManager = NotificationManagerCompat.from(this);
         showNotification();
 
-//        // obtain the intent that started this activity (should be the Main Activity)
-//        Intent intent = this.getIntent();
-//        Bundle b = intent.getExtras();
-//        if (b != null) {
-//            for (String key : b.keySet()) {
-//                switch (key) {
-//                    case "mainActivity":
-//                        // get mainActivity's messenger and prepare intent for MusicPlayerService
-//                        mainActivityMessenger = intent.getParcelableExtra("mainActivity");
-//                        musicServiceIntent = new Intent(this, MusicPlayerService.class);
-//
-//                        break;
-//                }
-//            }
-//        }
         mainActivityMessenger = new Messenger(new MessageHandler());
         musicServiceIntent = new Intent(this, MusicPlayerService.class);
 
@@ -327,8 +314,6 @@ public class MusicListActivity extends AppCompatActivity {
         if (!nightMode){
             listView.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
             musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
-            slidingUpPanelLayout.setBackgroundColor(getResources().getColor(R.color.nightSecondaryDark));
-            slidingUp_songName.setTextColor(getResources().getColor(R.color.lightPrimaryWhite));
             adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemnightselectorblue));
             nightModeButton.setImageResource(R.drawable.night);
             nightMode = true;
@@ -343,8 +328,6 @@ public class MusicListActivity extends AppCompatActivity {
         else{
             listView.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
             musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
-            slidingUpPanelLayout.setBackgroundColor(getResources().getColor(R.color.lightSecondaryWhite));
-            slidingUp_songName.setTextColor(getResources().getColor(R.color.colorTextDark));
             adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemlightselectorblue));
             nightModeButton.setImageResource(R.drawable.light);
             nightMode = false;
@@ -499,10 +482,6 @@ public class MusicListActivity extends AppCompatActivity {
         slidingUp_songName = findViewById(R.id.sliding_title);
         slidingUp_artistName = findViewById(R.id.sliding_artist);
         initSlidingUpPanelButtons();
-
-//        Drawable unwrappedDrawable = slidingUp_pauseplay_btn.getDrawable();
-//        Drawable wrappedDrawable = DrawableCompat.wrap(unwrappedDrawable);
-//        DrawableCompat.setTint(wrappedDrawable, Color.RED);
 
         // init slide and click controls for slide panel layout
         slidingUpPanelLayout = findViewById(R.id.slidingPanel);
@@ -1064,6 +1043,39 @@ public class MusicListActivity extends AppCompatActivity {
     }
 
     /**
+     * swaps the background, text, and button colors of the sliding menu
+     * text and button colors are decided as the swatch that contrasts the most with the background
+     * @param swatches list of palette swatches from an album art image
+     * @param base the background color the sliding menu will be
+     */
+    @TargetApi(16)
+    private void swapSlidingMenuSwatch(List<Palette.Swatch> swatches, int base){
+        // find the swatch that contrasts the most with the base
+        contrastSwatch = swatches.get(0);
+        int maxDiffRGB = 0;
+        for (Palette.Swatch swatch : swatches){
+            if (Math.abs(base - swatch.getRgb()) > maxDiffRGB){
+                maxDiffRGB = Math.abs(base - swatch.getRgb());
+                contrastSwatch = swatch;
+            }
+        }
+
+        // change color of sliding menu buttons and text
+        slidingUp_songName.setTextColor(contrastSwatch.getRgb());
+        slidingUp_artistName.setTextColor(contrastSwatch.getRgb());
+        slidingUpPanelLayout.setBackgroundColor(base);
+        Drawable unwrappedDrawablePauseplay = slidingUp_pauseplay_btn.getDrawable();
+        Drawable unwrappedDrawableNext = slidingUp_next_btn.getDrawable();
+        Drawable unwrappedDrawablePrev = slidingUp_prev_btn.getDrawable();
+        Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
+        Drawable wrappedDrawableNext = DrawableCompat.wrap(unwrappedDrawableNext);
+        Drawable wrappedDrawablePrev = DrawableCompat.wrap(unwrappedDrawablePrev);
+        DrawableCompat.setTint(wrappedDrawablePauseplay, contrastSwatch.getRgb());
+        DrawableCompat.setTint(wrappedDrawableNext, contrastSwatch.getRgb());
+        DrawableCompat.setTint(wrappedDrawablePrev, contrastSwatch.getRgb());
+    }
+
+    /**
      * helper function to convert time in milliseconds to HH:MM:SS format
      */
     public static String convertTime(int timeInMS){
@@ -1135,6 +1147,11 @@ public class MusicListActivity extends AppCompatActivity {
                 case MusicPlayerService.UPDATE_PLAY:
                     pauseplay.setImageResource(R.drawable.ic_play);
                     slidingUp_pauseplay_btn.setImageResource(R.drawable.ic_play24dp);
+                    if (contrastSwatch != null){ // change sliding menu pauseplay button color
+                        Drawable unwrappedDrawablePauseplay = slidingUp_pauseplay_btn.getDrawable();
+                        Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
+                        DrawableCompat.setTint(wrappedDrawablePauseplay, contrastSwatch.getRgb());
+                    }
                     notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_play24dp, "play", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);
@@ -1142,6 +1159,11 @@ public class MusicListActivity extends AppCompatActivity {
                 case MusicPlayerService.UPDATE_PAUSE:
                     pauseplay.setImageResource(R.drawable.ic_pause);
                     slidingUp_pauseplay_btn.setImageResource(R.drawable.ic_pause24dp);
+                    if (contrastSwatch != null){ // change sliding menu pauseplay button color
+                        Drawable unwrappedDrawablePauseplay = slidingUp_pauseplay_btn.getDrawable();
+                        Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
+                        DrawableCompat.setTint(wrappedDrawablePauseplay, contrastSwatch.getRgb());
+                    }
                     notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_pause24dp, "pause", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);
@@ -1225,21 +1247,26 @@ public class MusicListActivity extends AppCompatActivity {
                             vibrantSwatch = palette.getVibrantSwatch();
                             darkVibrantSwatch = palette.getDarkVibrantSwatch();
                             dominantSwatch = palette.getDominantSwatch();
+                            swatchList = palette.getSwatches();
                             if (MusicListActivity.nightMode){
                                 swapDarkVibrantGradient();
+                                swapSlidingMenuSwatch(swatchList, getResources().getColor(R.color.nightSecondaryDark));
                             }
                             else{
                                 swapVibrantGradient();
+                                swapSlidingMenuSwatch(swatchList, getResources().getColor(R.color.lightSecondaryWhite));
                             }
                         }
                     });
                     break;
                 case MusicPlayerService.UPDATE_NIGHT:
                     swapDarkVibrantGradient();
+                    swapSlidingMenuSwatch(swatchList, getResources().getColor(R.color.nightSecondaryDark));
                     info_btn.setImageResource(R.drawable.info_light);
                     break;
                 case MusicPlayerService.UPDATE_LIGHT:
                     swapVibrantGradient();
+                    swapSlidingMenuSwatch(swatchList, getResources().getColor(R.color.lightSecondaryWhite));
                     info_btn.setImageResource(R.drawable.info_night);
                     break;
             }

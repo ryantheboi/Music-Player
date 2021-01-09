@@ -40,9 +40,7 @@ public class MusicPlayerService
     public static final int UPDATE_SEEKBAR_DURATION = 2;
     public static final int UPDATE_SEEKBAR_PROGRESS = 3;
     public static final int UPDATE_SONG = 4;
-    public static final int UPDATE_NIGHT = 5;
-    public static final int UPDATE_LIGHT = 6;
-    public static final int UPDATE_HIGHLIGHT = 7;
+    public static final int UPDATE_HIGHLIGHT = 5;
 
 
 
@@ -188,17 +186,6 @@ public class MusicPlayerService
                         sendSongUpdateMessage(mainActivity_messenger, song);
                         sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE);
                         break;
-                    case "musicListNightToggle":
-                        bundle_extra = intent.getBundleExtra("musicListNightToggle");
-                        mainActivity_messenger = (Messenger) bundle_extra.get("mainActivityMessenger");
-                        boolean nightMode = (boolean) bundle_extra.get("nightmode");
-                        if (nightMode){
-                            sendUpdateMessage(mainActivity_messenger, UPDATE_NIGHT);
-                        }
-                        else{
-                            sendUpdateMessage(mainActivity_messenger, UPDATE_LIGHT);
-                        }
-                        break;
                 }
             }
         }
@@ -312,27 +299,6 @@ public class MusicPlayerService
             e.printStackTrace();
         }
     }
-
-    /**
-     * send a message to the messenger's activity to update its messenger
-     * @param messenger - the messenger to receive the update messenger from another activity
-     * @param update - the messenger from the other activity
-     * @param message - the update code
-     */
-    private void sendMessengerUpdateMessage(Messenger messenger, Messenger update, int message){
-        Message msg = Message.obtain();
-        Bundle bundle = new Bundle();
-
-        bundle.putInt("update", message);
-        bundle.putParcelable("messenger", update);
-        msg.setData(bundle);
-        try {
-            messenger.send(msg);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-    }
-
 
     /**
      *  checks for audio focus before toggling media

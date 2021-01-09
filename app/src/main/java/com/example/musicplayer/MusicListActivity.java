@@ -235,17 +235,15 @@ public class MusicListActivity extends AppCompatActivity {
                 // obtain the selected song object and add to user selection arraylist
                 Song song = (Song) listView.getItemAtPosition(position);
 
-                if (!checked){
+                if (!checked) {
                     userSelection.remove(song);
-                }
-                else{
+                } else {
                     userSelection.add(song);
                 }
 
-                if (userSelection.size() == 1){
+                if (userSelection.size() == 1) {
                     mode.setTitle(userSelection.get(0).getTitle());
-                }
-                else{
+                } else {
                     mode.setTitle(userSelection.size() + " songs selected");
                 }
             }
@@ -265,7 +263,7 @@ public class MusicListActivity extends AppCompatActivity {
 
             @Override
             public boolean onActionItemClicked(android.view.ActionMode mode, MenuItem item) {
-                switch (item.getItemId()){
+                switch (item.getItemId()) {
                     case R.id.createqueue:
                         Toast.makeText(MusicListActivity.this, "Creating Queue of " + userSelection.size() + " songs", Toast.LENGTH_SHORT).show();
                         // construct new current playlist, given the user selections
@@ -298,47 +296,40 @@ public class MusicListActivity extends AppCompatActivity {
         });
     }
 
-    public void initNightMode(){
+    public void initNightMode() {
         nightMode = false;
         nightModeButton = findViewById(R.id.btn_nightmode);
         nightModeServiceIntent = new Intent(this, MusicPlayerService.class);
-        nightModeButton.setOnClickListener(new View.OnClickListener(){
+        nightModeButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v){
+            public void onClick(View v) {
                 toggleNightMode();
             }
         });
     }
 
-    public void toggleNightMode(){
-        if (!nightMode){
+    public void toggleNightMode() {
+        if (!nightMode) {
             listView.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
             musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
             adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemnightselectorblue));
             nightModeButton.setImageResource(R.drawable.night);
             nightMode = true;
 
-            // notify music player service with the main activity messenger
-            Bundle bundle = new Bundle();
-            bundle.putParcelable("mainActivityMessenger", mainActivityMessenger);
-            bundle.putBoolean("nightmode", true);
-            nightModeServiceIntent.putExtra("musicListNightToggle", bundle);
-            startService(nightModeServiceIntent);
-        }
-        else{
+            // swap info button color
+            info_btn.setImageResource(R.drawable.info_light);
+        } else {
             listView.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
             musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
             adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemlightselectorblue));
             nightModeButton.setImageResource(R.drawable.light);
             nightMode = false;
 
-            // notify music player service with the main activity messenger
-            Bundle bundle = new Bundle();
-            bundle.putParcelable("mainActivityMessenger", mainActivityMessenger);
-            bundle.putBoolean("nightmode", false);
-            nightModeServiceIntent.putExtra("musicListNightToggle", bundle);
-            startService(nightModeServiceIntent);
+            // swap info button color
+            info_btn.setImageResource(R.drawable.info_night);
         }
+        swapMainColors();
+        swapSlidingMenuColors();
     }
 
     @TargetApi(Q)
@@ -422,7 +413,7 @@ public class MusicListActivity extends AppCompatActivity {
      * @param songList arraylist containing the songs to populate the playlist
      * @return playlist hashmap that contains every Song in songList, each mapping to a SongNode
      */
-    public HashMap<Song, SongNode> createPlaylist(ArrayList<Song> songList){
+    public HashMap<Song, SongNode> createPlaylist(ArrayList<Song> songList) {
         HashMap<Song, SongNode> playlist = new HashMap<>();
 
         int size = songList.size();
@@ -455,18 +446,17 @@ public class MusicListActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults){
-        switch (requestCode){
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode) {
             case MY_PERMISSION_REQUEST:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     if (ContextCompat.checkSelfPermission(MusicListActivity.this,
-                            Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
+                            Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
                         Toast.makeText(this, "Permission granted!", Toast.LENGTH_SHORT).show();
                         initMusicList();
                         initNightMode();
                     }
-                }
-                else{
+                } else {
                     Toast.makeText(this, "Permission denied..", Toast.LENGTH_SHORT).show();
                 }
         }
@@ -475,7 +465,7 @@ public class MusicListActivity extends AppCompatActivity {
     /**
      * Initialize the sliding up panel for controlling the visibility of the main activity
      */
-    public void initSlidingUpPanel(){
+    public void initSlidingUpPanel() {
         // init image, text, and buttons on sliding menu
         slidingUpMenuLayout = findViewById(R.id.sliding_menu);
         slidingUp_albumArt = findViewById(R.id.sliding_albumart);
@@ -515,7 +505,7 @@ public class MusicListActivity extends AppCompatActivity {
      * Each one will trigger a unique event from MusicPlayerService
      */
     @SuppressLint("ClickableViewAccessibility")
-    public void initSlidingUpPanelButtons(){
+    public void initSlidingUpPanelButtons() {
         Messenger slidingUpPanelMessenger = new Messenger(new MessageHandler());
 
         // init pauseplay button with touch and click, and appropriate animations
@@ -525,9 +515,9 @@ public class MusicListActivity extends AppCompatActivity {
         slidingUp_pauseplayIntent = new Intent(this, MusicPlayerService.class);
         slidingUp_pauseplayIntent.putExtra("pauseplay", slidingUpPanelMessenger);
 
-        slidingUp_pauseplay_btn.setOnClickListener(new View.OnClickListener(){
+        slidingUp_pauseplay_btn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view){
+            public void onClick(View view) {
                 slidingUp_pauseplay_btn.startAnimation(slidingUp_pauseplaybtnAnim);
                 startService(slidingUp_pauseplayIntent);
             }
@@ -535,6 +525,7 @@ public class MusicListActivity extends AppCompatActivity {
         slidingUp_pauseplay_btn.setOnTouchListener(new View.OnTouchListener() {
             private Rect viewBoundary;
             private boolean ignore; // true to ignore all touches, false otherwise
+
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
@@ -567,9 +558,9 @@ public class MusicListActivity extends AppCompatActivity {
         slidingUp_nextIntent = new Intent(this, MusicPlayerService.class);
         slidingUp_nextIntent.putExtra("next", slidingUpPanelMessenger);
 
-        slidingUp_next_btn.setOnClickListener(new View.OnClickListener(){
+        slidingUp_next_btn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view){
+            public void onClick(View view) {
                 slidingUp_next_btn.startAnimation(slidingUp_nextbtnAnim);
                 startService(slidingUp_nextIntent);
             }
@@ -578,6 +569,7 @@ public class MusicListActivity extends AppCompatActivity {
         slidingUp_next_btn.setOnTouchListener(new View.OnTouchListener() {
             private Rect viewBoundary;
             private boolean ignore; // true to ignore all touches, false otherwise
+
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
@@ -610,9 +602,9 @@ public class MusicListActivity extends AppCompatActivity {
         slidingUp_prevIntent = new Intent(this, MusicPlayerService.class);
         slidingUp_prevIntent.putExtra("prev", slidingUpPanelMessenger);
 
-        slidingUp_prev_btn.setOnClickListener(new View.OnClickListener(){
+        slidingUp_prev_btn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view){
+            public void onClick(View view) {
                 slidingUp_prev_btn.startAnimation(slidingUp_prevbtnAnim);
                 startService(slidingUp_prevIntent);
             }
@@ -621,6 +613,7 @@ public class MusicListActivity extends AppCompatActivity {
         slidingUp_prev_btn.setOnTouchListener(new View.OnTouchListener() {
             private Rect viewBoundary;
             private boolean ignore; // true to ignore all touches, false otherwise
+
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
@@ -652,7 +645,7 @@ public class MusicListActivity extends AppCompatActivity {
      * Gradients are set up to be mutated, here
      */
     @TargetApi(16)
-    public void initMainAnimation(){
+    public void initMainAnimation() {
         // set up gradients that can be mutated
         gradient1 = (GradientDrawable) ResourcesCompat.getDrawable(this.getResources(), R.drawable.gradient_default1, null);
         gradient2 = (GradientDrawable) ResourcesCompat.getDrawable(this.getResources(), R.drawable.gradient_default2, null);
@@ -675,7 +668,7 @@ public class MusicListActivity extends AppCompatActivity {
      * Initialize the mutable album art view and the transparent button
      * On button click, scales the view and button with an animation
      */
-    public void initAlbumArt(){
+    public void initAlbumArt() {
         // init album art button and textviews for song details
         albumArt = findViewById(R.id.circularImageView);
         albumArt_btn = findViewById(R.id.toggle_largeAlbumArt);
@@ -696,7 +689,7 @@ public class MusicListActivity extends AppCompatActivity {
      * Each one will trigger a unique event from MusicPlayerService
      */
     @SuppressLint("ClickableViewAccessibility")
-    public void initMainButtons(){
+    public void initMainButtons() {
         Messenger mainMessenger = new Messenger(new MessageHandler());
 
         // init pauseplay button with touch and click, and appropriate animations
@@ -709,9 +702,9 @@ public class MusicListActivity extends AppCompatActivity {
         mainPausePlayIntent = new Intent(this, MusicPlayerService.class);
         mainPausePlayIntent.putExtra("pauseplay", mainMessenger);
 
-        pauseplay.setOnClickListener(new View.OnClickListener(){
+        pauseplay.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view){
+            public void onClick(View view) {
                 pauseplay.startAnimation(pauseplayAnim);
                 pauseplay_background.setVisibility(View.VISIBLE);
                 pauseplay_background.startAnimation(pauseplayBackgroundAnim);
@@ -722,6 +715,7 @@ public class MusicListActivity extends AppCompatActivity {
         pauseplay.setOnTouchListener(new View.OnTouchListener() {
             private Rect viewBoundary;
             private boolean ignore; // true to ignore all touches, false otherwise
+
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
@@ -765,9 +759,9 @@ public class MusicListActivity extends AppCompatActivity {
         mainNextIntent = new Intent(this, MusicPlayerService.class);
         mainNextIntent.putExtra("next", mainMessenger);
 
-        next_btn.setOnClickListener(new View.OnClickListener(){
+        next_btn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view){
+            public void onClick(View view) {
                 nextbtn_background.setVisibility(View.VISIBLE);
                 next_btn.startAnimation(nextbtnAnim);
                 nextbtn_background.startAnimation(nextbtnBackgroundAnim);
@@ -779,6 +773,7 @@ public class MusicListActivity extends AppCompatActivity {
         next_btn.setOnTouchListener(new View.OnTouchListener() {
             private Rect viewBoundary;
             private boolean ignore; // true to ignore all touches, false otherwise
+
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
@@ -822,9 +817,9 @@ public class MusicListActivity extends AppCompatActivity {
         mainPrevIntent = new Intent(this, MusicPlayerService.class);
         mainPrevIntent.putExtra("prev", mainMessenger);
 
-        prev_btn.setOnClickListener(new View.OnClickListener(){
+        prev_btn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view){
+            public void onClick(View view) {
                 prevbtn_background.setVisibility(View.VISIBLE);
                 prev_btn.startAnimation(prevbtnAnim);
                 prevbtn_background.startAnimation(prevbtnBackgroundAnim);
@@ -836,6 +831,7 @@ public class MusicListActivity extends AppCompatActivity {
         prev_btn.setOnTouchListener(new View.OnTouchListener() {
             private Rect viewBoundary;
             private boolean ignore; // true to ignore all touches, false otherwise
+
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
@@ -875,7 +871,7 @@ public class MusicListActivity extends AppCompatActivity {
      * Time is converted from milliseconds to HH:MM:SS format
      * Textview for current position is updated upon user changing the seekbar
      */
-    public void initSeekbar(){
+    public void initSeekbar() {
         // init seekbar and textviews
         seekBar = findViewById(R.id.seekBar);
         musicPosition = findViewById(R.id.music_position);
@@ -916,12 +912,12 @@ public class MusicListActivity extends AppCompatActivity {
      * Initializes the button for displaying details about a song in a scrollview
      * Upon clicking the button, the current song will be sent in the intent
      */
-    public void initInfoButton(){
+    public void initInfoButton() {
         info_btn = findViewById(R.id.btn_info);
         infoIntent = new Intent(this, MusicDetailsActivity.class);
-        info_btn.setOnClickListener(new View.OnClickListener(){
+        info_btn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v){
+            public void onClick(View v) {
                 infoIntent.putExtra("currentSong", current_song);
                 startActivity(infoIntent);
             }
@@ -930,7 +926,7 @@ public class MusicListActivity extends AppCompatActivity {
 
 
     @TargetApi(19)
-    public void showNotification(){
+    public void showNotification() {
         Bitmap largeImage = BitmapFactory.decodeResource(getResources(), R.drawable.kaminomanimani);
         Intent activityIntent = new Intent(this, MainActivity.class);
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, activityIntent, 0);
@@ -938,7 +934,7 @@ public class MusicListActivity extends AppCompatActivity {
         // create intents for the notification action buttons
         Messenger notificationMessenger = new Messenger(new MessageHandler());
         notificationPrevIntent = new Intent(this, MusicPlayerService.class).putExtra("prev", notificationMessenger);
-        notificationPauseplayIntent =  new Intent(this, MusicPlayerService.class).putExtra("pauseplay", notificationMessenger);
+        notificationPauseplayIntent = new Intent(this, MusicPlayerService.class).putExtra("pauseplay", notificationMessenger);
         notificationNextIntent = new Intent(this, MusicPlayerService.class).putExtra("next", notificationMessenger);
 
         notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID_1)
@@ -963,116 +959,103 @@ public class MusicListActivity extends AppCompatActivity {
     }
 
     /**
-     * helper method used to swap the two main gradients to white and vibrant swatch, if it exists
-     * swaps to white and dominant if vibrant swatch doesn't exist
-     * swaps to white and yellow if neither swatch exists
-     */
-    @TargetApi(16)
-    public void swapVibrantGradient(){
-        songName.setTextColor(getResources().getColor(R.color.colorTextDark));
-        if (vibrantSwatch != null){
-            gradient1.setColors(new int[]{Color.WHITE, vibrantSwatch.getRgb()});
-            gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
-            gradient2.setColors(new int[]{Color.WHITE, vibrantSwatch.getRgb()});
-            gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
-        }
-        else if (dominantSwatch != null){
-            gradient1.setColors(new int[]{Color.WHITE, dominantSwatch.getRgb()});
-            gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
-            gradient2.setColors(new int[]{Color.WHITE, dominantSwatch.getRgb()});
-            gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
-        }
-        else{
-            gradient1.setColors(new int[]{Color.WHITE, Color.YELLOW});
-            gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
-            gradient2.setColors(new int[]{Color.WHITE, Color.YELLOW});
-            gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
-        }
-
-        // change background gradient of buttons to contrast with light theme
-        if (darkVibrantSwatch != null){
-            pauseplay_background_gradient.setColor(darkVibrantSwatch.getRgb());
-            nextbtn_background_gradient.setColor(darkVibrantSwatch.getRgb());
-            prevbtn_background_gradient.setColor(darkVibrantSwatch.getRgb());
-        }
-        else{
-            pauseplay_background_gradient.setColor(Color.BLACK);
-            nextbtn_background_gradient.setColor(Color.BLACK);
-            prevbtn_background_gradient.setColor(Color.BLACK);
-        }
-    }
-
-    /**
      * helper method used to swap the two main gradients to dark and darkvibrant swatch, if it exists
      * swaps to dark and dominant if vibrant swatch doesn't exist
      * swaps to dark and grey if neither swatch exists
      */
     @TargetApi(16)
-    public void swapDarkVibrantGradient(){
-        songName.setTextColor(getResources().getColor(R.color.lightPrimaryWhite));
-        if (darkVibrantSwatch != null) {
-            gradient1.setColors(new int[]{getResources().getColor(R.color.nightPrimaryDark), darkVibrantSwatch.getRgb()});
-            gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
-            gradient2.setColors(new int[]{getResources().getColor(R.color.nightPrimaryDark), darkVibrantSwatch.getRgb()});
-            gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
-        }
-        else if (dominantSwatch != null){
-            gradient1.setColors(new int[]{getResources().getColor(R.color.nightPrimaryDark), dominantSwatch.getRgb()});
-            gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
-            gradient2.setColors(new int[]{getResources().getColor(R.color.nightPrimaryDark), dominantSwatch.getRgb()});
-            gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
-        }
-        else {
-            gradient1.setColors(new int[]{getResources().getColor(R.color.nightPrimaryDark), getResources().getColor(R.color.nightPrimaryGrey)});
-            gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
-            gradient2.setColors(new int[]{getResources().getColor(R.color.nightPrimaryDark), getResources().getColor(R.color.nightPrimaryGrey)});
-            gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
-        }
+    public void swapMainColors() {
+        int textColor;
+        int primaryColor;
+        int secondaryColor;
+        int contrastColor;
+        if (nightMode) {
+            // assign primary and secondary colors
+            textColor = getResources().getColor(R.color.lightPrimaryWhite);
+            primaryColor = getResources().getColor(R.color.nightPrimaryDark);
+            if (darkVibrantSwatch != null) {
+                secondaryColor = darkVibrantSwatch.getRgb();
+            } else if (dominantSwatch != null) {
+                secondaryColor = dominantSwatch.getRgb();
+            } else {
+                secondaryColor = getResources().getColor(R.color.nightPrimaryGrey);
+            }
 
-        // change background gradient of buttons to contrast with dark theme
-        if (vibrantSwatch != null){
-            pauseplay_background_gradient.setColor(vibrantSwatch.getRgb());
-            nextbtn_background_gradient.setColor(vibrantSwatch.getRgb());
-            prevbtn_background_gradient.setColor(vibrantSwatch.getRgb());
+            // assign contrasting color
+            if (vibrantSwatch != null) {
+                contrastColor = vibrantSwatch.getRgb();
+            } else {
+                contrastColor = Color.WHITE;
+            }
+        } else {
+            // assign primary and secondary colors
+            textColor = getResources().getColor(R.color.colorTextDark);
+            primaryColor = Color.WHITE;
+            if (vibrantSwatch != null) {
+                secondaryColor = vibrantSwatch.getRgb();
+            } else if (dominantSwatch != null) {
+                secondaryColor = dominantSwatch.getRgb();
+            } else {
+                secondaryColor = Color.YELLOW;
+            }
+
+            // assign contrasting color
+            if (darkVibrantSwatch != null) {
+                contrastColor = darkVibrantSwatch.getRgb();
+            } else {
+                contrastColor = getResources().getColor(R.color.nightPrimaryDark);
+            }
         }
-        else{
-            pauseplay_background_gradient.setColor(Color.WHITE);
-            nextbtn_background_gradient.setColor(Color.WHITE);
-            prevbtn_background_gradient.setColor(Color.WHITE);
-        }
+        songName.setTextColor(textColor);
+        gradient1.setColors(new int[]{primaryColor, secondaryColor});
+        gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
+        gradient2.setColors(new int[]{primaryColor, secondaryColor});
+        gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
+
+        // change background gradient of buttons to contrast with current theme
+        pauseplay_background_gradient.setColor(contrastColor);
+        nextbtn_background_gradient.setColor(contrastColor);
+        prevbtn_background_gradient.setColor(contrastColor);
     }
 
     /**
      * swaps the background, text, and button colors of the sliding menu
      * text and button colors are decided as the swatch that contrasts the most with the background
-     * @param swatches list of palette swatches from an album art image
-     * @param base the background color the sliding menu will be
      */
     @TargetApi(16)
-    private void swapSlidingMenuSwatch(List<Palette.Swatch> swatches, int base){
-        // find the swatch that contrasts the most with the base
-        contrastSwatch = swatches.get(0);
-        int maxDiffRGB = 0;
-        for (Palette.Swatch swatch : swatches){
-            if (Math.abs(base - swatch.getRgb()) > maxDiffRGB){
-                maxDiffRGB = Math.abs(base - swatch.getRgb());
-                contrastSwatch = swatch;
+    private void swapSlidingMenuColors() {
+        if (swatchList != null) {
+            int base;
+            if (nightMode) {
+                base = getResources().getColor(R.color.nightSecondaryDark);
+            } else {
+                base = getResources().getColor(R.color.lightSecondaryWhite);
             }
-        }
 
-        // change color of sliding menu buttons and text
-        slidingUp_songName.setTextColor(contrastSwatch.getRgb());
-        slidingUp_artistName.setTextColor(contrastSwatch.getRgb());
-        slidingUpPanelLayout.setBackgroundColor(base);
-        Drawable unwrappedDrawablePauseplay = slidingUp_pauseplay_btn.getDrawable();
-        Drawable unwrappedDrawableNext = slidingUp_next_btn.getDrawable();
-        Drawable unwrappedDrawablePrev = slidingUp_prev_btn.getDrawable();
-        Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
-        Drawable wrappedDrawableNext = DrawableCompat.wrap(unwrappedDrawableNext);
-        Drawable wrappedDrawablePrev = DrawableCompat.wrap(unwrappedDrawablePrev);
-        DrawableCompat.setTint(wrappedDrawablePauseplay, contrastSwatch.getRgb());
-        DrawableCompat.setTint(wrappedDrawableNext, contrastSwatch.getRgb());
-        DrawableCompat.setTint(wrappedDrawablePrev, contrastSwatch.getRgb());
+            // find the swatch that contrasts the most with the base
+            contrastSwatch = swatchList.get(0);
+            int maxDiffRGB = 0;
+            for (Palette.Swatch swatch : swatchList) {
+                if (Math.abs(base - swatch.getRgb()) > maxDiffRGB) {
+                    maxDiffRGB = Math.abs(base - swatch.getRgb());
+                    contrastSwatch = swatch;
+                }
+            }
+
+            // change color of sliding menu buttons and text
+            slidingUp_songName.setTextColor(contrastSwatch.getRgb());
+            slidingUp_artistName.setTextColor(contrastSwatch.getRgb());
+            slidingUpPanelLayout.setBackgroundColor(base);
+            Drawable unwrappedDrawablePauseplay = slidingUp_pauseplay_btn.getDrawable();
+            Drawable unwrappedDrawableNext = slidingUp_next_btn.getDrawable();
+            Drawable unwrappedDrawablePrev = slidingUp_prev_btn.getDrawable();
+            Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
+            Drawable wrappedDrawableNext = DrawableCompat.wrap(unwrappedDrawableNext);
+            Drawable wrappedDrawablePrev = DrawableCompat.wrap(unwrappedDrawablePrev);
+            DrawableCompat.setTint(wrappedDrawablePauseplay, contrastSwatch.getRgb());
+            DrawableCompat.setTint(wrappedDrawableNext, contrastSwatch.getRgb());
+            DrawableCompat.setTint(wrappedDrawablePrev, contrastSwatch.getRgb());
+        }
     }
 
     /**
@@ -1248,26 +1231,10 @@ public class MusicListActivity extends AppCompatActivity {
                             darkVibrantSwatch = palette.getDarkVibrantSwatch();
                             dominantSwatch = palette.getDominantSwatch();
                             swatchList = palette.getSwatches();
-                            if (MusicListActivity.nightMode){
-                                swapDarkVibrantGradient();
-                                swapSlidingMenuSwatch(swatchList, getResources().getColor(R.color.nightSecondaryDark));
-                            }
-                            else{
-                                swapVibrantGradient();
-                                swapSlidingMenuSwatch(swatchList, getResources().getColor(R.color.lightSecondaryWhite));
-                            }
+                            swapMainColors();
+                            swapSlidingMenuColors();
                         }
                     });
-                    break;
-                case MusicPlayerService.UPDATE_NIGHT:
-                    swapDarkVibrantGradient();
-                    swapSlidingMenuSwatch(swatchList, getResources().getColor(R.color.nightSecondaryDark));
-                    info_btn.setImageResource(R.drawable.info_light);
-                    break;
-                case MusicPlayerService.UPDATE_LIGHT:
-                    swapVibrantGradient();
-                    swapSlidingMenuSwatch(swatchList, getResources().getColor(R.color.lightSecondaryWhite));
-                    info_btn.setImageResource(R.drawable.info_night);
                     break;
             }
         }

@@ -510,7 +510,6 @@ public class MusicListActivity extends AppCompatActivity {
 
         // init pauseplay button with touch and click, and appropriate animations
         slidingUp_pauseplay_btn = findViewById(R.id.sliding_btn_play);
-        slidingUp_pauseplaybtnAnim = AnimationUtils.loadAnimation(this, R.anim.blink_animation);
 
         slidingUp_pauseplayIntent = new Intent(this, MusicPlayerService.class);
         slidingUp_pauseplayIntent.putExtra("pauseplay", slidingUpPanelMessenger);
@@ -518,7 +517,6 @@ public class MusicListActivity extends AppCompatActivity {
         slidingUp_pauseplay_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                slidingUp_pauseplay_btn.startAnimation(slidingUp_pauseplaybtnAnim);
                 startService(slidingUp_pauseplayIntent);
             }
         });
@@ -532,16 +530,13 @@ public class MusicListActivity extends AppCompatActivity {
                     case MotionEvent.ACTION_DOWN:
                         ignore = false;
                         viewBoundary = new Rect(v.getLeft(), v.getTop(), v.getRight(), v.getBottom());
-                        slidingUp_pauseplay_btn.animate().scaleX((float) 0.8).scaleY((float) 0.8);
                         break;
                     case MotionEvent.ACTION_UP:
-                        slidingUp_pauseplay_btn.animate().scaleX(1).scaleY(1);
                         break;
                     case MotionEvent.ACTION_MOVE:
                         // if movement is greater than 60 pixels from the original press point
                         if (!ignore) {
                             if (!viewBoundary.contains(v.getLeft() + (int) event.getX(), v.getTop() + (int) event.getY())) {
-                                slidingUp_pauseplay_btn.animate().scaleX(1).scaleY(1);
                                 ignore = true;
                             }
                         }
@@ -553,7 +548,6 @@ public class MusicListActivity extends AppCompatActivity {
 
         // init next button with touch and click, and appropriate animations
         slidingUp_next_btn = findViewById(R.id.sliding_btn_next);
-        slidingUp_nextbtnAnim = AnimationUtils.loadAnimation(this, R.anim.zoom_inout_animation);
 
         slidingUp_nextIntent = new Intent(this, MusicPlayerService.class);
         slidingUp_nextIntent.putExtra("next", slidingUpPanelMessenger);
@@ -561,7 +555,6 @@ public class MusicListActivity extends AppCompatActivity {
         slidingUp_next_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                slidingUp_next_btn.startAnimation(slidingUp_nextbtnAnim);
                 startService(slidingUp_nextIntent);
             }
         });
@@ -576,16 +569,13 @@ public class MusicListActivity extends AppCompatActivity {
                     case MotionEvent.ACTION_DOWN:
                         ignore = false;
                         viewBoundary = new Rect(v.getLeft(), v.getTop(), v.getRight(), v.getBottom());
-                        slidingUp_next_btn.animate().scaleX((float) 0.8).scaleY((float) 0.8);
                         break;
                     case MotionEvent.ACTION_UP:
-                        slidingUp_next_btn.animate().scaleX(1).scaleY(1);
                         break;
                     case MotionEvent.ACTION_MOVE:
                         // if movement is greater than 60 pixels from the original press point
                         if (!ignore) {
                             if (!viewBoundary.contains(v.getLeft() + (int) event.getX(), v.getTop() + (int) event.getY())) {
-                                slidingUp_next_btn.animate().scaleX(1).scaleY(1);
                                 ignore = true;
                             }
                         }
@@ -597,7 +587,6 @@ public class MusicListActivity extends AppCompatActivity {
 
         // init prev button with touch and click, and appropriate animations
         slidingUp_prev_btn = findViewById(R.id.sliding_btn_prev);
-        slidingUp_prevbtnAnim = AnimationUtils.loadAnimation(this, R.anim.zoom_inout_animation);
 
         slidingUp_prevIntent = new Intent(this, MusicPlayerService.class);
         slidingUp_prevIntent.putExtra("prev", slidingUpPanelMessenger);
@@ -605,7 +594,6 @@ public class MusicListActivity extends AppCompatActivity {
         slidingUp_prev_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                slidingUp_prev_btn.startAnimation(slidingUp_prevbtnAnim);
                 startService(slidingUp_prevIntent);
             }
         });
@@ -620,16 +608,13 @@ public class MusicListActivity extends AppCompatActivity {
                     case MotionEvent.ACTION_DOWN:
                         ignore = false;
                         viewBoundary = new Rect(v.getLeft(), v.getTop(), v.getRight(), v.getBottom());
-                        slidingUp_prev_btn.animate().scaleX((float) 0.8).scaleY((float) 0.8);
                         break;
                     case MotionEvent.ACTION_UP:
-                        slidingUp_prev_btn.animate().scaleX(1).scaleY(1);
                         break;
                     case MotionEvent.ACTION_MOVE:
                         // if movement is greater than 60 pixels from the original press point
                         if (!ignore) {
                             if (!viewBoundary.contains(v.getLeft() + (int) event.getX(), v.getTop() + (int) event.getY())) {
-                                slidingUp_prev_btn.animate().scaleX(1).scaleY(1);
                                 ignore = true;
                             }
                         }
@@ -1022,7 +1007,7 @@ public class MusicListActivity extends AppCompatActivity {
      * swaps the background, text, and button colors of the sliding menu
      * text and button colors are decided as the swatch that contrasts the most with the background
      */
-    @TargetApi(16)
+    @TargetApi(21)
     private void swapSlidingMenuColors() {
         if (swatchList != null) {
             int base;
@@ -1055,6 +1040,7 @@ public class MusicListActivity extends AppCompatActivity {
             DrawableCompat.setTint(wrappedDrawablePauseplay, contrastSwatch.getRgb());
             DrawableCompat.setTint(wrappedDrawableNext, contrastSwatch.getRgb());
             DrawableCompat.setTint(wrappedDrawablePrev, contrastSwatch.getRgb());
+
         }
     }
 

@@ -20,6 +20,7 @@ import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -28,6 +29,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.RippleDrawable;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -534,12 +536,6 @@ public class MusicListActivity extends AppCompatActivity {
                     case MotionEvent.ACTION_UP:
                         break;
                     case MotionEvent.ACTION_MOVE:
-                        // if movement is greater than 60 pixels from the original press point
-                        if (!ignore) {
-                            if (!viewBoundary.contains(v.getLeft() + (int) event.getX(), v.getTop() + (int) event.getY())) {
-                                ignore = true;
-                            }
-                        }
                         break;
                 }
                 return ignore;
@@ -573,12 +569,6 @@ public class MusicListActivity extends AppCompatActivity {
                     case MotionEvent.ACTION_UP:
                         break;
                     case MotionEvent.ACTION_MOVE:
-                        // if movement is greater than 60 pixels from the original press point
-                        if (!ignore) {
-                            if (!viewBoundary.contains(v.getLeft() + (int) event.getX(), v.getTop() + (int) event.getY())) {
-                                ignore = true;
-                            }
-                        }
                         break;
                 }
                 return ignore;
@@ -612,12 +602,6 @@ public class MusicListActivity extends AppCompatActivity {
                     case MotionEvent.ACTION_UP:
                         break;
                     case MotionEvent.ACTION_MOVE:
-                        // if movement is greater than 60 pixels from the original press point
-                        if (!ignore) {
-                            if (!viewBoundary.contains(v.getLeft() + (int) event.getX(), v.getTop() + (int) event.getY())) {
-                                ignore = true;
-                            }
-                        }
                         break;
                 }
                 return ignore;
@@ -1041,6 +1025,13 @@ public class MusicListActivity extends AppCompatActivity {
             DrawableCompat.setTint(wrappedDrawableNext, contrastSwatch.getRgb());
             DrawableCompat.setTint(wrappedDrawablePrev, contrastSwatch.getRgb());
 
+            // change color of button ripples
+            RippleDrawable ripple_pauseplay = (RippleDrawable) slidingUp_pauseplay_btn.getBackground();
+            RippleDrawable ripple_next = (RippleDrawable) slidingUp_next_btn.getBackground();
+            RippleDrawable ripple_prev = (RippleDrawable) slidingUp_prev_btn.getBackground();
+            ripple_pauseplay.setColor(ColorStateList.valueOf(contrastSwatch.getRgb()));
+            ripple_next.setColor(ColorStateList.valueOf(contrastSwatch.getRgb()));
+            ripple_prev.setColor(ColorStateList.valueOf(contrastSwatch.getRgb()));
         }
     }
 

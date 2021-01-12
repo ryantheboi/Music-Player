@@ -25,7 +25,6 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.Rect;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
@@ -41,10 +40,7 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -81,7 +77,6 @@ public class MusicListActivity extends AppCompatActivity {
     private SongListAdapter adapter;
     private Messenger mainActivityMessenger;
     private Intent musicServiceIntent;
-    private Intent nightModeServiceIntent;
     public static boolean isActionMode = false;
     private ActionMode actionMode = null;
     private ArrayList<Song> userSelection;
@@ -89,26 +84,14 @@ public class MusicListActivity extends AppCompatActivity {
     // sliding up panel
     private boolean largeAlbumArt;
     private ImageView albumArt;
-    private ImageView pauseplay_background;
-    private ImageView nextbtn_background;
-    private ImageView prevbtn_background;
-    private Animation pauseplayAnim;
-    private Animation nextbtnAnim;
-    private Animation prevbtnAnim;
-    private Animation pauseplayBackgroundAnim;
-    private Animation nextbtnBackgroundAnim;
-    private Animation prevbtnBackgroundAnim;
     private Button albumArt_btn;
     private ImageButton info_btn;
-    private ImageButton pauseplay;
+    private ImageButton pauseplay_btn;
     private ImageButton next_btn;
     private ImageButton prev_btn;
     private AnimationDrawable mainAnimation;
     private GradientDrawable gradient1;
     private GradientDrawable gradient2;
-    private GradientDrawable pauseplay_background_gradient;
-    private GradientDrawable nextbtn_background_gradient;
-    private GradientDrawable prevbtn_background_gradient;
     private SeekBar seekBar;
     private TextView musicPosition;
     private TextView musicDuration;
@@ -145,9 +128,9 @@ public class MusicListActivity extends AppCompatActivity {
     private ImageButton slidingUp_prev_btn;
     private ImageButton slidingUp_pauseplay_btn;
     private ImageButton slidingUp_next_btn;
-    private Animation slidingUp_pauseplaybtnAnim;
-    private Animation slidingUp_nextbtnAnim;
-    private Animation slidingUp_prevbtnAnim;
+    private RippleDrawable slidingUp_prev_btn_ripple;
+    private RippleDrawable slidingUp_pauseplay_btn_ripple;
+    private RippleDrawable slidingUp_next_btn_ripple;
 
 
     @Override
@@ -301,7 +284,6 @@ public class MusicListActivity extends AppCompatActivity {
     public void initNightMode() {
         nightMode = false;
         nightModeButton = findViewById(R.id.btn_nightmode);
-        nightModeServiceIntent = new Intent(this, MusicPlayerService.class);
         nightModeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -507,11 +489,13 @@ public class MusicListActivity extends AppCompatActivity {
      * Each one will trigger a unique event from MusicPlayerService
      */
     @SuppressLint("ClickableViewAccessibility")
+    @TargetApi(21)
     public void initSlidingUpPanelButtons() {
         Messenger slidingUpPanelMessenger = new Messenger(new MessageHandler());
 
-        // init pauseplay button with touch and click, and appropriate animations
+        // init pauseplay button and ripple drawable
         slidingUp_pauseplay_btn = findViewById(R.id.sliding_btn_play);
+        slidingUp_pauseplay_btn_ripple = (RippleDrawable) slidingUp_pauseplay_btn.getBackground();
 
         slidingUp_pauseplayIntent = new Intent(this, MusicPlayerService.class);
         slidingUp_pauseplayIntent.putExtra("pauseplay", slidingUpPanelMessenger);
@@ -522,28 +506,10 @@ public class MusicListActivity extends AppCompatActivity {
                 startService(slidingUp_pauseplayIntent);
             }
         });
-        slidingUp_pauseplay_btn.setOnTouchListener(new View.OnTouchListener() {
-            private Rect viewBoundary;
-            private boolean ignore; // true to ignore all touches, false otherwise
 
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        ignore = false;
-                        viewBoundary = new Rect(v.getLeft(), v.getTop(), v.getRight(), v.getBottom());
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        break;
-                }
-                return ignore;
-            }
-        });
-
-        // init next button with touch and click, and appropriate animations
+        // init next button and ripple drawable
         slidingUp_next_btn = findViewById(R.id.sliding_btn_next);
+        slidingUp_next_btn_ripple = (RippleDrawable) slidingUp_next_btn.getBackground();
 
         slidingUp_nextIntent = new Intent(this, MusicPlayerService.class);
         slidingUp_nextIntent.putExtra("next", slidingUpPanelMessenger);
@@ -555,28 +521,9 @@ public class MusicListActivity extends AppCompatActivity {
             }
         });
 
-        slidingUp_next_btn.setOnTouchListener(new View.OnTouchListener() {
-            private Rect viewBoundary;
-            private boolean ignore; // true to ignore all touches, false otherwise
-
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        ignore = false;
-                        viewBoundary = new Rect(v.getLeft(), v.getTop(), v.getRight(), v.getBottom());
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        break;
-                }
-                return ignore;
-            }
-        });
-
-        // init prev button with touch and click, and appropriate animations
+        // init prev button and ripple drawable
         slidingUp_prev_btn = findViewById(R.id.sliding_btn_prev);
+        slidingUp_prev_btn_ripple = (RippleDrawable) slidingUp_prev_btn.getBackground();
 
         slidingUp_prevIntent = new Intent(this, MusicPlayerService.class);
         slidingUp_prevIntent.putExtra("prev", slidingUpPanelMessenger);
@@ -585,26 +532,6 @@ public class MusicListActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 startService(slidingUp_prevIntent);
-            }
-        });
-
-        slidingUp_prev_btn.setOnTouchListener(new View.OnTouchListener() {
-            private Rect viewBoundary;
-            private boolean ignore; // true to ignore all touches, false otherwise
-
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        ignore = false;
-                        viewBoundary = new Rect(v.getLeft(), v.getTop(), v.getRight(), v.getBottom());
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        break;
-                }
-                return ignore;
             }
         });
     }
@@ -661,69 +588,21 @@ public class MusicListActivity extends AppCompatActivity {
     public void initMainButtons() {
         Messenger mainMessenger = new Messenger(new MessageHandler());
 
-        // init pauseplay button with touch and click, and appropriate animations
-        pauseplay = findViewById((R.id.btn_play));
-        pauseplay_background = findViewById((R.id.round_play_background));
-        pauseplayAnim = AnimationUtils.loadAnimation(this, R.anim.blink_animation);
-        pauseplayBackgroundAnim = AnimationUtils.loadAnimation(this, R.anim.blink_animation_background);
-        pauseplay_background_gradient = (GradientDrawable) pauseplay_background.getBackground().getCurrent();
+        // init pauseplay button
+        pauseplay_btn = findViewById((R.id.btn_play));
 
         mainPausePlayIntent = new Intent(this, MusicPlayerService.class);
         mainPausePlayIntent.putExtra("pauseplay", mainMessenger);
 
-        pauseplay.setOnClickListener(new View.OnClickListener() {
+        pauseplay_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                pauseplay.startAnimation(pauseplayAnim);
-                pauseplay_background.setVisibility(View.VISIBLE);
-                pauseplay_background.startAnimation(pauseplayBackgroundAnim);
-                pauseplay_background.setVisibility(View.INVISIBLE);
                 startService(mainPausePlayIntent);
             }
         });
-        pauseplay.setOnTouchListener(new View.OnTouchListener() {
-            private Rect viewBoundary;
-            private boolean ignore; // true to ignore all touches, false otherwise
 
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        ignore = false;
-                        viewBoundary = new Rect(v.getLeft(), v.getTop(), v.getRight(), v.getBottom());
-                        pauseplay_background.clearAnimation();
-                        pauseplay_background.setVisibility(View.VISIBLE);
-                        pauseplay_background.animate().alpha((float) 0.3).scaleX((float) 0.8).scaleY((float) 0.8);
-                        pauseplay.animate().scaleX((float) 0.8).scaleY((float) 0.8);
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        pauseplay_background.animate().scaleX(1).scaleY(1);
-                        pauseplay.animate().scaleX(1).scaleY(1);
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        // if movement is greater than 60 pixels from the original press point
-                        if (!ignore) {
-                            if (!viewBoundary.contains(v.getLeft() + (int) event.getX(), v.getTop() + (int) event.getY())) {
-                                pauseplay_background.setVisibility(View.VISIBLE);
-                                pauseplay_background.startAnimation(pauseplayBackgroundAnim);
-                                pauseplay_background.setVisibility(View.INVISIBLE);
-                                pauseplay_background.animate().scaleX(1).scaleY(1);
-                                pauseplay.animate().scaleX(1).scaleY(1);
-                                ignore = true;
-                            }
-                        }
-                        break;
-                }
-                return ignore;
-            }
-        });
-
-        // init next button with touch and click, and appropriate animations
+        // init next button
         next_btn = findViewById((R.id.btn_next));
-        nextbtn_background = findViewById((R.id.round_next_background));
-        nextbtnAnim = AnimationUtils.loadAnimation(this, R.anim.zoom_inout_animation);
-        nextbtnBackgroundAnim = AnimationUtils.loadAnimation(this, R.anim.blink_animation_background);
-        nextbtn_background_gradient = (GradientDrawable) nextbtn_background.getBackground().getCurrent();
 
         mainNextIntent = new Intent(this, MusicPlayerService.class);
         mainNextIntent.putExtra("next", mainMessenger);
@@ -731,57 +610,12 @@ public class MusicListActivity extends AppCompatActivity {
         next_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                nextbtn_background.setVisibility(View.VISIBLE);
-                next_btn.startAnimation(nextbtnAnim);
-                nextbtn_background.startAnimation(nextbtnBackgroundAnim);
-                nextbtn_background.setVisibility(View.INVISIBLE);
                 startService(mainNextIntent);
             }
         });
 
-        next_btn.setOnTouchListener(new View.OnTouchListener() {
-            private Rect viewBoundary;
-            private boolean ignore; // true to ignore all touches, false otherwise
-
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        ignore = false;
-                        viewBoundary = new Rect(v.getLeft(), v.getTop(), v.getRight(), v.getBottom());
-                        nextbtn_background.clearAnimation();
-                        nextbtn_background.setVisibility(View.VISIBLE);
-                        nextbtn_background.animate().alpha((float) 0.3).scaleX((float) 0.8).scaleY((float) 0.8);
-                        next_btn.animate().scaleX((float) 0.8).scaleY((float) 0.8);
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        nextbtn_background.animate().scaleX(1).scaleY(1);
-                        next_btn.animate().scaleX(1).scaleY(1);
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        // if movement is greater than 60 pixels from the original press point
-                        if (!ignore) {
-                            if (!viewBoundary.contains(v.getLeft() + (int) event.getX(), v.getTop() + (int) event.getY())) {
-                                nextbtn_background.setVisibility(View.VISIBLE);
-                                nextbtn_background.startAnimation(nextbtnBackgroundAnim);
-                                nextbtn_background.setVisibility(View.INVISIBLE);
-                                nextbtn_background.animate().scaleX(1).scaleY(1);
-                                next_btn.animate().scaleX(1).scaleY(1);
-                                ignore = true;
-                            }
-                        }
-                        break;
-                }
-                return ignore;
-            }
-        });
-
-        // init prev button with touch and click, and appropriate animations
+        // init prev button
         prev_btn = findViewById((R.id.btn_prev));
-        prevbtn_background = findViewById((R.id.round_prev_background));
-        prevbtnAnim = AnimationUtils.loadAnimation(this, R.anim.zoom_inout_animation);
-        prevbtnBackgroundAnim = AnimationUtils.loadAnimation(this, R.anim.blink_animation_background);
-        prevbtn_background_gradient = (GradientDrawable) prevbtn_background.getBackground().getCurrent();
 
         mainPrevIntent = new Intent(this, MusicPlayerService.class);
         mainPrevIntent.putExtra("prev", mainMessenger);
@@ -789,48 +623,7 @@ public class MusicListActivity extends AppCompatActivity {
         prev_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                prevbtn_background.setVisibility(View.VISIBLE);
-                prev_btn.startAnimation(prevbtnAnim);
-                prevbtn_background.startAnimation(prevbtnBackgroundAnim);
-                prevbtn_background.setVisibility(View.INVISIBLE);
                 startService(mainPrevIntent);
-            }
-        });
-
-        prev_btn.setOnTouchListener(new View.OnTouchListener() {
-            private Rect viewBoundary;
-            private boolean ignore; // true to ignore all touches, false otherwise
-
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        ignore = false;
-                        viewBoundary = new Rect(v.getLeft(), v.getTop(), v.getRight(), v.getBottom());
-                        prevbtn_background.clearAnimation();
-                        prevbtn_background.setVisibility(View.VISIBLE);
-                        prevbtn_background.animate().alpha((float) 0.3).scaleX((float) 0.8).scaleY((float) 0.8);
-                        prev_btn.animate().scaleX((float) 0.8).scaleY((float) 0.8);
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        prevbtn_background.animate().scaleX(1).scaleY(1);
-                        prev_btn.animate().scaleX(1).scaleY(1);
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        // if movement is greater than 60 pixels from the original press point
-                        if (!ignore) {
-                            if (!viewBoundary.contains(v.getLeft() + (int) event.getX(), v.getTop() + (int) event.getY())) {
-                                prevbtn_background.setVisibility(View.VISIBLE);
-                                prevbtn_background.startAnimation(prevbtnBackgroundAnim);
-                                prevbtn_background.setVisibility(View.INVISIBLE);
-                                prevbtn_background.animate().scaleX(1).scaleY(1);
-                                prev_btn.animate().scaleX(1).scaleY(1);
-                                ignore = true;
-                            }
-                        }
-                        break;
-                }
-                return ignore;
             }
         });
     }
@@ -928,16 +721,15 @@ public class MusicListActivity extends AppCompatActivity {
     }
 
     /**
-     * helper method used to swap the two main gradients to dark and darkvibrant swatch, if it exists
-     * swaps to dark and dominant if vibrant swatch doesn't exist
-     * swaps to dark and grey if neither swatch exists
+     * helper method used to swap the two main gradients to the appropriate swatch
+     * swaps gradients to darker colors if nightmode
+     * swaps gradients to lighter colors otherwise
      */
     @TargetApi(16)
     public void swapMainColors() {
         int textColor;
         int primaryColor;
         int secondaryColor;
-        int contrastColor;
         if (nightMode) {
             // assign primary and secondary colors
             textColor = getResources().getColor(R.color.lightPrimaryWhite);
@@ -948,13 +740,6 @@ public class MusicListActivity extends AppCompatActivity {
                 secondaryColor = dominantSwatch.getRgb();
             } else {
                 secondaryColor = getResources().getColor(R.color.nightPrimaryGrey);
-            }
-
-            // assign contrasting color
-            if (vibrantSwatch != null) {
-                contrastColor = vibrantSwatch.getRgb();
-            } else {
-                contrastColor = Color.WHITE;
             }
         } else {
             // assign primary and secondary colors
@@ -967,24 +752,12 @@ public class MusicListActivity extends AppCompatActivity {
             } else {
                 secondaryColor = Color.YELLOW;
             }
-
-            // assign contrasting color
-            if (darkVibrantSwatch != null) {
-                contrastColor = darkVibrantSwatch.getRgb();
-            } else {
-                contrastColor = getResources().getColor(R.color.nightPrimaryDark);
-            }
         }
         songName.setTextColor(textColor);
         gradient1.setColors(new int[]{primaryColor, secondaryColor});
         gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
         gradient2.setColors(new int[]{primaryColor, secondaryColor});
         gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
-
-        // change background gradient of buttons to contrast with current theme
-        pauseplay_background_gradient.setColor(contrastColor);
-        nextbtn_background_gradient.setColor(contrastColor);
-        prevbtn_background_gradient.setColor(contrastColor);
     }
 
     /**
@@ -1025,13 +798,10 @@ public class MusicListActivity extends AppCompatActivity {
             DrawableCompat.setTint(wrappedDrawableNext, contrastSwatch.getRgb());
             DrawableCompat.setTint(wrappedDrawablePrev, contrastSwatch.getRgb());
 
-            // change color of button ripples
-            RippleDrawable ripple_pauseplay = (RippleDrawable) slidingUp_pauseplay_btn.getBackground();
-            RippleDrawable ripple_next = (RippleDrawable) slidingUp_next_btn.getBackground();
-            RippleDrawable ripple_prev = (RippleDrawable) slidingUp_prev_btn.getBackground();
-            ripple_pauseplay.setColor(ColorStateList.valueOf(contrastSwatch.getRgb()));
-            ripple_next.setColor(ColorStateList.valueOf(contrastSwatch.getRgb()));
-            ripple_prev.setColor(ColorStateList.valueOf(contrastSwatch.getRgb()));
+            // change color of the button ripples
+            slidingUp_pauseplay_btn_ripple.setColor(ColorStateList.valueOf(contrastSwatch.getRgb()));
+            slidingUp_next_btn_ripple.setColor(ColorStateList.valueOf(contrastSwatch.getRgb()));
+            slidingUp_prev_btn_ripple.setColor(ColorStateList.valueOf(contrastSwatch.getRgb()));
         }
     }
 
@@ -1105,7 +875,7 @@ public class MusicListActivity extends AppCompatActivity {
             int updateOperation = (int) bundle.get("update");
             switch (updateOperation) {
                 case MusicPlayerService.UPDATE_PLAY:
-                    pauseplay.setImageResource(R.drawable.ic_play);
+                    pauseplay_btn.setImageResource(R.drawable.ic_play);
                     slidingUp_pauseplay_btn.setImageResource(R.drawable.ic_play24dp);
                     if (contrastSwatch != null){ // change sliding menu pauseplay button color
                         Drawable unwrappedDrawablePauseplay = slidingUp_pauseplay_btn.getDrawable();
@@ -1117,7 +887,7 @@ public class MusicListActivity extends AppCompatActivity {
                     notificationManager.notify(1, notificationChannel1);
                     break;
                 case MusicPlayerService.UPDATE_PAUSE:
-                    pauseplay.setImageResource(R.drawable.ic_pause);
+                    pauseplay_btn.setImageResource(R.drawable.ic_pause);
                     slidingUp_pauseplay_btn.setImageResource(R.drawable.ic_pause24dp);
                     if (contrastSwatch != null){ // change sliding menu pauseplay button color
                         Drawable unwrappedDrawablePauseplay = slidingUp_pauseplay_btn.getDrawable();

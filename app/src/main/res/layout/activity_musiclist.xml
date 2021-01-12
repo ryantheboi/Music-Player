@@ -229,7 +229,7 @@
                     android:layout_centerHorizontal="true"
                     android:layout_marginTop="40dp"
                     android:src="@drawable/ic_play"
-                    android:background="#00000000"/>
+                    android:background="@drawable/button_ripple"/>
 
                 <ImageButton
                     android:id="@+id/btn_next"
@@ -240,7 +240,7 @@
                     android:layout_marginTop="40dp"
                     android:layout_marginLeft="50dp"
                     android:src="@drawable/ic_next"
-                    android:background="#00000000"/>
+                    android:background="@drawable/button_ripple"/>
 
                 <ImageButton
                     android:id="@+id/btn_prev"
@@ -251,7 +251,7 @@
                     android:layout_marginTop="40dp"
                     android:layout_marginRight="50dp"
                     android:src="@drawable/ic_prev"
-                    android:background="#00000000"/>
+                    android:background="@drawable/button_ripple"/>
 
                 <ImageButton
                     android:id="@+id/btn_musiclist"

@@ -468,6 +468,24 @@ public class MusicListActivity extends AppCompatActivity {
 
             @Override
             public void onPanelStateChanged(View panel, SlidingUpPanelLayout.PanelState previousState, SlidingUpPanelLayout.PanelState newState) {
+                if (slidingUpPanelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.EXPANDED) {
+                    // disable buttons on the menu
+                    slidingUp_prev_btn.setClickable(false);
+                    slidingUp_pauseplay_btn.setClickable(false);
+                    slidingUp_next_btn.setClickable(false);
+
+                    // enable buttons on the main display
+                    info_btn.setClickable(true);
+                }
+                if (slidingUpPanelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.COLLAPSED) {
+                    // enable buttons on the menu
+                    slidingUp_prev_btn.setClickable(true);
+                    slidingUp_pauseplay_btn.setClickable(true);
+                    slidingUp_next_btn.setClickable(true);
+
+                    // disable buttons on the main display
+                    info_btn.setClickable(false);
+                }
             }
         });
 

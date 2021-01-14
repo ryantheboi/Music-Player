@@ -702,6 +702,9 @@ public class MusicListActivity extends AppCompatActivity {
                 startActivity(infoIntent);
             }
         });
+
+        // initially hidden and unclickable
+        info_btn.setClickable(false);
     }
 
 

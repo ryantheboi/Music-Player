@@ -31,7 +31,6 @@ public class MusicPlayerService
     AudioFocusRequest mAudioFocusRequest;
     boolean mPlayOnAudioFocus;
     private Messenger mainActivity_messenger;
-    private Messenger musicList_messenger;
 
     public static final Uri artURI = Uri.parse("content://media/external/audio/albumart");
 
@@ -40,10 +39,7 @@ public class MusicPlayerService
     public static final int UPDATE_SEEKBAR_DURATION = 2;
     public static final int UPDATE_SEEKBAR_PROGRESS = 3;
     public static final int UPDATE_SONG = 4;
-    public static final int UPDATE_NIGHT = 5;
-    public static final int UPDATE_LIGHT = 6;
-    public static final int UPDATE_MESSENGER_MUSICLISTACTIVITY = 7;
-    public static final int UPDATE_HIGHLIGHT = 8;
+    public static final int UPDATE_HIGHLIGHT = 5;
 
 
 
@@ -122,13 +118,11 @@ public class MusicPlayerService
                         audioFocusToggleMedia();
                         break;
                     case "prev":
-                        bundle_extra = intent.getBundleExtra("prev");
-                        mainActivity_messenger = bundle_extra.getParcelable("mainActivityMessenger");
-                        musicList_messenger = bundle_extra.getParcelable("musicListActivityMessenger");
-                        if (MusicListActivity.playlist != null){
+                        mainActivity_messenger = intent.getParcelableExtra("prev");
+                        if (MainActivity.playlist != null){
                             // change current song in main activity
                             Song current_song = MainActivity.getCurrent_song();
-                            SongNode songNode = MusicListActivity.playlist.get(current_song);
+                            SongNode songNode = MainActivity.playlist.get(current_song);
                             Song prev_song = songNode.getPrev();
                             if (mediaPlayer.isPlaying()) { // keep it playing
                                 sendSongUpdateMessage(mainActivity_messenger, prev_song);
@@ -139,22 +133,17 @@ public class MusicPlayerService
                                 mediaPlayer.pause();
                                 sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY);
                             }
-
-                            // change highlighted song from list view
-                            sendUpdateMessage(musicList_messenger, UPDATE_HIGHLIGHT);
                         }
                         else {
                             Toast.makeText(this, "received notification: prev", Toast.LENGTH_SHORT).show();
                         }
                         break;
                     case "next":
-                        bundle_extra = intent.getBundleExtra("next");
-                        mainActivity_messenger = bundle_extra.getParcelable("mainActivityMessenger");
-                        musicList_messenger = bundle_extra.getParcelable("musicListActivityMessenger");
-                        if (MusicListActivity.playlist != null){
+                        mainActivity_messenger = intent.getParcelableExtra("next");
+                        if (MainActivity.playlist != null){
                             // change current song in main activity
                             Song current_song = MainActivity.getCurrent_song();
-                            SongNode songNode = MusicListActivity.playlist.get(current_song);
+                            SongNode songNode = MainActivity.playlist.get(current_song);
                             Song next_song = songNode.getNext();
                             if (mediaPlayer.isPlaying()) { // keep it playing
                                 sendSongUpdateMessage(mainActivity_messenger, next_song);
@@ -164,61 +153,6 @@ public class MusicPlayerService
                                 sendSongUpdateMessage(mainActivity_messenger, next_song);
                                 mediaPlayer.pause();
                                 sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY);
-                            }
-
-                            // change highlighted song from list view
-                            sendUpdateMessage(musicList_messenger, UPDATE_HIGHLIGHT);
-                        }
-                        else {
-                            Toast.makeText(this, "received notification: next", Toast.LENGTH_SHORT).show();
-                        }
-                        break;
-                    case "notificationPrev":
-                        mainActivity_messenger = intent.getParcelableExtra("notificationPrev");
-                        if (MusicListActivity.playlist != null){
-                            // change current song in main activity
-                            Song current_song = MainActivity.getCurrent_song();
-                            SongNode songNode = MusicListActivity.playlist.get(current_song);
-                            Song next_song = songNode.getPrev();
-                            if (mediaPlayer.isPlaying()) { // keep it playing
-                                sendSongUpdateMessage(mainActivity_messenger, next_song);
-                                sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE);
-                            }
-                            else{ // keep it paused
-                                sendSongUpdateMessage(mainActivity_messenger, next_song);
-                                mediaPlayer.pause();
-                                sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY);
-                            }
-
-                            // change highlighted song from list view (if it exists)
-                            if (musicList_messenger != null) {
-                                sendUpdateMessage(musicList_messenger, UPDATE_HIGHLIGHT);
-                            }
-                        }
-                        else {
-                            Toast.makeText(this, "received notification: prev", Toast.LENGTH_SHORT).show();
-                        }
-                        break;
-                    case "notificationNext":
-                        mainActivity_messenger = intent.getParcelableExtra("notificationNext");
-                        if (MusicListActivity.playlist != null){
-                            // change current song in main activity
-                            Song current_song = MainActivity.getCurrent_song();
-                            SongNode songNode = MusicListActivity.playlist.get(current_song);
-                            Song next_song = songNode.getNext();
-                            if (mediaPlayer.isPlaying()) { // keep it playing
-                                sendSongUpdateMessage(mainActivity_messenger, next_song);
-                                sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE);
-                            }
-                            else{ // keep it paused
-                                sendSongUpdateMessage(mainActivity_messenger, next_song);
-                                mediaPlayer.pause();
-                                sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY);
-                            }
-
-                            // change highlighted song from list view (if it exists)
-                            if (musicList_messenger != null) {
-                                sendUpdateMessage(musicList_messenger, UPDATE_HIGHLIGHT);
                             }
                         }
                         else {
@@ -250,23 +184,6 @@ public class MusicPlayerService
 
                         sendSongUpdateMessage(mainActivity_messenger, song);
                         sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE);
-                        break;
-                    case "musicListMessenger":
-                        bundle_extra = intent.getBundleExtra("musicListMessenger");
-                        mainActivity_messenger = (Messenger) bundle_extra.get("mainActivityMessenger");
-                        musicList_messenger = (Messenger) bundle_extra.get("musicListActivityMessenger");
-                        sendMessengerUpdateMessage(mainActivity_messenger, musicList_messenger, UPDATE_MESSENGER_MUSICLISTACTIVITY);
-                        break;
-                    case "musicListNightToggle":
-                        bundle_extra = intent.getBundleExtra("musicListNightToggle");
-                        mainActivity_messenger = (Messenger) bundle_extra.get("mainActivityMessenger");
-                        boolean nightMode = (boolean) bundle_extra.get("nightmode");
-                        if (nightMode){
-                            sendUpdateMessage(mainActivity_messenger, UPDATE_NIGHT);
-                        }
-                        else{
-                            sendUpdateMessage(mainActivity_messenger, UPDATE_LIGHT);
-                        }
                         break;
                 }
             }
@@ -383,27 +300,6 @@ public class MusicPlayerService
     }
 
     /**
-     * send a message to the messenger's activity to update its messenger
-     * @param messenger - the messenger to receive the update messenger from another activity
-     * @param update - the messenger from the other activity
-     * @param message - the update code
-     */
-    private void sendMessengerUpdateMessage(Messenger messenger, Messenger update, int message){
-        Message msg = Message.obtain();
-        Bundle bundle = new Bundle();
-
-        bundle.putInt("update", message);
-        bundle.putParcelable("messenger", update);
-        msg.setData(bundle);
-        try {
-            messenger.send(msg);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    /**
      *  checks for audio focus before toggling media
      */
     @TargetApi(26)
@@ -440,21 +336,16 @@ public class MusicPlayerService
      */
     @Override
     public void onCompletion(MediaPlayer mp) {
-        if (MusicListActivity.playlist != null){
+        if (MainActivity.playlist != null){
             // change current song in main activity
             Song current_song = MainActivity.getCurrent_song();
-            SongNode songNode = MusicListActivity.playlist.get(current_song);
+            SongNode songNode = MainActivity.playlist.get(current_song);
             Song next_song = songNode.getNext();
 
             // notify main activity of the next song and keep it playing
             if (mainActivity_messenger != null) {
                 sendSongUpdateMessage(mainActivity_messenger, next_song);
                 sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE);
-            }
-
-            // change highlighted song from list view
-            if (musicList_messenger != null) {
-                sendUpdateMessage(musicList_messenger, UPDATE_HIGHLIGHT);
             }
         }
     }

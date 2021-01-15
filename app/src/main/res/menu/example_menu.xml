@@ -3,7 +3,7 @@
     <item
         android:id="@+id/createqueue"
         android:title="Queue"
-        android:icon="@drawable/ic_play24dp" />
+        android:icon="@drawable/ic_queue_play24dp" />
 
     <item
         android:id="@+id/createplaylist"

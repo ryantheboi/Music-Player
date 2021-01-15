@@ -15,7 +15,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".MusicListActivity"/>
         <activity android:name=".MusicDetailsActivity"
             android:theme="@style/AppTheme.MusicDetails"/>
 

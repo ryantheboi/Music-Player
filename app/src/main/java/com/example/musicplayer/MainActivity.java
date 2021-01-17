@@ -203,6 +203,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // visually highlight the song in the list view
                 adapter.highlightItem(song);
+                current_song = song;
 
                 // notify music player service with the main activity messenger and the selected song
                 Bundle bundle = new Bundle();
@@ -253,6 +254,7 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, "Creating Queue of " + userSelection.size() + " songs", Toast.LENGTH_SHORT).show();
                         // construct new current playlist, given the user selections
                         playlist = createPlaylist(userSelection);
+                        current_song = userSelection.get(0);
 
                         // notify music player service to start the new song in the new playlist (queue)
                         Bundle bundle = new Bundle();

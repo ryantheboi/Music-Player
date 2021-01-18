@@ -38,6 +38,7 @@ public class MusicPlayerService
     private HandlerThread musicPlayerHandlerThread;
     private PlaybackHandler playerHandler;
     private static boolean playing = false;
+    private static int seekbar_position;
 
     public static final Uri artURI = Uri.parse("content://media/external/audio/albumart");
 
@@ -47,9 +48,13 @@ public class MusicPlayerService
     public static final int UPDATE_SEEKBAR_PROGRESS = 3;
     public static final int UPDATE_SONG = 4;
 
-    public static final int PREPARE_PLAY = 0;
-    public static final int PREPARE_PREV = 1;
-    public static final int PREPARE_NEXT = 2;
+    public static final int PREPARE_SONG = 0;
+    public static final int PREPARE_PLAY = 1;
+    public static final int PREPARE_PREV = 2;
+    public static final int PREPARE_NEXT = 3;
+    public static final int PREPARE_DURATION = 4;
+    public static final int PREPARE_SEEK = 5;
+    public static final int PREPARE_SEEKBAR_PROGRESS = 6;
 
 
 
@@ -123,13 +128,8 @@ public class MusicPlayerService
                     case "pauseplay":
                         // update the pauseplay button icon via messenger and toggle music
                         mainActivity_messenger = intent.getParcelableExtra("pauseplay");
-                        if (mediaPlayer.isPlaying()) {
-                            sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY);
-                        }
-                        else{
-                            sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE);
-                        }
-                        audioFocusToggleMedia();
+                        playerHandler.removeMessages(PREPARE_PLAY);
+                        playerHandler.obtainMessage(PREPARE_PLAY).sendToTarget();
                         break;
                     case "prev":
                         mainActivity_messenger = intent.getParcelableExtra("prev");
@@ -145,25 +145,22 @@ public class MusicPlayerService
                         break;
                     case "seekbarDuration":
                         mainActivity_messenger = intent.getParcelableExtra("seekbarDuration");
-                        Object[] durationMessage = new Object[2];
-                        durationMessage[0] = UPDATE_SEEKBAR_DURATION;
-                        //durationMessage[1] = mediaPlayer.getDuration();
-                        //sendUpdateMessage(mainActivity_messenger, durationMessage);
+                        playerHandler.removeMessages(PREPARE_DURATION);
+                        playerHandler.obtainMessage(PREPARE_DURATION).sendToTarget();
                         break;
                     case "seekbarProgress":
                         mainActivity_messenger = intent.getParcelableExtra("seekbarProgress");
-                        Object[] progressMessage = new Object[2];
-                        progressMessage[0] = UPDATE_SEEKBAR_PROGRESS;
-                        //progressMessage[1] = mediaPlayer.getCurrentPosition();
-                        //sendUpdateMessage(mainActivity_messenger, progressMessage);
+                        playerHandler.removeMessages(PREPARE_SEEKBAR_PROGRESS);
+                        playerHandler.obtainMessage(PREPARE_SEEKBAR_PROGRESS).sendToTarget();
                         break;
                     case "seekbarSeek":
-                        int seekbar_position = intent.getIntExtra("seekbarSeek", 0);
-                        //mediaPlayer.seekTo(seekbar_position);
+                        seekbar_position = intent.getIntExtra("seekbarSeek", 0);
+                        playerHandler.removeMessages(PREPARE_SEEK);
+                        playerHandler.obtainMessage(PREPARE_SEEK).sendToTarget();
                         break;
                     case "musicListActivity":
-                        playerHandler.removeMessages(PREPARE_PLAY);
-                        playerHandler.obtainMessage(PREPARE_PLAY).sendToTarget();
+                        playerHandler.removeMessages(PREPARE_SONG);
+                        playerHandler.obtainMessage(PREPARE_SONG).sendToTarget();
                         break;
                 }
             }
@@ -207,63 +204,6 @@ public class MusicPlayerService
         }
 
         return false;
-    }
-
-    /**
-     * sends an int message to the main thread
-     * @param messenger the messenger to send update to
-     * @param message the update code
-     */
-    private static void sendUpdateMessage(Messenger messenger, int message) {
-        Message msg = Message.obtain();
-        Bundle bundle = new Bundle();
-
-        bundle.putInt("update", message);
-        msg.setData(bundle);
-        try {
-            messenger.send(msg);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * overloaded method to send a message containing an update and int
-     * @param messenger the messenger to send update to
-     * @param message 2-part message containing update code and seekbar time
-     */
-    private void sendUpdateMessage(Messenger messenger, Object[] message) {
-        Message msg = Message.obtain();
-        Bundle bundle = new Bundle();
-        int updateMessage = (int) message[0];
-        int intMessage = (int) message[1];
-        bundle.putInt("update", updateMessage);
-        bundle.putInt("time", intMessage);
-        msg.setData(bundle);
-        try {
-            messenger.send(msg);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * send a message containing a string and Song
-     * @param messenger the messenger to send update to
-     * @param song the song to update the messenger's activity with
-     */
-    private static void sendSongUpdateMessage(Messenger messenger, final Song song) {
-        // find the song uri and start playing the song
-        Message msg = Message.obtain();
-        Bundle bundle = new Bundle();
-        bundle.putInt("update", UPDATE_SONG);
-        bundle.putParcelable("song", song);
-        msg.setData(bundle);
-        try {
-            messenger.send(msg);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -316,6 +256,63 @@ public class MusicPlayerService
             mService = servicer;
         }
 
+        /**
+         * sends an int message to the main thread
+         * @param messenger the messenger to send update to
+         * @param message the update code
+         */
+        private void sendUpdateMessage(Messenger messenger, int message) {
+            Message msg = Message.obtain();
+            Bundle bundle = new Bundle();
+
+            bundle.putInt("update", message);
+            msg.setData(bundle);
+            try {
+                messenger.send(msg);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+
+        /**
+         * overloaded method to send a message containing an update and int
+         * @param messenger the messenger to send update to
+         * @param message 2-part message containing update code and seekbar time
+         */
+        private void sendUpdateMessage(Messenger messenger, Object[] message) {
+            Message msg = Message.obtain();
+            Bundle bundle = new Bundle();
+            int updateMessage = (int) message[0];
+            int intMessage = (int) message[1];
+            bundle.putInt("update", updateMessage);
+            bundle.putInt("time", intMessage);
+            msg.setData(bundle);
+            try {
+                messenger.send(msg);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+
+        /**
+         * send a message containing a string and Song
+         * @param messenger the messenger to send update to
+         * @param song the song to update the messenger's activity with
+         */
+        private void sendSongUpdateMessage(Messenger messenger, final Song song) {
+            // find the song uri and start playing the song
+            Message msg = Message.obtain();
+            Bundle bundle = new Bundle();
+            bundle.putInt("update", UPDATE_SONG);
+            bundle.putParcelable("song", song);
+            msg.setData(bundle);
+            try {
+                messenger.send(msg);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+
         @Override
         public void handleMessage(final Message msg) {
             final MusicPlayerService service = mService;
@@ -323,7 +320,7 @@ public class MusicPlayerService
                 return;
             }
             switch (msg.what) {
-                case PREPARE_PLAY:
+                case PREPARE_SONG:
                     try {
                         // update main ui with current song
                         Song current_song = MainActivity.getCurrent_song();
@@ -346,6 +343,15 @@ public class MusicPlayerService
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
+                    break;
+                case PREPARE_PLAY:
+                    if (playing) {
+                        sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY);
+                    }
+                    else{
+                        sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE);
+                    }
+                    audioFocusToggleMedia();
                     break;
                 case PREPARE_PREV:
                     if (MainActivity.playlist != null) {
@@ -413,8 +419,22 @@ public class MusicPlayerService
                         }
                     }
                     break;
+                case PREPARE_DURATION:
+                    Object[] durationMessage = new Object[2];
+                    durationMessage[0] = UPDATE_SEEKBAR_DURATION;
+                    durationMessage[1] = mediaPlayer.getDuration();
+                    sendUpdateMessage(mainActivity_messenger, durationMessage);
+                    break;
+                case PREPARE_SEEK:
+                    mediaPlayer.seekTo(seekbar_position);
+                    break;
+                case PREPARE_SEEKBAR_PROGRESS:
+                    Object[] progressMessage = new Object[2];
+                    progressMessage[0] = UPDATE_SEEKBAR_PROGRESS;
+                    progressMessage[1] = mediaPlayer.getCurrentPosition();
+                    sendUpdateMessage(mainActivity_messenger, progressMessage);
+                    break;
             }
-
         }
     }
 }

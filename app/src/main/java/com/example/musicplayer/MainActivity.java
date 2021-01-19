@@ -205,11 +205,8 @@ public class MainActivity extends AppCompatActivity {
                 adapter.highlightItem(song);
                 current_song = song;
 
-                // notify music player service with the main activity messenger and the selected song
-                Bundle bundle = new Bundle();
-                bundle.putParcelable("mainActivityMessenger", mainActivityMessenger);
-                bundle.putParcelable("song", song);
-                musicServiceIntent.putExtra("musicListActivity", bundle);
+                // notify music player service about the current song change
+                musicServiceIntent.putExtra("musicListSong", mainActivityMessenger);
                 startService(musicServiceIntent);
             }
         });
@@ -257,10 +254,7 @@ public class MainActivity extends AppCompatActivity {
                         current_song = userSelection.get(0);
 
                         // notify music player service to start the new song in the new playlist (queue)
-                        Bundle bundle = new Bundle();
-                        bundle.putParcelable("mainActivityMessenger", mainActivityMessenger);
-                        bundle.putParcelable("song", userSelection.get(0));
-                        musicServiceIntent.putExtra("musicListActivity", bundle);
+                        musicServiceIntent.putExtra("musicListSong", mainActivityMessenger);
                         startService(musicServiceIntent);
 
                         mode.finish(); // Action picked, so close the CAB

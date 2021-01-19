@@ -158,7 +158,7 @@ public class MusicPlayerService
                         playerHandler.removeMessages(PREPARE_SEEK);
                         playerHandler.obtainMessage(PREPARE_SEEK).sendToTarget();
                         break;
-                    case "musicListActivity":
+                    case "musicListSong":
                         playerHandler.removeMessages(PREPARE_SONG);
                         playerHandler.obtainMessage(PREPARE_SONG).sendToTarget();
                         break;

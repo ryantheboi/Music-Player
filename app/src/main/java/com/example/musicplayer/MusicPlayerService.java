@@ -251,6 +251,7 @@ public class MusicPlayerService
 
     private static final class PlaybackHandler extends Handler {
         private MusicPlayerService mService;
+
         public PlaybackHandler(final MusicPlayerService servicer, Looper looper) {
             super(looper);
             mService = servicer;

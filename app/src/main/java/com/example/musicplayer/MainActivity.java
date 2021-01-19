@@ -33,6 +33,8 @@ import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.provider.MediaStore;
@@ -111,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
     private Intent seekBarProgressIntent;
     private Intent seekBarSeekIntent;
     private static Song current_song = Song.EMPTY_SONG;
+    private Bitmap current_albumImage;
     private Palette.Swatch vibrantSwatch;
     private Palette.Swatch darkVibrantSwatch;
     private Palette.Swatch dominantSwatch;
@@ -131,6 +134,8 @@ public class MainActivity extends AppCompatActivity {
     private RippleDrawable slidingUp_prev_btn_ripple;
     private RippleDrawable slidingUp_pauseplay_btn_ripple;
     private RippleDrawable slidingUp_next_btn_ripple;
+    private MessageHandler messageHandler;
+    private MessageHandler seekbarHandler;
 
 
     @Override
@@ -140,6 +145,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_musiclist);
         musicListRelativeLayout = findViewById(R.id.activity_musiclist);
         initMusicList();
+
+        // init thread for message handling
+        HandlerThread messageHandlerThread = new HandlerThread("MessageHandler");
+        messageHandlerThread.start();
+        messageHandler = new MessageHandler(messageHandlerThread.getLooper());
+        mainActivityMessenger = new Messenger(messageHandler);
+        musicServiceIntent = new Intent(this, MusicPlayerService.class);
 
         // initialize main sliding up panel
         initMainAnimation();
@@ -158,9 +170,6 @@ public class MainActivity extends AppCompatActivity {
         mediaSession = new MediaSessionCompat(this, "media");
         notificationManager = NotificationManagerCompat.from(this);
         showNotification();
-
-        mainActivityMessenger = new Messenger(new MessageHandler());
-        musicServiceIntent = new Intent(this, MusicPlayerService.class);
 
         // check and request for read permissions
         if (ContextCompat.checkSelfPermission(MainActivity.this,
@@ -505,7 +514,7 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("ClickableViewAccessibility")
     @TargetApi(21)
     public void initSlidingUpPanelButtons() {
-        Messenger slidingUpPanelMessenger = new Messenger(new MessageHandler());
+        Messenger slidingUpPanelMessenger = new Messenger(messageHandler);
 
         // init pauseplay button and ripple drawable
         slidingUp_pauseplay_btn = findViewById(R.id.sliding_btn_play);
@@ -600,7 +609,7 @@ public class MainActivity extends AppCompatActivity {
      */
     @SuppressLint("ClickableViewAccessibility")
     public void initMainButtons() {
-        Messenger mainMessenger = new Messenger(new MessageHandler());
+        Messenger mainMessenger = new Messenger(messageHandler);
 
         // init pauseplay button
         pauseplay_btn = findViewById((R.id.btn_play));
@@ -648,6 +657,11 @@ public class MainActivity extends AppCompatActivity {
      * Textview for current position is updated upon user changing the seekbar
      */
     public void initSeekbar() {
+        // init thread for seekbar updates
+        HandlerThread seekbarHandlerThread = new HandlerThread("SeekbarHandler");
+        seekbarHandlerThread.start();
+        seekbarHandler = new MessageHandler(seekbarHandlerThread.getLooper());
+
         // init seekbar and textviews
         seekBar = findViewById(R.id.seekBar);
         musicPosition = findViewById(R.id.music_position);
@@ -657,7 +671,7 @@ public class MainActivity extends AppCompatActivity {
         Intent seekBarDurationIntent = new Intent(this, MusicPlayerService.class);
         seekBarProgressIntent = new Intent(this, MusicPlayerService.class);
         seekBarSeekIntent = new Intent(this, MusicPlayerService.class);
-        Messenger mainMessenger = new Messenger(new MessageHandler());
+        Messenger mainMessenger = new Messenger(messageHandler);
         seekBarDurationIntent.putExtra("seekbarDuration", mainMessenger);
         startService(seekBarDurationIntent);
 
@@ -711,7 +725,7 @@ public class MainActivity extends AppCompatActivity {
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, activityIntent, 0);
 
         // create intents for the notification action buttons
-        Messenger notificationMessenger = new Messenger(new MessageHandler());
+        Messenger notificationMessenger = new Messenger(messageHandler);
         notificationPrevIntent = new Intent(this, MusicPlayerService.class).putExtra("prev", notificationMessenger);
         notificationPauseplayIntent = new Intent(this, MusicPlayerService.class).putExtra("pauseplay", notificationMessenger);
         notificationNextIntent = new Intent(this, MusicPlayerService.class).putExtra("next", notificationMessenger);
@@ -883,6 +897,11 @@ public class MainActivity extends AppCompatActivity {
      */
     public class MessageHandler extends Handler
     {
+
+        public MessageHandler(Looper looper) {
+            super(looper);
+        }
+
         @SuppressLint("RestrictedApi")
         @Override
         @TargetApi(24)
@@ -923,7 +942,7 @@ public class MainActivity extends AppCompatActivity {
                     musicDuration.setText(time);
 
                     // spawn a thread to update seekbar progress each millisecond
-                    final Messenger seekMessenger = new Messenger(new MessageHandler());
+                    final Messenger seekMessenger = new Messenger(seekbarHandler);
                     seekBarProgressIntent.putExtra("seekbarProgress", seekMessenger);
                     Thread seekbarUpdateThread = new Thread(new Runnable() {
                         @Override
@@ -931,7 +950,7 @@ public class MainActivity extends AppCompatActivity {
                             while (true) {
                                 startService(seekBarProgressIntent);
                                 try {
-                                    Thread.sleep(100);
+                                    Thread.sleep(1000);
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }
@@ -951,44 +970,50 @@ public class MainActivity extends AppCompatActivity {
                     // grab song album art and duration
                     String albumID = current_song.getAlbumID();
                     long albumID_long = Long.parseLong(albumID);
-                    Bitmap albumImage;
                     Uri albumArtURI = ContentUris.withAppendedId(MusicPlayerService.artURI, albumID_long);
                     ContentResolver res = getContentResolver();
                     try {
                         InputStream in = res.openInputStream(albumArtURI);
-                        albumImage = BitmapFactory.decodeStream(in);
+                        current_albumImage = BitmapFactory.decodeStream(in);
                         if (in != null){
                             in.close();
                         }
                     }catch(Exception e){
-                        albumImage = BitmapFactory.decodeResource(getResources(), R.drawable.default_image);
+                        current_albumImage = BitmapFactory.decodeResource(getResources(), R.drawable.default_image);
                         e.printStackTrace();
                     }
-                    int songDuration = current_song.getDuration();
+
+                    final int songDuration = current_song.getDuration();
+
+                    // view changes must be done on the main ui thread
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            // update sliding menu details
+                            slidingUp_songName.setText(current_song.getTitle());
+                            slidingUp_artistName.setText(current_song.getArtist());
+                            slidingUp_albumArt.setImageBitmap(current_albumImage);
+
+                            // update main activity details
+                            songName.setText(current_song.getTitle());
+                            artistName.setText(current_song.getArtist());
+                            albumArt.setImageBitmap(current_albumImage);
+                            seekBar.setMax(songDuration);
+                            musicDuration.setText(convertTime(songDuration));
+                        }
+                    });
 
                     // update notification details
                     notificationBuilder
                             .setContentTitle(current_song.getTitle())
                             .setPriority(NotificationManager.IMPORTANCE_LOW)
                             .setContentText(current_song.getArtist())
-                            .setLargeIcon(albumImage);
+                            .setLargeIcon(current_albumImage);
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);
 
-                    // update sliding menu details
-                    slidingUp_songName.setText(current_song.getTitle());
-                    slidingUp_artistName.setText(current_song.getArtist());
-                    slidingUp_albumArt.setImageBitmap(albumImage);
-
-                    // update main activity details
-                    songName.setText(current_song.getTitle());
-                    artistName.setText(current_song.getArtist());
-                    albumArt.setImageBitmap(albumImage);
-                    seekBar.setMax(songDuration);
-                    musicDuration.setText(convertTime(songDuration));
-
                     // update palette swatch colors for the animated gradients
-                    Palette.from(albumImage).maximumColorCount(8).generate(new Palette.PaletteAsyncListener() {
+                    Palette.from(current_albumImage).maximumColorCount(8).generate(new Palette.PaletteAsyncListener() {
                         @Override
                         public void onGenerated(@Nullable Palette palette) {
                             vibrantSwatch = palette.getVibrantSwatch();

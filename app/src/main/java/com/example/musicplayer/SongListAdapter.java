@@ -67,15 +67,6 @@ public class SongListAdapter extends ArrayAdapter {
         }
 
         // set resources for the view
-        if (title.length() > 35){
-            title = title.substring(0,35) + "...";
-        }
-        if (artist.length() > 35){
-            artist = artist.substring(0,35) + "...";
-        }
-        if (album.length() > 35){
-            album = album.substring(0,35) + "...";
-        }
         item.title.setText(title);
         item.artist.setText(artist);
         item.album.setText(album);

@@ -462,6 +462,10 @@ public class MainActivity extends AppCompatActivity {
         slidingUp_artistName = findViewById(R.id.sliding_artist);
         initSlidingUpPanelButtons();
 
+        // set selected to be true for marquee left-right scrolling
+        slidingUp_songName.setSelected(true);
+        slidingUp_artistName.setSelected(true);
+
         // init slide and click controls for slide panel layout
         slidingUpPanelLayout = findViewById(R.id.slidingPanel);
         slidingUpPanelLayout.addPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {

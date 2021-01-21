@@ -61,6 +61,10 @@
                     <TextView
                         android:id="@+id/sliding_title"
                         android:textSize="16sp"
+                        android:singleLine="true"
+                        android:ellipsize="marquee"
+                        android:marqueeRepeatLimit ="marquee_forever"
+                        android:scrollHorizontally="true"
                         android:textColor="@color/itemlightselectorblue"
                         android:textStyle="bold"
                         android:gravity="start"
@@ -71,6 +75,10 @@
                     <TextView
                         android:id="@+id/sliding_artist"
                         android:textSize="14sp"
+                        android:singleLine="true"
+                        android:ellipsize="marquee"
+                        android:marqueeRepeatLimit ="marquee_forever"
+                        android:scrollHorizontally="true"
                         android:textColor="@color/itemdefaultselectorblue"
                         android:gravity="start"
                         android:textAlignment="viewStart"

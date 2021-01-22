@@ -62,12 +62,12 @@ public class MusicDetailsActivity extends Activity {
         ImageView details_background = findViewById(R.id.music_details_background);
         if (MainActivity.nightMode){
             heading.setTextColor(Color.WHITE);
-            msgWindow.setTextColor(getResources().getColor(R.color.lightPrimaryWhite));
+            msgWindow.setTextColor(getResources().getColor(R.color.colorTextPrimaryLight));
             details_background.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
         }
         else{
             heading.setTextColor(Color.BLACK);
-            msgWindow.setTextColor(getResources().getColor(R.color.colorTextDark));
+            msgWindow.setTextColor(getResources().getColor(R.color.colorTextPrimaryDark));
             details_background.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
 
         }

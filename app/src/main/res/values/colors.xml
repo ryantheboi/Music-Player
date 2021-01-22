@@ -10,7 +10,10 @@
     <color name="nightPrimaryGrey">#8a8a8a</color>
     <color name="colorTextGrey">#737373</color>
     <color name="colorTextBlue">#008BFF</color>
-    <color name="colorTextDark">#030303</color>
+    <color name="colorTextPrimaryDark">#030303</color>
+    <color name="colorTextSecondaryDark">#0F0F0F</color>
+    <color name="colorTextPrimaryLight">#F4F4F4</color>
+    <color name="colorTextSecondaryLight">#ECECEC</color>
     <color name="lightPrimaryWhite">#F4F4F4</color>
     <color name="lightSecondaryWhite">#ECECEC</color>
 

@@ -762,18 +762,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * helper method used to swap the two main gradients to the appropriate swatch
+     * Swaps the two main gradients and the text colors in the main display
      * swaps gradients to darker colors if nightmode
      * swaps gradients to lighter colors otherwise
      */
     @TargetApi(16)
     public void swapMainColors() {
-        int textColor;
+        int textSongColor;
+        int textArtistColor;
+        int textSeekbarColor;
         int primaryColor;
         int secondaryColor;
         if (nightMode) {
             // assign primary and secondary colors
-            textColor = getResources().getColor(R.color.lightPrimaryWhite);
+            textSongColor = getResources().getColor(R.color.colorTextPrimaryLight);
+            textArtistColor = getResources().getColor(R.color.colorTextSecondaryLight);
+            textSeekbarColor = getResources().getColor(R.color.colorTextPrimaryLight);
             primaryColor = getResources().getColor(R.color.nightPrimaryDark);
             if (darkVibrantSwatch != null) {
                 secondaryColor = darkVibrantSwatch.getRgb();
@@ -784,8 +788,10 @@ public class MainActivity extends AppCompatActivity {
             }
         } else {
             // assign primary and secondary colors
-            textColor = getResources().getColor(R.color.colorTextDark);
-            primaryColor = Color.WHITE;
+            textSongColor = getResources().getColor(R.color.colorTextPrimaryDark);
+            textArtistColor = getResources().getColor(R.color.colorTextSecondaryDark);
+            textSeekbarColor = getResources().getColor(R.color.colorTextPrimaryDark);
+            primaryColor = getResources().getColor(R.color.lightPrimaryWhite);
             if (vibrantSwatch != null) {
                 secondaryColor = vibrantSwatch.getRgb();
             } else if (dominantSwatch != null) {
@@ -794,7 +800,10 @@ public class MainActivity extends AppCompatActivity {
                 secondaryColor = Color.YELLOW;
             }
         }
-        songName.setTextColor(textColor);
+        songName.setTextColor(textSongColor);
+        artistName.setTextColor(textArtistColor);
+        musicPosition.setTextColor(textSeekbarColor);
+        musicDuration.setTextColor(textSeekbarColor);
         gradient1.setColors(new int[]{primaryColor, secondaryColor});
         gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
         gradient2.setColors(new int[]{primaryColor, secondaryColor});

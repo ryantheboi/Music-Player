@@ -156,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
         // initialize main sliding up panel
         initMainAnimation();
 
-        initAlbumArt();
+        initMainDisplay();
 
         initMainButtons();
 
@@ -452,7 +452,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Initialize the sliding up panel for controlling the visibility of the main activity
+     * Initialize views and buttons in the sliding up panel
+     * The sliding up panel can be expanded upon click, but not collapsed
+     * Buttons will be invisible and unclickable depending on the panel state
      */
     public void initSlidingUpPanel() {
         // init image, text, and buttons on sliding menu
@@ -588,22 +590,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Initialize the mutable album art view and the transparent button
-     * On button click, scales the view and button with an animation
+     * Initializes the main display details, including the album art, song name, and artist name
+     * On button click (overlaps with albumart), scales the view and button with an animation
      */
-    public void initAlbumArt() {
-        // init album art button and textviews for song details
+    public void initMainDisplay() {
+        // init album art and transparent album art button
         albumArt = findViewById(R.id.circularImageView);
         albumArt_btn = findViewById(R.id.toggle_largeAlbumArt);
-        songName = findViewById(R.id.song_name);
-        artistName = findViewById(R.id.artist_name);
-        largeAlbumArt = true;
+        largeAlbumArt = true; // init album art as large
         albumArt_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 toggleLargeAlbumArt();
             }
         });
+
+        // init song name and artist name text with marquee scrolling
+        songName = findViewById(R.id.song_title);
+        songName.setSelected(true);
+        artistName = findViewById(R.id.song_artist);
+        artistName.setSelected(true);
     }
 
     /**

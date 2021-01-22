@@ -78,7 +78,6 @@
                         android:singleLine="true"
                         android:ellipsize="marquee"
                         android:marqueeRepeatLimit ="marquee_forever"
-                        android:scrollHorizontally="true"
                         android:textColor="@color/itemdefaultselectorblue"
                         android:gravity="start"
                         android:textAlignment="viewStart"
@@ -155,31 +154,44 @@
                     android:layout_alignParentStart="true"
                     android:layout_alignParentLeft="true"/>
 
-                <TextView
-                    android:id="@+id/song_name"
-                    android:visibility="invisible"
+                <LinearLayout
+                    android:id="@+id/song_text"
+                    android:orientation="vertical"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="9dp"
                     android:layout_above="@+id/seekBar"
-                    android:layout_centerHorizontal="true"
-                    android:textColor="@color/colorTextDark"
-                    android:layout_marginBottom="30dp"
-                    android:text="@string/Song"
-                    android:textSize="30sp"
-                    android:textStyle="bold" />
+                    android:layout_centerHorizontal="true">
+                    <TextView
+                        android:id="@+id/song_title"
+                        android:visibility="invisible"
+                        android:layout_gravity="center"
+                        android:singleLine="true"
+                        android:ellipsize="marquee"
+                        android:marqueeRepeatLimit ="marquee_forever"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/colorTextDark"
+                        android:layout_marginBottom="10dp"
+                        android:text="@string/Song"
+                        android:textSize="30sp"
+                        android:textStyle="bold"/>
 
-                <TextView
-                    android:id="@+id/artist_name"
-                    android:visibility="invisible"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_above="@+id/seekBar"
-                    android:layout_centerHorizontal="true"
-                    android:textColor="@color/colorTextGrey"
-                    android:text="@string/Artist"
-                    android:textSize="20sp" />
+                    <TextView
+                        android:id="@+id/song_artist"
+                        android:visibility="invisible"
+                        android:layout_gravity="center"
+                        android:singleLine="true"
+                        android:ellipsize="marquee"
+                        android:marqueeRepeatLimit ="marquee_forever"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/colorTextGrey"
+                        android:text="@string/Artist"
+                        android:textSize="20sp" />
+                </LinearLayout>
 
-                <TextView
+            <TextView
                     android:id="@+id/music_position"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

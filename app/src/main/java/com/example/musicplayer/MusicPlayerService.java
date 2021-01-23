@@ -11,7 +11,6 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnErrorListener;
-import android.media.MediaPlayer.OnPreparedListener;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -48,13 +47,14 @@ public class MusicPlayerService
     public static final int UPDATE_SEEKBAR_PROGRESS = 3;
     public static final int UPDATE_SONG = 4;
 
-    public static final int PREPARE_SONG = 0;
-    public static final int PREPARE_PLAY = 1;
-    public static final int PREPARE_PREV = 2;
-    public static final int PREPARE_NEXT = 3;
-    public static final int PREPARE_DURATION = 4;
-    public static final int PREPARE_SEEK = 5;
-    public static final int PREPARE_SEEKBAR_PROGRESS = 6;
+    public static final int PREPARE_INIT = 0;
+    public static final int PREPARE_SONG = 1;
+    public static final int PREPARE_PLAY = 2;
+    public static final int PREPARE_PREV = 3;
+    public static final int PREPARE_NEXT = 4;
+    public static final int PREPARE_DURATION = 5;
+    public static final int PREPARE_SEEK = 6;
+    public static final int PREPARE_SEEKBAR_PROGRESS = 7;
 
 
 
@@ -127,29 +127,24 @@ public class MusicPlayerService
                 switch (key){
                     case "pauseplay":
                         // update the pauseplay button icon via messenger and toggle music
-                        mainActivity_messenger = intent.getParcelableExtra("pauseplay");
                         playerHandler.removeMessages(PREPARE_PLAY);
                         playerHandler.obtainMessage(PREPARE_PLAY).sendToTarget();
                         break;
                     case "prev":
-                        mainActivity_messenger = intent.getParcelableExtra("prev");
                         // change current song in main activity
                         playerHandler.removeMessages(PREPARE_PREV);
                         playerHandler.obtainMessage(PREPARE_PREV).sendToTarget();
                         break;
                     case "next":
-                        mainActivity_messenger = intent.getParcelableExtra("next");
                         // change current song in main activity
                         playerHandler.removeMessages(PREPARE_NEXT);
                         playerHandler.obtainMessage(PREPARE_NEXT).sendToTarget();
                         break;
                     case "seekbarDuration":
-                        mainActivity_messenger = intent.getParcelableExtra("seekbarDuration");
                         playerHandler.removeMessages(PREPARE_DURATION);
                         playerHandler.obtainMessage(PREPARE_DURATION).sendToTarget();
                         break;
                     case "seekbarProgress":
-                        mainActivity_messenger = intent.getParcelableExtra("seekbarProgress");
                         playerHandler.removeMessages(PREPARE_SEEKBAR_PROGRESS);
                         playerHandler.obtainMessage(PREPARE_SEEKBAR_PROGRESS).sendToTarget();
                         break;
@@ -161,6 +156,11 @@ public class MusicPlayerService
                     case "musicListSong":
                         playerHandler.removeMessages(PREPARE_SONG);
                         playerHandler.obtainMessage(PREPARE_SONG).sendToTarget();
+                        break;
+                    case "musicListInit":
+                        mainActivity_messenger = intent.getParcelableExtra("musicListInit");
+                        playerHandler.removeMessages(PREPARE_INIT);
+                        playerHandler.obtainMessage(PREPARE_INIT).sendToTarget();
                         break;
                 }
             }
@@ -321,6 +321,31 @@ public class MusicPlayerService
                 return;
             }
             switch (msg.what) {
+                case PREPARE_INIT:
+                    try {
+                        // update main ui with current song
+                        Song current_song = MainActivity.getCurrent_song();
+                        if (current_song != Song.EMPTY_SONG) {
+                            sendSongUpdateMessage(mainActivity_messenger, current_song);
+
+                            // release current mediaplayer to allow another to be created
+                            mediaPlayer.release();
+
+                            // prepare mediaplayer and play the song
+                            int songID = current_song.getID();
+                            Uri audioURI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                            Uri songURI = ContentUris.withAppendedId(audioURI, songID);
+                            MediaPlayer mp = MediaPlayer.create(mService, songURI);
+                            mp.setOnCompletionListener(mService);
+                            mp.setOnErrorListener(mService);
+                            mp.setWakeMode(mService, PowerManager.PARTIAL_WAKE_LOCK);
+                            mediaPlayer = mp;
+                            sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
                 case PREPARE_SONG:
                     try {
                         // update main ui with current song
@@ -355,11 +380,11 @@ public class MusicPlayerService
                     audioFocusToggleMedia();
                     break;
                 case PREPARE_PREV:
-                    if (MainActivity.playlist != null) {
+                    if (MainActivity.current_playlist.size() > 0) {
                         try {
                             // update main ui with prev song
                             Song current_song = MainActivity.getCurrent_song();
-                            SongNode songNode = MainActivity.playlist.get(current_song);
+                            SongNode songNode = MainActivity.current_playlist.get(current_song);
                             Song prev_song = songNode.getPrev();
                             sendSongUpdateMessage(mainActivity_messenger, prev_song);
 
@@ -388,11 +413,11 @@ public class MusicPlayerService
                     }
                     break;
                 case PREPARE_NEXT:
-                    if (MainActivity.playlist != null) {
+                    if (MainActivity.current_playlist.size() > 0) {
                         try {
                             // update main ui with next song
                             Song current_song = MainActivity.getCurrent_song();
-                            SongNode songNode = MainActivity.playlist.get(current_song);
+                            SongNode songNode = MainActivity.current_playlist.get(current_song);
                             Song next_song = songNode.getNext();
                             sendSongUpdateMessage(mainActivity_messenger, next_song);
 

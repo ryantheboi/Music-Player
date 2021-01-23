@@ -73,8 +73,8 @@ public class MainActivity extends AppCompatActivity {
     public static boolean nightMode = false;
     private ListView listView;
     private RelativeLayout musicListRelativeLayout;
-    private ArrayList<Song> songList;
-    public static HashMap<Song, SongNode> playlist;
+    private ArrayList<Song> fullSongList;
+    public static HashMap<Song, SongNode> current_playlist;
     public static HashMap<Song, SongNode> fullPlaylist;
     private SongListAdapter adapter;
     private Messenger mainActivityMessenger;
@@ -142,9 +142,6 @@ public class MainActivity extends AppCompatActivity {
     @TargetApi(16)
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_musiclist);
-        musicListRelativeLayout = findViewById(R.id.activity_musiclist);
-        initMusicList();
 
         // init thread for message handling
         HandlerThread messageHandlerThread = new HandlerThread("MessageHandler");
@@ -153,7 +150,12 @@ public class MainActivity extends AppCompatActivity {
         mainActivityMessenger = new Messenger(messageHandler);
         musicServiceIntent = new Intent(this, MusicPlayerService.class);
 
-        // initialize main sliding up panel
+        // init listview functionality and playlist
+        setContentView(R.layout.activity_musiclist);
+        musicListRelativeLayout = findViewById(R.id.activity_musiclist);
+        initMusicList(); // starts music service for the first time
+
+        // init main sliding up panel
         initMainAnimation();
 
         initMainDisplay();
@@ -190,15 +192,32 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Initializes the listview with item click and multi choice listeners, and starts music service
+     * On item click, the song that was clicked will be played
+     * On multi choice, multiple songs can be selected to either create a queue or a new playlist
+     * The music service is started here in order to send the main activity's messenger
+     */
     public void initMusicList() {
         listView = findViewById(R.id.listView);
         userSelection = new ArrayList<>();
-        songList = new ArrayList<>();
+        fullSongList = new ArrayList<>();
         fullPlaylist = new HashMap<>();
-        playlist = new HashMap<>();
-        getMusic(); // populates songList
-        fullPlaylist = createPlaylist(songList);
-        adapter = new SongListAdapter(this, R.layout.adapter_view_layout, songList);
+        current_playlist = new HashMap<>();
+        getMusic(); // populates fullSongList
+        fullPlaylist = createPlaylist(fullSongList);
+
+        // initialize current playlist and song
+        if (fullSongList.size() > 0){
+            current_playlist = fullPlaylist;
+            current_song = fullSongList.get(0);
+        }
+
+        // start music service for the first time
+        musicServiceIntent.putExtra("musicListInit", mainActivityMessenger);
+        startService(musicServiceIntent);
+
+        adapter = new SongListAdapter(this, R.layout.adapter_view_layout, fullSongList);
         listView.setAdapter(adapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -208,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
                 Song song = (Song) listView.getItemAtPosition(position);
 
                 // redirect the current playlist to reference the full (original) playlist
-                playlist = fullPlaylist;
+                current_playlist = fullPlaylist;
 
                 // visually highlight the song in the list view
                 adapter.highlightItem(song);
@@ -259,7 +278,7 @@ public class MainActivity extends AppCompatActivity {
                     case R.id.createqueue:
                         Toast.makeText(MainActivity.this, "Creating Queue of " + userSelection.size() + " songs", Toast.LENGTH_SHORT).show();
                         // construct new current playlist, given the user selections
-                        playlist = createPlaylist(userSelection);
+                        current_playlist = createPlaylist(userSelection);
                         current_song = userSelection.get(0);
 
                         // notify music player service to start the new song in the new playlist (queue)
@@ -387,7 +406,7 @@ public class MainActivity extends AppCompatActivity {
                         currentRelativePath,
                         currentSize
                 );
-                songList.add(song);
+                fullSongList.add(song);
             } while (songCursor.moveToNext());
 
             songCursor.close();
@@ -960,7 +979,7 @@ public class MainActivity extends AppCompatActivity {
                     String time = convertTime(musicMaxDuration);
                     musicDuration.setText(time);
 
-                    // spawn a thread to update seekbar progress each millisecond
+                    // spawn a thread to update seekbar progress each 100 milliseconds
                     final Messenger seekMessenger = new Messenger(seekbarHandler);
                     seekBarProgressIntent.putExtra("seekbarProgress", seekMessenger);
                     Thread seekbarUpdateThread = new Thread(new Runnable() {
@@ -969,7 +988,7 @@ public class MainActivity extends AppCompatActivity {
                             while (true) {
                                 startService(seekBarProgressIntent);
                                 try {
-                                    Thread.sleep(1000);
+                                    Thread.sleep(100);
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }

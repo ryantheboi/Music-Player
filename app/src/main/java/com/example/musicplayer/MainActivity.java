@@ -46,6 +46,7 @@ import android.view.View;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -136,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
     private RippleDrawable slidingUp_next_btn_ripple;
     private MessageHandler messageHandler;
     private MessageHandler seekbarHandler;
+    private EditText listFilter;
 
 
     @Override

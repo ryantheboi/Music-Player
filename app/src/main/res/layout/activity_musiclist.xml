@@ -31,6 +31,13 @@
                 android:layout_marginRight="20dp"
                 android:background="#00000000"
                 android:src="@drawable/light" />
+            <EditText
+                android:id="@+id/listFilter"
+                android:layout_width="80dp"
+                android:layout_height="40dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="10dp" />
         </RelativeLayout>
 
         <RelativeLayout

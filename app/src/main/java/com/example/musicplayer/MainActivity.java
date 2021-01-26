@@ -13,6 +13,7 @@ import androidx.palette.graphics.Palette;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -39,10 +40,15 @@ import android.os.Message;
 import android.os.Messenger;
 import android.provider.MediaStore;
 import android.support.v4.media.session.MediaSessionCompat;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -169,6 +175,8 @@ public class MainActivity extends AppCompatActivity {
         initInfoButton();
 
         initSlidingUpPanel();
+
+        initFilterSearch();
 
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
         mediaSession = new MediaSessionCompat(this, "media");
@@ -321,6 +329,7 @@ public class MainActivity extends AppCompatActivity {
     public void toggleNightMode() {
         if (!nightMode) {
             listView.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
+            listFilter.setTextColor(getResources().getColor(R.color.colorTextPrimaryLight));
             musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
             adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemnightselectorblue));
             nightModeButton.setImageResource(R.drawable.night);
@@ -330,6 +339,7 @@ public class MainActivity extends AppCompatActivity {
             info_btn.setImageResource(R.drawable.info_light);
         } else {
             listView.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
+            listFilter.setTextColor(getResources().getColor(R.color.colorTextPrimaryDark));
             musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
             adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemlightselectorblue));
             nightModeButton.setImageResource(R.drawable.light);
@@ -453,6 +463,45 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return playlist;
+    }
+
+    public void initFilterSearch() {
+        listFilter = findViewById(R.id.listFilter);
+        listFilter.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void onTextChanged(CharSequence cs, int arg1, int arg2, int arg3) {
+                // filter based on song name
+                adapter.getFilter().filter(cs);
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable arg0) {
+            }
+        });
+
+        // set touch listener for all views to hide the keyboard when touched
+        ArrayList<View> views = getAllChildren(slidingUpPanelLayout);
+        for (View innerView : views){
+            innerView.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    // only attempt to hide keyboard if the list filter is in focus
+                    if (listFilter.hasFocus()) {
+                        InputMethodManager inputMethodManager =
+                                (InputMethodManager) MainActivity.this.getSystemService(
+                                        Activity.INPUT_METHOD_SERVICE);
+                        inputMethodManager.hideSoftInputFromWindow(
+                                MainActivity.this.getCurrentFocus().getWindowToken(), 0);
+                    }
+                    listFilter.clearFocus();
+                    return false;
+                }
+            });
+        }
     }
 
     @Override
@@ -929,6 +978,37 @@ public class MainActivity extends AppCompatActivity {
 
     public static Song getCurrent_song(){
         return current_song;
+    }
+
+    /**
+     * Recursively find all child views (if any) from a view
+     * @param v the view to find all children from
+     * @return an arraylist of all child views under v
+     */
+    private ArrayList<View> getAllChildren(View v) {
+
+        // base case for when the view is not a ViewGroup or is a ListView
+        if (!(v instanceof ViewGroup) || (v instanceof ListView)) {
+            ArrayList<View> viewArrayList = new ArrayList();
+            viewArrayList.add(v);
+            return viewArrayList;
+        }
+
+        // recursive case to add all child views from the ViewGroup, including the ViewGroup
+        ArrayList<View> children = new ArrayList();
+
+        ViewGroup viewGroup = (ViewGroup) v;
+        for (int i = 0; i < viewGroup.getChildCount(); i++) {
+
+            View child = viewGroup.getChildAt(i);
+
+            ArrayList<View> viewArrayList = new ArrayList();
+            viewArrayList.add(v);
+            viewArrayList.addAll(getAllChildren(child));
+
+            children.addAll(viewArrayList);
+        }
+        return children;
     }
 
     /**

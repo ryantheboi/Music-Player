@@ -109,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
     private MediaSessionCompat mediaSession;
     private NotificationManagerCompat notificationManager;
     private NotificationCompat.Builder notificationBuilder;
-    private Notification notificationChannel1;
+    private static Notification notificationChannel1;
     private Intent mainPausePlayIntent;
     private Intent mainPrevIntent;
     private Intent mainNextIntent;
@@ -135,6 +135,9 @@ public class MainActivity extends AppCompatActivity {
     private Intent slidingUp_pauseplayIntent;
     private Intent slidingUp_prevIntent;
     private Intent slidingUp_nextIntent;
+    private Intent musicListSelectIntent;
+    private Intent musicListQueueIntent;
+    private Intent notificationIntent;
     private ImageButton slidingUp_prev_btn;
     private ImageButton slidingUp_pauseplay_btn;
     private ImageButton slidingUp_next_btn;
@@ -150,6 +153,7 @@ public class MainActivity extends AppCompatActivity {
     @TargetApi(16)
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         // init thread for message handling
         HandlerThread messageHandlerThread = new HandlerThread("MessageHandler");
@@ -178,10 +182,7 @@ public class MainActivity extends AppCompatActivity {
 
         initFilterSearch();
 
-        setVolumeControlStream(AudioManager.STREAM_MUSIC);
-        mediaSession = new MediaSessionCompat(this, "media");
-        notificationManager = NotificationManagerCompat.from(this);
-        showNotification();
+        initNotification();
 
         // check and request for read permissions
         if (ContextCompat.checkSelfPermission(MainActivity.this,
@@ -217,6 +218,10 @@ public class MainActivity extends AppCompatActivity {
         getMusic(); // populates fullSongList
         fullPlaylist = createPlaylist(fullSongList);
 
+        // init intents
+        musicListSelectIntent = new Intent(this, MusicPlayerService.class);
+        musicListQueueIntent = new Intent(this, MusicPlayerService.class);
+
         // initialize current playlist and song
         if (fullSongList.size() > 0){
             current_playlist = fullPlaylist;
@@ -244,8 +249,8 @@ public class MainActivity extends AppCompatActivity {
                 current_song = song;
 
                 // notify music player service about the current song change
-                musicServiceIntent.putExtra("musicListSong", mainActivityMessenger);
-                startService(musicServiceIntent);
+                musicListSelectIntent.putExtra("musicListSong", mainActivityMessenger);
+                startService(musicListSelectIntent);
             }
         });
 
@@ -292,8 +297,8 @@ public class MainActivity extends AppCompatActivity {
                         current_song = userSelection.get(0);
 
                         // notify music player service to start the new song in the new playlist (queue)
-                        musicServiceIntent.putExtra("musicListSong", mainActivityMessenger);
-                        startService(musicServiceIntent);
+                        musicListQueueIntent.putExtra("musicListSong", mainActivityMessenger);
+                        startService(musicListQueueIntent);
 
                         mode.finish(); // Action picked, so close the CAB
                         return true;
@@ -799,7 +804,10 @@ public class MainActivity extends AppCompatActivity {
 
 
     @TargetApi(19)
-    public void showNotification() {
+    public void initNotification() {
+        mediaSession = new MediaSessionCompat(this, "media");
+        notificationManager = NotificationManagerCompat.from(this);
+
         Bitmap largeImage = BitmapFactory.decodeResource(getResources(), R.drawable.kaminomanimani);
         Intent activityIntent = new Intent(this, MainActivity.class);
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, activityIntent, 0);
@@ -821,7 +829,7 @@ public class MainActivity extends AppCompatActivity {
                 .addAction(R.drawable.ic_play24dp, "play", PendingIntent.getService(this, 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT))
                 .addAction(R.drawable.ic_next24dp, "next", PendingIntent.getService(this, 2, notificationNextIntent, PendingIntent.FLAG_UPDATE_CURRENT))
                 .setPriority(NotificationCompat.PRIORITY_MIN)
-                .setOngoing(true)
+                .setOngoing(false)
                 .setContentIntent(contentIntent)
                 .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
                         .setShowActionsInCompactView(0, 1, 2)
@@ -829,6 +837,11 @@ public class MainActivity extends AppCompatActivity {
 
         notificationChannel1 = notificationBuilder.build();
         notificationManager.notify(1, notificationChannel1);
+
+        // notify music player service about the notification
+        notificationIntent = new Intent(this, MusicPlayerService.class);
+        notificationIntent.putExtra("notification", mainActivityMessenger);
+        startService(notificationIntent);
     }
 
     /**
@@ -980,6 +993,10 @@ public class MainActivity extends AppCompatActivity {
         return current_song;
     }
 
+    public static Notification getNotification(){
+        return notificationChannel1;
+    }
+
     /**
      * Recursively find all child views (if any) from a view
      * @param v the view to find all children from
@@ -1024,7 +1041,7 @@ public class MainActivity extends AppCompatActivity {
 
         @SuppressLint("RestrictedApi")
         @Override
-        @TargetApi(24)
+        @TargetApi(26)
         public void handleMessage(Message msg) {
 
             Bundle bundle = msg.getData();

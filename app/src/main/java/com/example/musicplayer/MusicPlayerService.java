@@ -1,6 +1,7 @@
 package com.example.musicplayer;
 
 import android.annotation.TargetApi;
+import android.app.Notification;
 import android.app.Service;
 import android.content.ContentUris;
 import android.content.Context;
@@ -34,6 +35,7 @@ public class MusicPlayerService
     static AudioFocusRequest mAudioFocusRequest;
     boolean mPlayOnAudioFocus;
     private static Messenger mainActivity_messenger;
+    private static Notification notification;
     private HandlerThread musicPlayerHandlerThread;
     private PlaybackHandler playerHandler;
     private static boolean playing = false;
@@ -55,6 +57,7 @@ public class MusicPlayerService
     public static final int PREPARE_DURATION = 5;
     public static final int PREPARE_SEEK = 6;
     public static final int PREPARE_SEEKBAR_PROGRESS = 7;
+    public static final int PREPARE_NOTIFICATION = 8;
 
 
 
@@ -125,6 +128,11 @@ public class MusicPlayerService
             for (String key : b.keySet()) {
                 //System.out.println(key);
                 switch (key){
+                    case "musicListInit":
+                        mainActivity_messenger = intent.getParcelableExtra("musicListInit");
+                        playerHandler.removeMessages(PREPARE_INIT);
+                        playerHandler.obtainMessage(PREPARE_INIT).sendToTarget();
+                        break;
                     case "pauseplay":
                         // update the pauseplay button icon via messenger and toggle music
                         playerHandler.removeMessages(PREPARE_PLAY);
@@ -157,10 +165,9 @@ public class MusicPlayerService
                         playerHandler.removeMessages(PREPARE_SONG);
                         playerHandler.obtainMessage(PREPARE_SONG).sendToTarget();
                         break;
-                    case "musicListInit":
-                        mainActivity_messenger = intent.getParcelableExtra("musicListInit");
-                        playerHandler.removeMessages(PREPARE_INIT);
-                        playerHandler.obtainMessage(PREPARE_INIT).sendToTarget();
+                    case "notification":
+                        playerHandler.removeMessages(PREPARE_NOTIFICATION);
+                        playerHandler.obtainMessage(PREPARE_NOTIFICATION).sendToTarget();
                         break;
                 }
             }
@@ -348,6 +355,9 @@ public class MusicPlayerService
                     break;
                 case PREPARE_SONG:
                     try {
+                        // enable playback in background
+                        mService.startForeground(1, notification);
+
                         // update main ui with current song
                         Song current_song = MainActivity.getCurrent_song();
                         sendSongUpdateMessage(mainActivity_messenger, current_song);
@@ -372,10 +382,14 @@ public class MusicPlayerService
                     break;
                 case PREPARE_PLAY:
                     if (playing) {
+                        // disable playback in background
                         sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY);
+                        mService.stopForeground(false);
                     }
                     else{
+                        // enable playback in background
                         sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE);
+                        mService.startForeground(1, notification);
                     }
                     audioFocusToggleMedia();
                     break;
@@ -459,6 +473,9 @@ public class MusicPlayerService
                     progressMessage[0] = UPDATE_SEEKBAR_PROGRESS;
                     progressMessage[1] = mediaPlayer.getCurrentPosition();
                     sendUpdateMessage(mainActivity_messenger, progressMessage);
+                    break;
+                case PREPARE_NOTIFICATION:
+                    notification = MainActivity.getNotification();
                     break;
             }
         }

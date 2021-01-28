@@ -150,9 +150,43 @@ public class MainActivity extends AppCompatActivity {
 
 
     @Override
-    @TargetApi(16)
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // initialize all views
+        setContentView(R.layout.activity_musiclist);
+        musicListRelativeLayout = findViewById(R.id.activity_musiclist);
+        listView = findViewById(R.id.listView);
+        nightModeButton = findViewById(R.id.btn_nightmode);
+        listFilter = findViewById(R.id.listFilter);
+        slidingUpMenuLayout = findViewById(R.id.sliding_menu);
+        slidingUp_albumArt = findViewById(R.id.sliding_albumart);
+        slidingUp_songName = findViewById(R.id.sliding_title);
+        slidingUp_artistName = findViewById(R.id.sliding_artist);
+        slidingUpPanelLayout = findViewById(R.id.slidingPanel);
+        slidingUp_pauseplay_btn = findViewById(R.id.sliding_btn_play);
+        slidingUp_next_btn = findViewById(R.id.sliding_btn_next);
+        slidingUp_prev_btn = findViewById(R.id.sliding_btn_prev);
+        mainActivityRelativeLayout = findViewById(R.id.mainlayout);
+        albumArt = findViewById(R.id.circularImageView);
+        albumArt_btn = findViewById(R.id.toggle_largeAlbumArt);
+        songName = findViewById(R.id.song_title);
+        artistName = findViewById(R.id.song_artist);
+        pauseplay_btn = findViewById((R.id.btn_play));
+        next_btn = findViewById((R.id.btn_next));
+        prev_btn = findViewById((R.id.btn_prev));
+        seekBar = findViewById(R.id.seekBar);
+        musicPosition = findViewById(R.id.music_position);
+        musicDuration = findViewById(R.id.music_duration);
+        info_btn = findViewById(R.id.btn_info);
+    }
+
+    @Override
+    @TargetApi(16)
+    protected void onStart() {
+        super.onStart();
+        System.out.println("started");
+
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         // init thread for message handling
@@ -163,8 +197,6 @@ public class MainActivity extends AppCompatActivity {
         musicServiceIntent = new Intent(this, MusicPlayerService.class);
 
         // init listview functionality and playlist
-        setContentView(R.layout.activity_musiclist);
-        musicListRelativeLayout = findViewById(R.id.activity_musiclist);
         initMusicList(); // starts music service for the first time
 
         // init main sliding up panel
@@ -210,7 +242,6 @@ public class MainActivity extends AppCompatActivity {
      * The music service is started here in order to send the main activity's messenger
      */
     public void initMusicList() {
-        listView = findViewById(R.id.listView);
         userSelection = new ArrayList<>();
         fullSongList = new ArrayList<>();
         fullPlaylist = new HashMap<>();
@@ -322,7 +353,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void initNightMode() {
         nightMode = false;
-        nightModeButton = findViewById(R.id.btn_nightmode);
         nightModeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -471,7 +501,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void initFilterSearch() {
-        listFilter = findViewById(R.id.listFilter);
         listFilter.addTextChangedListener(new TextWatcher() {
             @Override
             public void onTextChanged(CharSequence cs, int arg1, int arg2, int arg3) {
@@ -532,11 +561,7 @@ public class MainActivity extends AppCompatActivity {
      * Buttons will be invisible and unclickable depending on the panel state
      */
     public void initSlidingUpPanel() {
-        // init image, text, and buttons on sliding menu
-        slidingUpMenuLayout = findViewById(R.id.sliding_menu);
-        slidingUp_albumArt = findViewById(R.id.sliding_albumart);
-        slidingUp_songName = findViewById(R.id.sliding_title);
-        slidingUp_artistName = findViewById(R.id.sliding_artist);
+        // init functionality for buttons on sliding menu
         initSlidingUpPanelButtons();
 
         // set selected to be true for marquee left-right scrolling
@@ -544,7 +569,6 @@ public class MainActivity extends AppCompatActivity {
         slidingUp_artistName.setSelected(true);
 
         // init slide and click controls for slide panel layout
-        slidingUpPanelLayout = findViewById(R.id.slidingPanel);
         slidingUpPanelLayout.addPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
             @Override
             public void onPanelSlide(View panel, float slideOffset) {
@@ -598,7 +622,6 @@ public class MainActivity extends AppCompatActivity {
         Messenger slidingUpPanelMessenger = new Messenger(messageHandler);
 
         // init pauseplay button and ripple drawable
-        slidingUp_pauseplay_btn = findViewById(R.id.sliding_btn_play);
         slidingUp_pauseplay_btn_ripple = (RippleDrawable) slidingUp_pauseplay_btn.getBackground();
 
         slidingUp_pauseplayIntent = new Intent(this, MusicPlayerService.class);
@@ -612,7 +635,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // init next button and ripple drawable
-        slidingUp_next_btn = findViewById(R.id.sliding_btn_next);
         slidingUp_next_btn_ripple = (RippleDrawable) slidingUp_next_btn.getBackground();
 
         slidingUp_nextIntent = new Intent(this, MusicPlayerService.class);
@@ -626,7 +648,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // init prev button and ripple drawable
-        slidingUp_prev_btn = findViewById(R.id.sliding_btn_prev);
         slidingUp_prev_btn_ripple = (RippleDrawable) slidingUp_prev_btn.getBackground();
 
         slidingUp_prevIntent = new Intent(this, MusicPlayerService.class);
@@ -653,7 +674,6 @@ public class MainActivity extends AppCompatActivity {
         gradient2.mutate();
 
         // 6 second animated gradients with 3 second transitions
-        mainActivityRelativeLayout = findViewById(R.id.mainlayout);
         mainAnimation = new AnimationDrawable();
         mainAnimation.addFrame(gradient1, 6000);
         mainAnimation.addFrame(gradient2, 6000);
@@ -661,7 +681,6 @@ public class MainActivity extends AppCompatActivity {
         mainAnimation.setExitFadeDuration(3000);
         mainAnimation.setOneShot(false);
         mainActivityRelativeLayout.setBackground(mainAnimation);
-        mainAnimation.start();
     }
 
     /**
@@ -670,8 +689,6 @@ public class MainActivity extends AppCompatActivity {
      */
     public void initMainDisplay() {
         // init album art and transparent album art button
-        albumArt = findViewById(R.id.circularImageView);
-        albumArt_btn = findViewById(R.id.toggle_largeAlbumArt);
         largeAlbumArt = true; // init album art as large
         albumArt_btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -680,10 +697,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // init song name and artist name text with marquee scrolling
-        songName = findViewById(R.id.song_title);
+        // enable song name and artist name text with marquee scrolling
         songName.setSelected(true);
-        artistName = findViewById(R.id.song_artist);
         artistName.setSelected(true);
     }
 
@@ -696,9 +711,7 @@ public class MainActivity extends AppCompatActivity {
     public void initMainButtons() {
         Messenger mainMessenger = new Messenger(messageHandler);
 
-        // init pauseplay button
-        pauseplay_btn = findViewById((R.id.btn_play));
-
+        // init pauseplay button click functionality
         mainPausePlayIntent = new Intent(this, MusicPlayerService.class);
         mainPausePlayIntent.putExtra("pauseplay", mainMessenger);
 
@@ -709,9 +722,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // init next button
-        next_btn = findViewById((R.id.btn_next));
-
+        // init next button click functionality
         mainNextIntent = new Intent(this, MusicPlayerService.class);
         mainNextIntent.putExtra("next", mainMessenger);
 
@@ -722,9 +733,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // init prev button
-        prev_btn = findViewById((R.id.btn_prev));
-
+        // init prev button click functionality
         mainPrevIntent = new Intent(this, MusicPlayerService.class);
         mainPrevIntent.putExtra("prev", mainMessenger);
 
@@ -746,11 +755,6 @@ public class MainActivity extends AppCompatActivity {
         HandlerThread seekbarHandlerThread = new HandlerThread("SeekbarHandler");
         seekbarHandlerThread.start();
         seekbarHandler = new MessageHandler(seekbarHandlerThread.getLooper());
-
-        // init seekbar and textviews
-        seekBar = findViewById(R.id.seekBar);
-        musicPosition = findViewById(R.id.music_position);
-        musicDuration = findViewById(R.id.music_duration);
 
         // set the seekbar & textview duration and sync with mediaplayer
         Intent seekBarDurationIntent = new Intent(this, MusicPlayerService.class);
@@ -788,7 +792,6 @@ public class MainActivity extends AppCompatActivity {
      * Upon clicking the button, the current song will be sent in the intent
      */
     public void initInfoButton() {
-        info_btn = findViewById(R.id.btn_info);
         infoIntent = new Intent(this, MusicDetailsActivity.class);
         info_btn.setOnClickListener(new View.OnClickListener() {
             @Override

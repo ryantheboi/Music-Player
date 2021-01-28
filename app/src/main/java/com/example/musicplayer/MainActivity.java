@@ -235,6 +235,32 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onResume() {
+        System.out.println("resumed");
+        mainAnimation.start();
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        System.out.println("paused");
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        System.out.println("stopped");
+        mainAnimation.stop();
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        System.out.println("destroyed");
+        super.onDestroy();
+    }
+
     /**
      * Initializes the listview with item click and multi choice listeners, and starts music service
      * On item click, the song that was clicked will be played

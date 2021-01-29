@@ -79,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton nightModeButton;
     public static boolean nightMode = false;
     private ListView listView;
+    private ImageView albumArt_innerFrame;
+    private ImageView albumArt_outerFrame;
     private RelativeLayout musicListRelativeLayout;
     private ArrayList<Song> fullSongList;
     public static HashMap<Song, SongNode> current_playlist;
@@ -158,6 +160,8 @@ public class MainActivity extends AppCompatActivity {
         musicListRelativeLayout = findViewById(R.id.activity_musiclist);
         listView = findViewById(R.id.listView);
         nightModeButton = findViewById(R.id.btn_nightmode);
+        albumArt_innerFrame = findViewById(R.id.albumart_innerframe);
+        albumArt_outerFrame = findViewById(R.id.albumart_outerframe);
         listFilter = findViewById(R.id.listFilter);
         slidingUpMenuLayout = findViewById(R.id.sliding_menu);
         slidingUp_albumArt = findViewById(R.id.sliding_albumart);
@@ -390,6 +394,8 @@ public class MainActivity extends AppCompatActivity {
     public void toggleNightMode() {
         if (!nightMode) {
             listView.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
+            albumArt_innerFrame.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
+            albumArt_outerFrame.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
             listFilter.setTextColor(getResources().getColor(R.color.colorTextPrimaryLight));
             musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
             adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemnightselectorblue));
@@ -400,6 +406,8 @@ public class MainActivity extends AppCompatActivity {
             info_btn.setImageResource(R.drawable.info_light);
         } else {
             listView.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
+            albumArt_innerFrame.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
+            albumArt_outerFrame.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
             listFilter.setTextColor(getResources().getColor(R.color.colorTextPrimaryDark));
             musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
             adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemlightselectorblue));

@@ -5,13 +5,28 @@
     android:layout_height="match_parent"
     android:weightSum="100">
 
-
-
-    <ImageView
-        android:id="@+id/album_art"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:layout_weight="85"/>
+        android:layout_weight="85">
+
+        <ImageView
+            android:id="@+id/album_art"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+        <ImageView
+            android:id="@+id/albumart_innerframe"
+            android:src="@drawable/albumart_innerframe"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <ImageView
+            android:id="@+id/albumart_outerframe"
+            android:src="@drawable/albumart_outerframe"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
 
     <LinearLayout
         android:orientation="vertical"

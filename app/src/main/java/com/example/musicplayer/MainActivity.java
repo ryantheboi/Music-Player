@@ -1109,25 +1109,35 @@ public class MainActivity extends AppCompatActivity {
             int updateOperation = (int) bundle.get("update");
             switch (updateOperation) {
                 case MusicPlayerService.UPDATE_PLAY:
-                    pauseplay_btn.setImageResource(R.drawable.ic_play);
-                    slidingUp_pauseplay_btn.setImageResource(R.drawable.ic_play24dp);
-                    if (contrastSwatch != null){ // change sliding menu pauseplay button color
-                        Drawable unwrappedDrawablePauseplay = slidingUp_pauseplay_btn.getDrawable();
-                        Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
-                        DrawableCompat.setTint(wrappedDrawablePauseplay, contrastSwatch.getRgb());
-                    }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            pauseplay_btn.setImageResource(R.drawable.ic_play);
+                            slidingUp_pauseplay_btn.setImageResource(R.drawable.ic_play24dp);
+                            if (contrastSwatch != null){ // change sliding menu pauseplay button color
+                                Drawable unwrappedDrawablePauseplay = slidingUp_pauseplay_btn.getDrawable();
+                                Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
+                                DrawableCompat.setTint(wrappedDrawablePauseplay, contrastSwatch.getRgb());
+                            }
+                        }
+                    });
                     notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_play24dp, "play", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);
                     break;
                 case MusicPlayerService.UPDATE_PAUSE:
-                    pauseplay_btn.setImageResource(R.drawable.ic_pause);
-                    slidingUp_pauseplay_btn.setImageResource(R.drawable.ic_pause24dp);
-                    if (contrastSwatch != null){ // change sliding menu pauseplay button color
-                        Drawable unwrappedDrawablePauseplay = slidingUp_pauseplay_btn.getDrawable();
-                        Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
-                        DrawableCompat.setTint(wrappedDrawablePauseplay, contrastSwatch.getRgb());
-                    }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            pauseplay_btn.setImageResource(R.drawable.ic_pause);
+                            slidingUp_pauseplay_btn.setImageResource(R.drawable.ic_pause24dp);
+                            if (contrastSwatch != null){ // change sliding menu pauseplay button color
+                                Drawable unwrappedDrawablePauseplay = slidingUp_pauseplay_btn.getDrawable();
+                                Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
+                                DrawableCompat.setTint(wrappedDrawablePauseplay, contrastSwatch.getRgb());
+                            }
+                        }
+                    });
                     notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_pause24dp, "pause", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);
@@ -1224,8 +1234,13 @@ public class MainActivity extends AppCompatActivity {
                             darkVibrantSwatch = palette.getDarkVibrantSwatch();
                             dominantSwatch = palette.getDominantSwatch();
                             swatchList = palette.getSwatches();
-                            swapMainColors();
-                            swapSlidingMenuColors();
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    swapMainColors();
+                                    swapSlidingMenuColors();
+                                }
+                            });
                         }
                     });
                     break;

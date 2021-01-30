@@ -5,23 +5,43 @@
     android:layout_height="match_parent"
     android:weightSum="100">
 
-
-
-    <ImageView
-        android:id="@+id/album_art"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:layout_weight="85"/>
+        android:layout_weight="85">
+
+        <ImageView
+            android:id="@+id/album_art"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+        <ImageView
+            android:id="@+id/albumart_innerframe"
+            android:src="@drawable/albumart_innerframe"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <ImageView
+            android:id="@+id/albumart_outerframe"
+            android:src="@drawable/albumart_outerframe"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:layout_weight="15">
+        android:layout_weight="15"
+        android:layout_marginLeft="10dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginEnd="10dp">
 
         <TextView
             android:id="@+id/textView1"
             android:textSize="16sp"
+            android:singleLine="true"
             android:textColor="@color/itemlightselectorblue"
             android:textStyle="bold"
             android:gravity="start"
@@ -32,6 +52,7 @@
         <TextView
             android:id="@+id/textView2"
             android:textSize="14sp"
+            android:singleLine="true"
             android:textColor="@color/itemdefaultselectorblue"
             android:gravity="start"
             android:textAlignment="viewStart"
@@ -41,6 +62,7 @@
         <TextView
             android:id="@+id/textView3"
             android:textSize="14sp"
+            android:singleLine="true"
             android:textColor="@color/itemdefaultselectorblue"
             android:gravity="start"
             android:textAlignment="viewStart"

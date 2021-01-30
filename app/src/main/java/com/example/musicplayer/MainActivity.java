@@ -79,8 +79,6 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton nightModeButton;
     public static boolean nightMode = false;
     private ListView listView;
-    private ImageView albumArt_innerFrame;
-    private ImageView albumArt_outerFrame;
     private RelativeLayout musicListRelativeLayout;
     private ArrayList<Song> fullSongList;
     public static HashMap<Song, SongNode> current_playlist;
@@ -160,8 +158,6 @@ public class MainActivity extends AppCompatActivity {
         musicListRelativeLayout = findViewById(R.id.activity_musiclist);
         listView = findViewById(R.id.listView);
         nightModeButton = findViewById(R.id.btn_nightmode);
-        albumArt_innerFrame = findViewById(R.id.albumart_innerframe);
-        albumArt_outerFrame = findViewById(R.id.albumart_outerframe);
         listFilter = findViewById(R.id.listFilter);
         slidingUpMenuLayout = findViewById(R.id.sliding_menu);
         slidingUp_albumArt = findViewById(R.id.sliding_albumart);
@@ -293,7 +289,7 @@ public class MainActivity extends AppCompatActivity {
         musicServiceIntent.putExtra("musicListInit", mainActivityMessenger);
         startService(musicServiceIntent);
 
-        adapter = new SongListAdapter(this, R.layout.adapter_view_layout, fullSongList);
+        adapter = new SongListAdapter(this, R.layout.adapter_view_layout, fullSongList, this);
         listView.setAdapter(adapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -305,8 +301,7 @@ public class MainActivity extends AppCompatActivity {
                 // redirect the current playlist to reference the full (original) playlist
                 current_playlist = fullPlaylist;
 
-                // visually highlight the song in the list view
-                adapter.highlightItem(song);
+                // change current song
                 current_song = song;
 
                 // notify music player service about the current song change
@@ -394,10 +389,9 @@ public class MainActivity extends AppCompatActivity {
     public void toggleNightMode() {
         if (!nightMode) {
             listView.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
-            albumArt_innerFrame.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
-            albumArt_outerFrame.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
             listFilter.setTextColor(getResources().getColor(R.color.colorTextPrimaryLight));
             musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
+            adapter.setItemsFrameColor(getResources().getColor(R.color.nightPrimaryDark));
             adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemnightselectorblue));
             nightModeButton.setImageResource(R.drawable.night);
             nightMode = true;
@@ -406,10 +400,9 @@ public class MainActivity extends AppCompatActivity {
             info_btn.setImageResource(R.drawable.info_light);
         } else {
             listView.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
-            albumArt_innerFrame.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
-            albumArt_outerFrame.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
             listFilter.setTextColor(getResources().getColor(R.color.colorTextPrimaryDark));
             musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
+            adapter.setItemsFrameColor(getResources().getColor(R.color.lightPrimaryWhite));
             adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemlightselectorblue));
             nightModeButton.setImageResource(R.drawable.light);
             nightMode = false;
@@ -1110,10 +1103,16 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case MusicPlayerService.UPDATE_SEEKBAR_DURATION:
                     // init the seekbar & textview max duration and begin thread to track progress
-                    int musicMaxDuration = (int) bundle.get("time");
-                    seekBar.setMax(musicMaxDuration);
-                    String time = convertTime(musicMaxDuration);
-                    musicDuration.setText(time);
+                    final int musicMaxDuration = (int) bundle.get("time");
+                    final String time = convertTime(musicMaxDuration);
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            seekBar.setMax(musicMaxDuration);
+                            musicDuration.setText(time);
+                        }
+                    });
 
                     // spawn a thread to update seekbar progress each 100 milliseconds
                     final Messenger seekMessenger = new Messenger(seekbarHandler);

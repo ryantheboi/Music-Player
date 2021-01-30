@@ -20,7 +20,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginTop="50dp"
-                android:dividerHeight="20dp"
+                android:dividerHeight="18dp"
                 android:divider="@drawable/list_divider"/>
 
             <ImageButton
@@ -37,8 +37,8 @@
                 android:layout_height="40dp"
                 android:layout_marginLeft="20dp"
                 android:layout_marginStart="20dp"
-                android:layout_marginTop="10dp"
-                android:hint="Search"
+                android:layout_marginTop="8dp"
+                android:hint="@string/Search"
                 android:textColorHint="@color/colorTextGrey"/>
         </RelativeLayout>
 

@@ -146,8 +146,8 @@ public class MainActivity extends AppCompatActivity {
     private RippleDrawable slidingUp_next_btn_ripple;
     private MessageHandler messageHandler;
     private MessageHandler seekbarHandler;
-    private EditText listFilter;
-
+    private EditText searchFilter;
+    private ImageView btn_searchFilter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -158,7 +158,8 @@ public class MainActivity extends AppCompatActivity {
         musicListRelativeLayout = findViewById(R.id.activity_musiclist);
         listView = findViewById(R.id.listView);
         nightModeButton = findViewById(R.id.btn_nightmode);
-        listFilter = findViewById(R.id.listFilter);
+        searchFilter = findViewById(R.id.searchFilter);
+        btn_searchFilter = findViewById(R.id.btn_searchfilter);
         slidingUpMenuLayout = findViewById(R.id.sliding_menu);
         slidingUp_albumArt = findViewById(R.id.sliding_albumart);
         slidingUp_songName = findViewById(R.id.sliding_title);
@@ -389,7 +390,7 @@ public class MainActivity extends AppCompatActivity {
     public void toggleNightMode() {
         if (!nightMode) {
             listView.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
-            listFilter.setTextColor(getResources().getColor(R.color.colorTextPrimaryLight));
+            searchFilter.setTextColor(getResources().getColor(R.color.colorTextPrimaryLight));
             musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
             adapter.setItemsFrameColor(getResources().getColor(R.color.nightPrimaryDark));
             adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemnightselectorblue));
@@ -400,7 +401,7 @@ public class MainActivity extends AppCompatActivity {
             info_btn.setImageResource(R.drawable.info_light);
         } else {
             listView.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
-            listFilter.setTextColor(getResources().getColor(R.color.colorTextPrimaryDark));
+            searchFilter.setTextColor(getResources().getColor(R.color.colorTextPrimaryDark));
             musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
             adapter.setItemsFrameColor(getResources().getColor(R.color.lightPrimaryWhite));
             adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemlightselectorblue));
@@ -528,7 +529,34 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void initFilterSearch() {
-        listFilter.addTextChangedListener(new TextWatcher() {
+        // init searchfilter button functionality
+        btn_searchFilter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (searchFilter.hasFocus()){
+                    // hide keyboard and clear focus from searchfilter
+                    InputMethodManager inputMethodManager =
+                            (InputMethodManager) MainActivity.this.getSystemService(
+                                    Activity.INPUT_METHOD_SERVICE);
+                    inputMethodManager.hideSoftInputFromWindow(
+                            MainActivity.this.getCurrentFocus().getWindowToken(), 0);
+                    searchFilter.clearFocus();
+                    searchFilter.setVisibility(View.INVISIBLE);
+                }
+                else {
+                    // show keyboard and focus on the searchfilter
+                    searchFilter.setVisibility(View.VISIBLE);
+                    if (searchFilter.requestFocus()) {
+                        InputMethodManager inputMethodManager = (InputMethodManager)
+                                getSystemService(Activity.INPUT_METHOD_SERVICE);
+                        inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+                    }
+                }
+            }
+        });
+
+        // init searchfilter text usage functionality
+        searchFilter.addTextChangedListener(new TextWatcher() {
             @Override
             public void onTextChanged(CharSequence cs, int arg1, int arg2, int arg3) {
                 // filter based on song name
@@ -547,21 +575,24 @@ public class MainActivity extends AppCompatActivity {
         // set touch listener for all views to hide the keyboard when touched
         ArrayList<View> views = getAllChildren(slidingUpPanelLayout);
         for (View innerView : views){
-            innerView.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    // only attempt to hide keyboard if the list filter is in focus
-                    if (listFilter.hasFocus()) {
-                        InputMethodManager inputMethodManager =
-                                (InputMethodManager) MainActivity.this.getSystemService(
-                                        Activity.INPUT_METHOD_SERVICE);
-                        inputMethodManager.hideSoftInputFromWindow(
-                                MainActivity.this.getCurrentFocus().getWindowToken(), 0);
+            // excluding the searchfilter and its button
+            if (innerView != searchFilter && innerView != btn_searchFilter) {
+                innerView.setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View v, MotionEvent event) {
+                        // only attempt to hide keyboard if the list filter is in focus
+                        if (searchFilter.hasFocus()) {
+                            InputMethodManager inputMethodManager =
+                                    (InputMethodManager) MainActivity.this.getSystemService(
+                                            Activity.INPUT_METHOD_SERVICE);
+                            inputMethodManager.hideSoftInputFromWindow(
+                                    MainActivity.this.getCurrentFocus().getWindowToken(), 0);
+                        }
+                        searchFilter.clearFocus();
+                        return false;
                     }
-                    listFilter.clearFocus();
-                    return false;
-                }
-            });
+                });
+            }
         }
     }
 

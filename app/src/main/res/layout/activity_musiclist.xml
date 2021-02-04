@@ -70,7 +70,9 @@
                     android:src="@drawable/music_default"
                     app:civ_border_color="@color/pureBlack"
                     app:civ_border_width="1dp"
-                    android:layout_weight="40"/>
+                    android:layout_weight="40"
+                    android:layout_marginLeft="4dp"
+                    android:layout_marginStart="4dp"/>
 
                 <LinearLayout
                     android:id="@+id/sliding_text"

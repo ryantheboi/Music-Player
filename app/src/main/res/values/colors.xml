@@ -12,8 +12,8 @@
     <color name="colorTextBlue">#008BFF</color>
     <color name="colorTextPrimaryDark">#030303</color>
     <color name="colorTextSecondaryDark">#0F0F0F</color>
-    <color name="colorTextPrimaryLight">#F4F4F4</color>
-    <color name="colorTextSecondaryLight">#ECECEC</color>
+    <color name="colorTextPrimaryLight">#F2EDED</color>
+    <color name="colorTextSecondaryLight">#F1ECEC</color>
     <color name="lightPrimaryWhite">#F4F4F4</color>
     <color name="lightSecondaryWhite">#ECECEC</color>
 

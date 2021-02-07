@@ -144,10 +144,13 @@ public class MainActivity extends AppCompatActivity {
     private MessageHandler seekbarHandler;
     private EditText searchFilter;
     private ImageView btn_searchFilter;
+    private TabLayout tabLayout;
+    private ViewPager viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        System.out.println("created");
 
         // initialize all views
         setContentView(R.layout.activity_musiclist);
@@ -175,6 +178,8 @@ public class MainActivity extends AppCompatActivity {
         musicPosition = findViewById(R.id.music_position);
         musicDuration = findViewById(R.id.music_duration);
         info_btn = findViewById(R.id.btn_info);
+        tabLayout = findViewById(R.id.tabLayout);
+        viewPager = findViewById(R.id.viewPager);
     }
 
     @Override
@@ -182,37 +187,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         System.out.println("started");
-
-        setVolumeControlStream(AudioManager.STREAM_MUSIC);
-
-        // init thread for message handling
-        HandlerThread messageHandlerThread = new HandlerThread("MessageHandler");
-        messageHandlerThread.start();
-        messageHandler = new MessageHandler(messageHandlerThread.getLooper());
-        mainActivityMessenger = new Messenger(messageHandler);
-        musicServiceIntent = new Intent(this, MusicPlayerService.class);
-
-        // init listview functionality and playlist
-        initMusicList(); // starts music service for the first time
-
-        // init main sliding up panel
-        initMainAnimation();
-
-        initMainDisplay();
-
-        initMainButtons();
-
-        initSeekbar();
-
-        initInfoButton();
-
-        initSlidingUpPanel();
-
-        initFilterSearch();
-
-        initNotification();
-
-        initViewPager();
 
         // check and request for read permissions
         if (ContextCompat.checkSelfPermission(MainActivity.this,
@@ -228,8 +202,38 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(MainActivity.this,
                     new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
         } else {
-            initMusicList();
+            setVolumeControlStream(AudioManager.STREAM_MUSIC);
+
+            // init thread for message handling
+            HandlerThread messageHandlerThread = new HandlerThread("MessageHandler");
+            messageHandlerThread.start();
+            messageHandler = new MessageHandler(messageHandlerThread.getLooper());
+            mainActivityMessenger = new Messenger(messageHandler);
+            musicServiceIntent = new Intent(this, MusicPlayerService.class);
+
+            // init listview functionality and playlist
+            initMusicList(); // starts music service for the first time
+
             initNightMode();
+
+            // init main sliding up panel
+            initMainAnimation();
+
+            initMainDisplay();
+
+            initMainButtons();
+
+            initSeekbar();
+
+            initInfoButton();
+
+            initSlidingUpPanel();
+
+            initFilterSearch();
+
+            initNotification();
+
+            initViewPager();
         }
     }
 
@@ -298,28 +302,27 @@ public class MainActivity extends AppCompatActivity {
 
     public void toggleNightMode() {
         if (!nightMode) {
-            //listView.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
+            tabLayout.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
+            tabLayout.setTabTextColors(getResources().getColorStateList(R.color.itemnightselectorblue));
             searchFilter.setTextColor(getResources().getColor(R.color.colorTextPrimaryLight));
             musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
-            //adapter.setItemsFrameColor(getResources().getColor(R.color.nightPrimaryDark));
-            //adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemnightselectorblue));
             nightModeButton.setImageResource(R.drawable.night);
             nightMode = true;
 
             // swap info button color
             info_btn.setImageResource(R.drawable.info_light);
         } else {
-            //listView.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
+            tabLayout.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
+            tabLayout.setTabTextColors(getResources().getColorStateList(R.color.itemlightselectorblue));
             searchFilter.setTextColor(getResources().getColor(R.color.colorTextPrimaryDark));
             musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
-            //adapter.setItemsFrameColor(getResources().getColor(R.color.lightPrimaryWhite));
-            //adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemlightselectorblue));
             nightModeButton.setImageResource(R.drawable.light);
             nightMode = false;
 
             // swap info button color
             info_btn.setImageResource(R.drawable.info_night);
         }
+        SongListTab.toggleTabColor();
         swapMainColors();
         swapSlidingMenuColors();
     }
@@ -815,9 +818,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void initViewPager(){
-        TabLayout tabLayout = findViewById(R.id.tabLayout);
-        final ViewPager viewPager = findViewById(R.id.viewPager);
-
         // remove any existing tabs prior to activity pause and re-add
         tabLayout.removeAllTabs();
         tabLayout.addTab(tabLayout.newTab().setText("Songs"));

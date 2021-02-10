@@ -821,7 +821,7 @@ public class MainActivity extends AppCompatActivity {
         // remove any existing tabs prior to activity pause and re-add
         tabLayout.removeAllTabs();
         tabLayout.addTab(tabLayout.newTab().setText("Songs"));
-        tabLayout.addTab(tabLayout.newTab().setText("Tab 2"));
+        tabLayout.addTab(tabLayout.newTab().setText("Playlists"));
         tabLayout.setTabTextColors(getResources().getColorStateList(R.color.itemlightselectorblue));
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 

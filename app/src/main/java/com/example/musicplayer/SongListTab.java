@@ -26,7 +26,6 @@ public class SongListTab extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
     private static ListView listView;
     private static SongListAdapter songListAdapter;
     private static Messenger mainActivityMessenger;
@@ -70,8 +69,8 @@ public class SongListTab extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View fragmentView = inflater.inflate(R.layout.fragment_songlisttab, container, false);
-        listView = fragmentView.findViewById(R.id.listView);
+        View fragmentView = inflater.inflate(R.layout.fragment_tab_songs, container, false);
+        listView = fragmentView.findViewById(R.id.fragment_listview_songs);
         listView.setAdapter(songListAdapter);
 
         // init intents

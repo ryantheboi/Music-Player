@@ -26,7 +26,7 @@ public class PagerAdapter extends FragmentStatePagerAdapter {
             case 0:
                 return SongListTab.newInstance("Tab1", adapter, mainActivityMessenger, mainActivity);
             case 1:
-                return new Tab2();
+                return new PlaylistTab();
             default:
                 return null;
         }

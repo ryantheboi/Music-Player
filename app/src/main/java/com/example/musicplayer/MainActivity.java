@@ -275,7 +275,7 @@ public class MainActivity extends AppCompatActivity {
         fullPlaylist = new HashMap<>();
         current_playlist = new HashMap<>();
         getMusic(); // populates fullSongList
-        fullPlaylist = createPlaylist(fullSongList);
+        fullPlaylist = Playlist.createPlaylist(fullSongList);
 
         // initialize current playlist and song
         if (fullSongList.size() > 0){
@@ -398,46 +398,6 @@ public class MainActivity extends AppCompatActivity {
 
             songCursor.close();
         }
-    }
-
-    /**
-     * creates a playlist given an arraylist of songs
-     * the playlist is a hashmap of Song to SongNode
-     * the SongNodes are created to form a circular doubly linked list
-     *
-     * @param songList arraylist containing the songs to populate the playlist
-     * @return playlist hashmap that contains every Song in songList, each mapping to a SongNode
-     */
-    public static HashMap<Song, SongNode> createPlaylist(ArrayList<Song> songList) {
-        HashMap<Song, SongNode> playlist = new HashMap<>();
-
-        int size = songList.size();
-        if (size != 0) {
-            Song head = songList.get(0);
-            Song tail = songList.get(size - 1);
-            if (size == 1) {
-                SongNode songNode = new SongNode(tail, head, tail);
-                playlist.put(head, songNode);
-            } else {
-                for (int i = 0; i < size; i++) {
-                    Song song = songList.get(i);
-                    SongNode songNode;
-                    if (song.equals(tail)) {
-                        Song prevSong = songList.get(i - 1);
-                        songNode = new SongNode(prevSong, song, head);
-                    } else if (song.equals(head)) {
-                        Song nextSong = songList.get(i + 1);
-                        songNode = new SongNode(tail, song, nextSong);
-                    } else {
-                        Song prevSong = songList.get(i - 1);
-                        Song nextSong = songList.get(i + 1);
-                        songNode = new SongNode(prevSong, song, nextSong);
-                    }
-                    playlist.put(song, songNode);
-                }
-            }
-        }
-        return playlist;
     }
 
     public void initFilterSearch() {

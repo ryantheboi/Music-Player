@@ -134,7 +134,7 @@ public class SongListTab extends Fragment {
                     case R.id.createqueue:
                         Toast.makeText(mainActivity, "Creating Queue of " + MainActivity.userSelection.size() + " songs", Toast.LENGTH_SHORT).show();
                         // construct new current playlist, given the user selections
-                        MainActivity.current_playlist = MainActivity.createPlaylist(MainActivity.userSelection);
+                        MainActivity.current_playlist = Playlist.createPlaylist(MainActivity.userSelection);
                         MainActivity.setCurrent_song(MainActivity.userSelection.get(0));
 
                         // notify music player service to start the new song in the new playlist (queue)

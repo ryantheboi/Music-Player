@@ -79,14 +79,16 @@ public class MainActivity extends AppCompatActivity {
     public static boolean nightMode = false;
     private RelativeLayout musicListRelativeLayout;
     private ArrayList<Song> fullSongList;
+    private ArrayList<Playlist> playlistList;
     public static HashMap<Song, SongNode> current_playlist;
     public static HashMap<Song, SongNode> fullPlaylist;
-    private SongListAdapter adapter;
+    private SongListAdapter songListadapter;
+    private PlaylistAdapter playlistAdapter;
+    private PagerAdapter pagerAdapter;
     private Messenger mainActivityMessenger;
     private Intent musicServiceIntent;
     public static boolean isActionMode = false;
     public static ActionMode actionMode = null;
-    public static ArrayList<Song> userSelection;
 
     // sliding up panel
     private boolean largeAlbumArt;
@@ -270,7 +272,7 @@ public class MainActivity extends AppCompatActivity {
      * The music service is started here in order to send the main activity's messenger
      */
     public void initMusicList() {
-        userSelection = new ArrayList<>();
+        playlistList = new ArrayList<>();
         fullSongList = new ArrayList<>();
         fullPlaylist = new HashMap<>();
         current_playlist = new HashMap<>();
@@ -287,7 +289,8 @@ public class MainActivity extends AppCompatActivity {
         musicServiceIntent.putExtra("musicListInit", mainActivityMessenger);
         startService(musicServiceIntent);
 
-        adapter = new SongListAdapter(this, R.layout.adapter_view_layout, fullSongList, this);
+        songListadapter = new SongListAdapter(this, R.layout.adapter_view_layout, fullSongList, this);
+        playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this);
     }
 
     public void initNightMode() {
@@ -323,6 +326,7 @@ public class MainActivity extends AppCompatActivity {
             info_btn.setImageResource(R.drawable.info_night);
         }
         SongListTab.toggleTabColor();
+        PlaylistTab.toggleTabColor();
         swapMainColors();
         swapSlidingMenuColors();
     }
@@ -432,7 +436,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence cs, int arg1, int arg2, int arg3) {
                 // filter based on song name
-                adapter.getFilter().filter(cs);
+                songListadapter.getFilter().filter(cs);
             }
 
             @Override
@@ -785,7 +789,7 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.setTabTextColors(getResources().getColorStateList(R.color.itemlightselectorblue));
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
-        PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), adapter, mainActivityMessenger, this);
+        pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, this);
         viewPager.setAdapter(pagerAdapter);
 
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener(){
@@ -997,6 +1001,25 @@ public class MainActivity extends AppCompatActivity {
     }
     public static void setCurrent_song(Song song){
         current_song = song;
+    }
+
+    /**
+     * adds a new playlist to the playlist tab of the viewpager
+     * @param playlist the playlist item to be added
+     */
+    public void addPlaylist(Playlist playlist){
+        // add playlist item to the adapter
+        playlistAdapter.add(playlist);
+
+        // reconstruct viewpager adapter with the new playlist adapter change
+        PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, this);
+        viewPager.setAdapter(pagerAdapter);
+
+        // adjust tab colors and move to playlist tab
+        SongListTab.toggleTabColor();
+        PlaylistTab.toggleTabColor();
+        viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
+
     }
 
     public static Notification getNotification(){

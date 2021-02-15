@@ -33,7 +33,7 @@ public class PlaylistAdapter extends ArrayAdapter {
     private HashSet<ViewHolder> items;
 
     /**
-     * Holds variables about an item (song) in a View
+     * Holds variables about an item (playlist) in a View
      */
     class ViewHolder {
         TextView name;
@@ -43,7 +43,7 @@ public class PlaylistAdapter extends ArrayAdapter {
         ImageView outerFrame;
     }
 
-    public PlaylistAdapter(Context context, int resource, ArrayList<Song> objects, MainActivity mainActivity) {
+    public PlaylistAdapter(Context context, int resource, ArrayList<Playlist> objects, MainActivity mainActivity) {
         super(context, resource, objects);
         mContext = context;
         mResource = resource;
@@ -132,7 +132,7 @@ public class PlaylistAdapter extends ArrayAdapter {
             @Override
             public void accept(Object[] arr) {
                 final String name = (String) arr[0];
-                final String size = ((String) arr[1]) + " tracks";
+                final String size = ((String) arr[1]) + " songs";
                 final Bitmap albumArt = (Bitmap) arr[2];
                 final ViewHolder item = (ViewHolder) arr[3];
 

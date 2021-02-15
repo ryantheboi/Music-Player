@@ -7,15 +7,22 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
 
 public class PagerAdapter extends FragmentStatePagerAdapter {
+    public static final int SONGS_TAB = 0;
+    public static final int PLAYLISTS_TAB = 1;
+
     int numTabs;
-    SongListAdapter adapter;
+    SongListAdapter songListAdapter;
+    PlaylistAdapter playlistAdapter;
     Messenger mainActivityMessenger;
     MainActivity mainActivity;
+    SongListTab songListTab;
+    PlaylistTab playlistTab;
 
-    public PagerAdapter(FragmentManager fm, int numTabs, SongListAdapter adapter, Messenger mainActivityMessenger, MainActivity mainActivity){
+    public PagerAdapter(FragmentManager fm, int numTabs, SongListAdapter songListAdapter, PlaylistAdapter playlistAdapter, Messenger mainActivityMessenger, MainActivity mainActivity){
         super(fm);
         this.numTabs = numTabs;
-        this.adapter = adapter;
+        this.songListAdapter = songListAdapter;
+        this.playlistAdapter = playlistAdapter;
         this.mainActivityMessenger = mainActivityMessenger;
         this.mainActivity = mainActivity;
     }
@@ -23,10 +30,12 @@ public class PagerAdapter extends FragmentStatePagerAdapter {
     @Override
     public Fragment getItem(int position) {
         switch (position){
-            case 0:
-                return SongListTab.newInstance("Tab1", adapter, mainActivityMessenger, mainActivity);
-            case 1:
-                return new PlaylistTab();
+            case SONGS_TAB:
+                songListTab = SongListTab.newInstance("Tab1", songListAdapter, mainActivityMessenger, mainActivity);
+                return songListTab;
+            case PLAYLISTS_TAB:
+                playlistTab = PlaylistTab.newInstance("Tab2", playlistAdapter, mainActivity);
+                return playlistTab;
             default:
                 return null;
         }

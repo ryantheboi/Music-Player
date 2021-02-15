@@ -16,6 +16,8 @@ import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 
+import java.util.ArrayList;
+
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link SongListTab#newInstance} factory method to
@@ -30,6 +32,7 @@ public class SongListTab extends Fragment {
     private static SongListAdapter songListAdapter;
     private static Messenger mainActivityMessenger;
     private static MainActivity mainActivity;
+    private static ArrayList<Song> userSelection;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -51,6 +54,7 @@ public class SongListTab extends Fragment {
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         fragment.setArguments(args);
+        userSelection = new ArrayList<>();
         songListAdapter = adapter;
         mainActivityMessenger = messenger;
         mainActivity = activity;
@@ -103,15 +107,15 @@ public class SongListTab extends Fragment {
                 Song song = (Song) listView.getItemAtPosition(position);
 
                 if (!checked) {
-                    MainActivity.userSelection.remove(song);
+                    userSelection.remove(song);
                 } else {
-                    MainActivity.userSelection.add(song);
+                    userSelection.add(song);
                 }
 
-                if (MainActivity.userSelection.size() == 1) {
-                    mode.setTitle(MainActivity.userSelection.get(0).getTitle());
+                if (userSelection.size() == 1) {
+                    mode.setTitle(userSelection.get(0).getTitle());
                 } else {
-                    mode.setTitle(MainActivity.userSelection.size() + " songs selected");
+                    mode.setTitle(userSelection.size() + " songs selected");
                 }
             }
 
@@ -132,10 +136,10 @@ public class SongListTab extends Fragment {
             public boolean onActionItemClicked(android.view.ActionMode mode, MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.createqueue:
-                        Toast.makeText(mainActivity, "Creating Queue of " + MainActivity.userSelection.size() + " songs", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mainActivity, "Creating Queue of " + userSelection.size() + " songs", Toast.LENGTH_SHORT).show();
                         // construct new current playlist, given the user selections
-                        MainActivity.current_playlist = Playlist.createPlaylist(MainActivity.userSelection);
-                        MainActivity.setCurrent_song(MainActivity.userSelection.get(0));
+                        MainActivity.current_playlist = Playlist.createPlaylist(userSelection);
+                        MainActivity.setCurrent_song(userSelection.get(0));
 
                         // notify music player service to start the new song in the new playlist (queue)
                         musicListQueueIntent.putExtra("musicListSong", mainActivityMessenger);
@@ -144,7 +148,12 @@ public class SongListTab extends Fragment {
                         mode.finish(); // Action picked, so close the CAB
                         return true;
                     case R.id.createplaylist:
-                        Toast.makeText(mainActivity, "Creating Playlist of " + MainActivity.userSelection.size() + " songs", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mainActivity, "Creating Playlist of " + userSelection.size() + " songs", Toast.LENGTH_SHORT).show();
+
+                        // construct named playlist
+                        Playlist playlist = new Playlist(0, getString(R.string.Favorites), userSelection);
+                        mainActivity.addPlaylist(playlist);
+
                         mode.finish(); // Action picked, so close the CAB
                         return true;
                     default:
@@ -156,7 +165,7 @@ public class SongListTab extends Fragment {
             public void onDestroyActionMode(android.view.ActionMode mode) {
                 MainActivity.isActionMode = false;
                 MainActivity.actionMode = null;
-                MainActivity.userSelection.clear();
+                userSelection.clear();
             }
         });
         return fragmentView;

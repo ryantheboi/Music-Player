@@ -99,7 +99,8 @@ public class Playlist implements Parcelable {
     public Playlist(Parcel in) {
         this.id = in.readInt();
         this.name = in.readString();
-        in.readParcelableList(this.songList, ClassLoader.getSystemClassLoader());
+        this.songList = new ArrayList<>();
+        in.readParcelableList(this.songList, Song.class.getClassLoader());
     }
 
     public static Creator<Playlist> CREATOR = new Creator<Playlist>() {

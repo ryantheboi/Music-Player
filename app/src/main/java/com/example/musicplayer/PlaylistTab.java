@@ -1,5 +1,6 @@
 package com.example.musicplayer;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -69,6 +70,9 @@ public class PlaylistTab extends Fragment {
                 // obtain the selected playlist object
                 Playlist playlist = (Playlist) listView.getItemAtPosition(position);
 
+                Intent playlistIntent = new Intent(mainActivity, PlaylistActivity.class);
+                playlistIntent.putExtra("playlist", playlist);
+                mainActivity.startActivity(playlistIntent);
             }
         });
 

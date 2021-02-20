@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:id="@+id/activity_musiclist"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/lightPrimaryWhite"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar_playlist"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize" />
+    <ListView
+        android:id="@+id/listview_playlist_songs"
+        android:layout_below="@+id/toolbar_playlist"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:dividerHeight="18dp"
+        android:divider="@drawable/list_divider"/>
+</RelativeLayout>

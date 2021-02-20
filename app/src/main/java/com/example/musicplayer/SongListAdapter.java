@@ -1,6 +1,7 @@
 package com.example.musicplayer;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
@@ -27,10 +28,10 @@ import java.util.function.Supplier;
 
 public class SongListAdapter extends ArrayAdapter {
 
-    private MainActivity mActivity;
+    private Activity mActivity;
     private Context mContext;
     private int mResource;
-    private HashSet<ViewHolder> items;
+    private HashSet<ViewHolder> mItems;
 
     /**
      * Holds variables about an item (song) in a View
@@ -44,12 +45,12 @@ public class SongListAdapter extends ArrayAdapter {
         ImageView outerFrame;
     }
 
-    public SongListAdapter(Context context, int resource, ArrayList<Song> objects, MainActivity mainActivity) {
+    public SongListAdapter(Context context, int resource, ArrayList<Song> objects, Activity activity) {
         super(context, resource, objects);
         mContext = context;
         mResource = resource;
-        mActivity = mainActivity;
-        items = new HashSet<>();
+        mActivity = activity;
+        mItems = new HashSet<>();
     }
 
     @Override
@@ -144,8 +145,8 @@ public class SongListAdapter extends ArrayAdapter {
                             item.albumArt.setImageResource(defaultImage);
                         }
                         // put item in arraylist if it doesn't exist already and set the appropriate colors
-                        if (!items.contains(item)) {
-                            items.add(item);
+                        if (!mItems.contains(item)) {
+                            mItems.add(item);
                             if (MainActivity.nightMode){
                                 setItemsFrameColor(mContext.getResources().getColor(R.color.nightPrimaryDark));
                                 setItemsTitleTextColor(mContext.getResources().getColorStateList(R.color.itemnightselectorblue));
@@ -187,7 +188,7 @@ public class SongListAdapter extends ArrayAdapter {
      * @param code the color resource code to set the title
      */
     public void setItemsTitleTextColor(ColorStateList code){
-        for (ViewHolder item : items){
+        for (ViewHolder item : mItems){
             item.title.setTextColor(code);
         }
     }
@@ -197,7 +198,7 @@ public class SongListAdapter extends ArrayAdapter {
      * @param code the color resource code to set the title
      */
     public void setItemsFrameColor(int code){
-        for (ViewHolder item : items){
+        for (ViewHolder item : mItems){
             Drawable unwrappedInnerFrame = item.innerFrame.getDrawable();
             Drawable wrappedInnerFrame = DrawableCompat.wrap(unwrappedInnerFrame);
             DrawableCompat.setTint(wrappedInnerFrame, code);

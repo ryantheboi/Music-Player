@@ -10,6 +10,8 @@
     <string name="Stuff">stuff</string>
     <string name="Search">Search</string>
     <string name="Favorites">Favorites</string>
+    <string name="Playlist">Playlist</string>
+    <string name="Size">Size</string>
 
 
 </resources>

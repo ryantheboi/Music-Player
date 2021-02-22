@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout android:id="@+id/activity_musiclist"
+<RelativeLayout android:id="@+id/activity_playlist"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/lightPrimaryWhite"
@@ -12,7 +12,7 @@
         android:id="@+id/ibtn_playlist_back"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="#00000000"
+        android:background="@drawable/button_ripple"
         android:layout_marginTop="4dp"
         android:src="@drawable/ic_chevron_left48dp"/>
     <TextView

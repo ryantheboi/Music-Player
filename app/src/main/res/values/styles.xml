@@ -14,4 +14,8 @@
         <item name="android:windowBackground">@android:color/transparent</item>
     </style>
 
+    <style name = "AppTheme.Playlist">
+        <item name="android:windowIsTranslucent">true</item>
+    </style>
+
 </resources>

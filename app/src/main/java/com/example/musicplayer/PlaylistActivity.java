@@ -26,7 +26,6 @@ public class PlaylistActivity extends Activity {
     private TextView playlist_name_tv;
     private TextView playlist_size_tv;
     private SongListAdapter songListAdapter;
-    private static HashMap<Song, SongNode> playlist_hashmap;
     private static ArrayList<Song> userSelection = new ArrayList<>();
 
     @Override
@@ -67,9 +66,6 @@ public class PlaylistActivity extends Activity {
         final Intent musicListSelectIntent = new Intent(this, MusicPlayerService.class);
         final Intent musicListQueueIntent = new Intent(this, MusicPlayerService.class);
 
-        // init playlist hashmap
-        playlist_hashmap = Playlist.createPlaylist(playlist.getSongList());
-
         // initialize listview and adapter using the songs in the playlist
         listView = findViewById(R.id.listview_playlist_songs);
         songListAdapter = new SongListAdapter(this, R.layout.adapter_view_layout, playlist.getSongList(), this);
@@ -82,7 +78,7 @@ public class PlaylistActivity extends Activity {
                 Song song = (Song) listView.getItemAtPosition(position);
 
                 // redirect the current playlist to reference the songs in this playlist
-                MainActivity.current_playlist = playlist_hashmap;
+                MainActivity.setCurrent_playlist(new Playlist(playlist.getName(), playlist.getSongList()));
 
                 // change current song
                 MainActivity.setCurrent_song(song);
@@ -115,7 +111,7 @@ public class PlaylistActivity extends Activity {
 
             @Override
             public boolean onCreateActionMode(android.view.ActionMode mode, Menu menu) {
-                mode.getMenuInflater().inflate(R.menu.example_menu, menu);
+                mode.getMenuInflater().inflate(R.menu.songs_menu, menu);
                 MainActivity.isActionMode = true;
                 MainActivity.actionMode = mode;
                 return true;
@@ -131,7 +127,7 @@ public class PlaylistActivity extends Activity {
                 switch (item.getItemId()) {
                     case R.id.createqueue:
                         // construct new current playlist, given the user selections
-                        MainActivity.current_playlist = Playlist.createPlaylist(userSelection);
+                        MainActivity.setCurrent_playlist(new Playlist("USER_SELECTION", userSelection));
                         MainActivity.setCurrent_song(userSelection.get(0));
 
                         // notify music player service to start the new song in the new playlist (queue)
@@ -142,7 +138,7 @@ public class PlaylistActivity extends Activity {
                         return true;
                     case R.id.createplaylist:
                         // construct named playlist
-                        Playlist playlist = new Playlist(0, getString(R.string.Favorites), userSelection);
+                        Playlist playlist = new Playlist(getString(R.string.Favorites), userSelection);
                         //mainActivity.addPlaylist(playlist);
 
                         mode.finish(); // Action picked, so close the CAB

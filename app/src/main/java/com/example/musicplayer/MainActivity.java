@@ -65,7 +65,6 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import static android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT;
@@ -80,8 +79,8 @@ public class MainActivity extends AppCompatActivity {
     private RelativeLayout musicListRelativeLayout;
     private ArrayList<Song> fullSongList;
     private ArrayList<Playlist> playlistList;
-    public static HashMap<Song, SongNode> current_playlist;
-    public static HashMap<Song, SongNode> fullPlaylist;
+    private static Playlist current_playlist;
+    private static Playlist fullPlaylist;
     private SongListAdapter songListadapter;
     private PlaylistAdapter playlistAdapter;
     private PagerAdapter pagerAdapter;
@@ -274,10 +273,8 @@ public class MainActivity extends AppCompatActivity {
     public void initMusicList() {
         playlistList = new ArrayList<>();
         fullSongList = new ArrayList<>();
-        fullPlaylist = new HashMap<>();
-        current_playlist = new HashMap<>();
         getMusic(); // populates fullSongList
-        fullPlaylist = Playlist.createPlaylist(fullSongList);
+        fullPlaylist = new Playlist("FULL_PLAYLIST", fullSongList);
 
         // initialize current playlist and song
         if (fullSongList.size() > 0){
@@ -999,8 +996,17 @@ public class MainActivity extends AppCompatActivity {
     public static Song getCurrent_song(){
         return current_song;
     }
+    public static Playlist getCurrent_playlist(){
+        return current_playlist;
+    }
+    public static Playlist getFullPlaylist(){
+        return fullPlaylist;
+    }
     public static void setCurrent_song(Song song){
         current_song = song;
+    }
+    public static void setCurrent_playlist(Playlist playlist){
+        current_playlist = playlist;
     }
 
     /**

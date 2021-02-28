@@ -10,15 +10,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Playlist implements Parcelable {
+    private static int total_playlists = 0;
     private int id;
     private String name;
     private ArrayList<Song> songList;
+    private HashMap<Song, SongNode> songHashMap;
 
-
-    public Playlist(int id, String name, ArrayList<Song> songList) {
-        this.id = id;
-        this.songList = songList;
+    public Playlist(String name, ArrayList<Song> songList) {
+        this.id = total_playlists;
         this.name = name;
+        this.songList = new ArrayList<>(songList);
+        this.songHashMap = createHashMap(songList);
+        total_playlists += 1;
     }
 
     public int getID() {
@@ -33,19 +36,22 @@ public class Playlist implements Parcelable {
         return songList;
     }
 
-    public String getSize() {
+    public String getSizeString() {
         return Long.toString(songList.size());
+    }
+    public int getSize(){
+        return songList.size();
     }
 
     /**
-     * creates a playlist given an arraylist of songs
-     * the playlist is a hashmap of Song to SongNode
+     * creates a hashmap given an arraylist of songs
+     * the hashmap is a mapping of Song to SongNode
      * the SongNodes are created to form a circular doubly linked list
      *
      * @param songList arraylist containing the songs to populate the playlist
      * @return playlist hashmap that contains every Song in songList, each mapping to a SongNode
      */
-    public static HashMap<Song, SongNode> createPlaylist(ArrayList<Song> songList) {
+    public static HashMap<Song, SongNode> createHashMap(ArrayList<Song> songList) {
         HashMap<Song, SongNode> playlist = new HashMap<>();
 
         int size = songList.size();
@@ -75,6 +81,26 @@ public class Playlist implements Parcelable {
             }
         }
         return playlist;
+    }
+
+    /**
+     * gets the song before the current song being played in this playlist
+     * @return the previous song
+     */
+    public Song getPrevSong(){
+        Song current_song = MainActivity.getCurrent_song();
+        SongNode songNode = songHashMap.get(current_song);
+        return songNode.getPrev();
+    }
+
+    /**
+     * gets the song after the current song being played in this playlist
+     * @return the next song
+     */
+    public Song getNextSong(){
+        Song current_song = MainActivity.getCurrent_song();
+        SongNode songNode = songHashMap.get(current_song);
+        return songNode.getNext();
     }
 
     @Override

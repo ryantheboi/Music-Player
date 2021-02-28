@@ -394,12 +394,10 @@ public class MusicPlayerService
                     audioFocusToggleMedia();
                     break;
                 case PREPARE_PREV:
-                    if (MainActivity.current_playlist.size() > 0) {
+                    if (MainActivity.getCurrent_playlist().getSize() > 0) {
                         try {
                             // update main ui with prev song
-                            Song current_song = MainActivity.getCurrent_song();
-                            SongNode songNode = MainActivity.current_playlist.get(current_song);
-                            Song prev_song = songNode.getPrev();
+                            Song prev_song = MainActivity.getCurrent_playlist().getPrevSong();
                             sendSongUpdateMessage(mainActivity_messenger, prev_song);
 
                             // release current mediaplayer to allow another to be created
@@ -427,12 +425,10 @@ public class MusicPlayerService
                     }
                     break;
                 case PREPARE_NEXT:
-                    if (MainActivity.current_playlist.size() > 0) {
+                    if (MainActivity.getCurrent_playlist().getSize() > 0) {
                         try {
                             // update main ui with next song
-                            Song current_song = MainActivity.getCurrent_song();
-                            SongNode songNode = MainActivity.current_playlist.get(current_song);
-                            Song next_song = songNode.getNext();
+                            Song next_song = MainActivity.getCurrent_playlist().getNextSong();
                             sendSongUpdateMessage(mainActivity_messenger, next_song);
 
                             // release current mediaplayer to allow another to be created

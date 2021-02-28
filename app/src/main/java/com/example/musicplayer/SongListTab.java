@@ -88,7 +88,7 @@ public class SongListTab extends Fragment {
                 Song song = (Song) listView.getItemAtPosition(position);
 
                 // redirect the current playlist to reference the full (original) playlist
-                MainActivity.current_playlist = MainActivity.fullPlaylist;
+                MainActivity.setCurrent_playlist(MainActivity.getFullPlaylist());
 
                 // change current song
                 MainActivity.setCurrent_song(song);
@@ -121,7 +121,7 @@ public class SongListTab extends Fragment {
 
             @Override
             public boolean onCreateActionMode(android.view.ActionMode mode, Menu menu) {
-                mode.getMenuInflater().inflate(R.menu.example_menu, menu);
+                mode.getMenuInflater().inflate(R.menu.songs_menu, menu);
                 MainActivity.isActionMode = true;
                 MainActivity.actionMode = mode;
                 return true;
@@ -138,7 +138,7 @@ public class SongListTab extends Fragment {
                     case R.id.createqueue:
                         Toast.makeText(mainActivity, "Creating Queue of " + userSelection.size() + " songs", Toast.LENGTH_SHORT).show();
                         // construct new current playlist, given the user selections
-                        MainActivity.current_playlist = Playlist.createPlaylist(userSelection);
+                        MainActivity.setCurrent_playlist(new Playlist("USER_SELECTION", userSelection));
                         MainActivity.setCurrent_song(userSelection.get(0));
 
                         // notify music player service to start the new song in the new playlist (queue)
@@ -151,7 +151,7 @@ public class SongListTab extends Fragment {
                         Toast.makeText(mainActivity, "Creating Playlist of " + userSelection.size() + " songs", Toast.LENGTH_SHORT).show();
 
                         // construct named playlist
-                        Playlist playlist = new Playlist(0, getString(R.string.Favorites), userSelection);
+                        Playlist playlist = new Playlist(getString(R.string.Favorites), userSelection);
                         mainActivity.addPlaylist(playlist);
 
                         mode.finish(); // Action picked, so close the CAB

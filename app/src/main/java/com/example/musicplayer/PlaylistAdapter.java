@@ -70,7 +70,7 @@ public class PlaylistAdapter extends ArrayAdapter {
                     // get playlist info
                     Playlist playlist = (Playlist) getItem(position);
                     String name = playlist.getName();
-                    String size = playlist.getSize();
+                    String size = playlist.getSizeString();
                     Bitmap albumArt;
                     if (!size.equals("0")) {
                         String albumID = playlist.getSongList().get(0).getAlbumID();
@@ -108,7 +108,7 @@ public class PlaylistAdapter extends ArrayAdapter {
                     // get playlist info
                     Playlist playlist = (Playlist) getItem(position);
                     String name = playlist.getName();
-                    String size = playlist.getSize();
+                    String size = playlist.getSizeString();
                     Bitmap albumArt;
                     if (!size.equals("0")) {
                         String albumID = playlist.getSongList().get(0).getAlbumID();

@@ -15,7 +15,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class PlaylistActivity extends Activity {
 
@@ -65,6 +64,7 @@ public class PlaylistActivity extends Activity {
         // init intents
         final Intent musicListSelectIntent = new Intent(this, MusicPlayerService.class);
         final Intent musicListQueueIntent = new Intent(this, MusicPlayerService.class);
+        final Intent addPlaylistIntent = new Intent(this, AddPlaylistActivity.class);
 
         // initialize listview and adapter using the songs in the playlist
         listView = findViewById(R.id.listview_playlist_songs);
@@ -139,6 +139,8 @@ public class PlaylistActivity extends Activity {
                     case R.id.createplaylist:
                         // construct named playlist
                         Playlist playlist = new Playlist(getString(R.string.Favorites), userSelection);
+                        addPlaylistIntent.putExtra("addPlaylist", playlist);
+                        startActivity(addPlaylistIntent);
                         //mainActivity.addPlaylist(playlist);
 
                         mode.finish(); // Action picked, so close the CAB

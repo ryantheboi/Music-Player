@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:id="@+id/activity_playlist"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/lightPrimaryWhite"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar_addPlaylist"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize" />
+    <ImageButton
+        android:id="@+id/ibtn_addPlaylist_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_ripple"
+        android:layout_marginTop="4dp"
+        android:src="@drawable/ic_chevron_left48dp"/>
+    <TextView
+        android:id="@+id/textview_addTo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="50dp"
+        android:layout_marginStart="50dp"
+        android:layout_marginTop="14dp"
+        android:text="@string/AddTo"
+        android:textSize="20sp"
+        android:textColor="@color/colorTextPrimaryDark"/>
+
+
+    <RelativeLayout
+        android:id="@+id/layout_addPlaylist"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_below="@id/toolbar_addPlaylist">
+
+        <FrameLayout
+            android:id="@+id/framelayout_addPlaylist"
+            android:layout_width="60dp"
+            android:layout_height="60dp">
+
+            <ImageView
+                android:id="@+id/imageview_addPlaylist"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/ic_library_add48dp"/>
+
+            <ImageView
+                android:id="@+id/imageview_addPlaylist_innerframe"
+                android:src="@drawable/albumart_innerframe"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <ImageView
+                android:id="@+id/imageview_addPlaylist_outerframe"
+                android:src="@drawable/albumart_outerframe"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/textview_addPlaylist"
+            android:layout_toRightOf="@+id/framelayout_addPlaylist"
+            android:layout_toEndOf="@+id/framelayout_addPlaylist"
+            android:textSize="16sp"
+            android:singleLine="true"
+            android:textColor="@color/itemlightselectorblue"
+            android:textStyle="bold"
+            android:gravity="start"
+            android:textAlignment="viewStart"
+            android:text="@string/NewPlaylist"
+            android:layout_width="190dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="21dp"
+            android:layout_marginLeft="11dp"
+            android:layout_marginStart="11dp"/>
+
+        <Button
+            android:id="@+id/btn_addPlaylist"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/button_ripple_rectangle"/>
+    </RelativeLayout>
+
+    <ListView
+        android:id="@+id/listview_playlists"
+        android:layout_below="@+id/layout_addPlaylist"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:dividerHeight="18dp"
+        android:divider="@drawable/list_divider"
+        android:listSelector="@drawable/button_ripple_rectangle"/>
+</RelativeLayout>

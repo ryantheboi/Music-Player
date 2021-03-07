@@ -1,6 +1,7 @@
 package com.example.musicplayer;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
@@ -27,7 +28,7 @@ import java.util.function.Supplier;
 
 public class PlaylistAdapter extends ArrayAdapter {
 
-    private MainActivity mActivity;
+    private Activity mActivity;
     private Context mContext;
     private int mResource;
     private HashSet<ViewHolder> items;
@@ -43,11 +44,11 @@ public class PlaylistAdapter extends ArrayAdapter {
         ImageView outerFrame;
     }
 
-    public PlaylistAdapter(Context context, int resource, ArrayList<Playlist> objects, MainActivity mainActivity) {
+    public PlaylistAdapter(Context context, int resource, ArrayList<Playlist> objects, Activity activity) {
         super(context, resource, objects);
         mContext = context;
         mResource = resource;
-        mActivity = mainActivity;
+        mActivity = activity;
         items = new HashSet<>();
     }
 

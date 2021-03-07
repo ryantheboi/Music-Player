@@ -12,6 +12,8 @@
     <string name="Favorites">Favorites</string>
     <string name="Playlist">Playlist</string>
     <string name="Size">Size</string>
+    <string name="AddTo">Add to</string>
+    <string name="NewPlaylist">New Playlist</string>
 
 
 </resources>

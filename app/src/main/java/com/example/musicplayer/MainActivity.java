@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
     public static boolean nightMode = false;
     private RelativeLayout musicListRelativeLayout;
     private ArrayList<Song> fullSongList;
-    private ArrayList<Playlist> playlistList;
+    private static ArrayList<Playlist> playlistList;
     private static Playlist current_playlist;
     private static Playlist fullPlaylist;
     private SongListAdapter songListadapter;
@@ -998,6 +998,9 @@ public class MainActivity extends AppCompatActivity {
     }
     public static Playlist getCurrent_playlist(){
         return current_playlist;
+    }
+    public static ArrayList<Playlist> getPlaylists(){
+        return playlistList;
     }
     public static Playlist getFullPlaylist(){
         return fullPlaylist;

@@ -1024,11 +1024,12 @@ public class MainActivity extends AppCompatActivity {
         PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, this);
         viewPager.setAdapter(pagerAdapter);
 
-        // adjust tab colors and move to playlist tab
+        // adjust tab colors
         SongListTab.toggleTabColor();
         PlaylistTab.toggleTabColor();
-        viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
 
+        // move to playlist tab
+        viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
     }
 
     public static Notification getNotification(){

@@ -80,6 +80,7 @@ public class SongListTab extends Fragment {
         // init intents
         final Intent musicListSelectIntent = new Intent(mainActivity, MusicPlayerService.class);
         final Intent musicListQueueIntent = new Intent(mainActivity, MusicPlayerService.class);
+        final Intent addPlaylistIntent = new Intent(mainActivity, AddPlaylistActivity.class);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -150,9 +151,10 @@ public class SongListTab extends Fragment {
                     case R.id.createplaylist:
                         Toast.makeText(mainActivity, "Creating Playlist of " + userSelection.size() + " songs", Toast.LENGTH_SHORT).show();
 
-                        // construct named playlist
+                        // construct named playlist and send it to addPlaylist activity
                         Playlist playlist = new Playlist(getString(R.string.Favorites), userSelection);
-                        mainActivity.addPlaylist(playlist);
+                        addPlaylistIntent.putExtra("addPlaylist", playlist);
+                        startActivity(addPlaylistIntent);
 
                         mode.finish(); // Action picked, so close the CAB
                         return true;

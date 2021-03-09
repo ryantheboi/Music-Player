@@ -26,7 +26,6 @@
         android:textSize="20sp"
         android:textColor="@color/colorTextPrimaryDark"/>
 
-
     <RelativeLayout
         android:id="@+id/layout_addPlaylist"
         android:orientation="horizontal"

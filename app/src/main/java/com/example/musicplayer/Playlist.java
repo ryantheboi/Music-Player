@@ -103,6 +103,27 @@ public class Playlist implements Parcelable {
         return songNode.getNext();
     }
 
+    /**
+     * Adds every new song in the given playlist to this playlist's collection of songs
+     * Reconstructs the underlying hashmap with the updated collection of songs
+     * @param playlist
+     */
+    public void extend(Playlist playlist){
+        // loop through list of songs to check if a song exists before adding
+        ArrayList<Song> playlist_songs = playlist.getSongList();
+        for (Song song : playlist_songs){
+            if (!songHashMap.containsKey(song)){
+                songList.add(song);
+            }
+            else{
+                System.out.println(song.getTitle() + " already exists");
+            }
+        }
+
+        // reconstruct hashmap with the updated song list
+        songHashMap = createHashMap(songList);
+    }
+
     @Override
     public int describeContents() {
         return 0;

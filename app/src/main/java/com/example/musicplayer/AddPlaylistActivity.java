@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -17,6 +18,7 @@ public class AddPlaylistActivity extends Activity {
     private ListView listView;
     private RelativeLayout addPlaylist_layout;
     private ImageButton back_btn;
+    private Button addPlaylist_button;
     private TextView addTo_tv;
     private TextView addPlaylist_tv;
     private PlaylistAdapter playlistAdapter;
@@ -62,7 +64,8 @@ public class AddPlaylistActivity extends Activity {
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
                 // obtain the selected playlist object
                 Playlist playlist = (Playlist) listView.getItemAtPosition(position);
-
+                playlist.extend(addPlaylist);
+                finish();
             }
         });
 
@@ -72,6 +75,16 @@ public class AddPlaylistActivity extends Activity {
             @Override
             public void onClick(View v) {
                 finish();
+            }
+        });
+
+        // initialize button to add a new playlist
+        addPlaylist_button = findViewById(R.id.btn_addPlaylist);
+        addPlaylist_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // add new playlist to the playlist tab
+                System.out.println("new playlist not added");
             }
         });
 

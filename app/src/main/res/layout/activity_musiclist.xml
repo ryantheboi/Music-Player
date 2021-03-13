@@ -52,14 +52,14 @@
                 android:src="@drawable/ic_search24dp"/>
             <EditText
                 android:id="@+id/searchFilter"
+                android:theme="@style/EditTextHint"
                 android:layout_width="250dp"
                 android:layout_height="40dp"
                 android:layout_toRightOf="@+id/btn_searchfilter"
                 android:layout_toEndOf="@+id/btn_searchfilter"
                 android:layout_marginTop="7dp"
                 android:hint="@string/Search"
-                android:visibility="invisible"
-                android:textColorHint="@color/colorTextGrey"/>
+                android:visibility="invisible"/>
         </RelativeLayout>
 
         <RelativeLayout

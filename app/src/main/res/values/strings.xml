@@ -14,6 +14,7 @@
     <string name="Size">Size</string>
     <string name="AddTo">Add to</string>
     <string name="NewPlaylist">New Playlist</string>
+    <string name="PlaylistName">Playlist Name</string>
 
 
 </resources>

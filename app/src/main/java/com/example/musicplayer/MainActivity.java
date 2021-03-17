@@ -1,5 +1,6 @@
 package com.example.musicplayer;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -9,6 +10,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.palette.graphics.Palette;
+import androidx.viewpager.widget.ViewPager;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -43,14 +45,10 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.ActionMode;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.AbsListView;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -62,11 +60,11 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.tabs.TabLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import static android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT;
@@ -78,17 +76,18 @@ public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSION_REQUEST = 1;
     private ImageButton nightModeButton;
     public static boolean nightMode = false;
-    private ListView listView;
     private RelativeLayout musicListRelativeLayout;
     private ArrayList<Song> fullSongList;
-    public static HashMap<Song, SongNode> current_playlist;
-    public static HashMap<Song, SongNode> fullPlaylist;
-    private SongListAdapter adapter;
+    private static ArrayList<Playlist> playlistList;
+    private static Playlist current_playlist;
+    private static Playlist fullPlaylist;
+    private SongListAdapter songListadapter;
+    private PlaylistAdapter playlistAdapter;
+    private PagerAdapter pagerAdapter;
     private Messenger mainActivityMessenger;
     private Intent musicServiceIntent;
     public static boolean isActionMode = false;
-    private ActionMode actionMode = null;
-    private ArrayList<Song> userSelection;
+    public static ActionMode actionMode = null;
 
     // sliding up panel
     private boolean largeAlbumArt;
@@ -135,8 +134,6 @@ public class MainActivity extends AppCompatActivity {
     private Intent slidingUp_pauseplayIntent;
     private Intent slidingUp_prevIntent;
     private Intent slidingUp_nextIntent;
-    private Intent musicListSelectIntent;
-    private Intent musicListQueueIntent;
     private Intent notificationIntent;
     private ImageButton slidingUp_prev_btn;
     private ImageButton slidingUp_pauseplay_btn;
@@ -148,15 +145,17 @@ public class MainActivity extends AppCompatActivity {
     private MessageHandler seekbarHandler;
     private EditText searchFilter;
     private ImageView btn_searchFilter;
+    private TabLayout tabLayout;
+    private ViewPager viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        System.out.println("created");
 
         // initialize all views
         setContentView(R.layout.activity_musiclist);
         musicListRelativeLayout = findViewById(R.id.activity_musiclist);
-        listView = findViewById(R.id.listView);
         nightModeButton = findViewById(R.id.btn_nightmode);
         searchFilter = findViewById(R.id.searchFilter);
         btn_searchFilter = findViewById(R.id.btn_searchfilter);
@@ -180,6 +179,8 @@ public class MainActivity extends AppCompatActivity {
         musicPosition = findViewById(R.id.music_position);
         musicDuration = findViewById(R.id.music_duration);
         info_btn = findViewById(R.id.btn_info);
+        tabLayout = findViewById(R.id.tabLayout);
+        viewPager = findViewById(R.id.viewPager);
     }
 
     @Override
@@ -187,35 +188,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         System.out.println("started");
-
-        setVolumeControlStream(AudioManager.STREAM_MUSIC);
-
-        // init thread for message handling
-        HandlerThread messageHandlerThread = new HandlerThread("MessageHandler");
-        messageHandlerThread.start();
-        messageHandler = new MessageHandler(messageHandlerThread.getLooper());
-        mainActivityMessenger = new Messenger(messageHandler);
-        musicServiceIntent = new Intent(this, MusicPlayerService.class);
-
-        // init listview functionality and playlist
-        initMusicList(); // starts music service for the first time
-
-        // init main sliding up panel
-        initMainAnimation();
-
-        initMainDisplay();
-
-        initMainButtons();
-
-        initSeekbar();
-
-        initInfoButton();
-
-        initSlidingUpPanel();
-
-        initFilterSearch();
-
-        initNotification();
 
         // check and request for read permissions
         if (ContextCompat.checkSelfPermission(MainActivity.this,
@@ -231,8 +203,38 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(MainActivity.this,
                     new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
         } else {
-            initMusicList();
+            setVolumeControlStream(AudioManager.STREAM_MUSIC);
+
+            // init thread for message handling
+            HandlerThread messageHandlerThread = new HandlerThread("MessageHandler");
+            messageHandlerThread.start();
+            messageHandler = new MessageHandler(messageHandlerThread.getLooper());
+            mainActivityMessenger = new Messenger(messageHandler);
+            musicServiceIntent = new Intent(this, MusicPlayerService.class);
+
+            // init listview functionality and playlist
+            initMusicList(); // starts music service for the first time
+
             initNightMode();
+
+            // init main sliding up panel
+            initMainAnimation();
+
+            initMainDisplay();
+
+            initMainButtons();
+
+            initSeekbar();
+
+            initInfoButton();
+
+            initSlidingUpPanel();
+
+            initFilterSearch();
+
+            initNotification();
+
+            initViewPager();
         }
     }
 
@@ -269,16 +271,10 @@ public class MainActivity extends AppCompatActivity {
      * The music service is started here in order to send the main activity's messenger
      */
     public void initMusicList() {
-        userSelection = new ArrayList<>();
+        playlistList = new ArrayList<>();
         fullSongList = new ArrayList<>();
-        fullPlaylist = new HashMap<>();
-        current_playlist = new HashMap<>();
         getMusic(); // populates fullSongList
-        fullPlaylist = createPlaylist(fullSongList);
-
-        // init intents
-        musicListSelectIntent = new Intent(this, MusicPlayerService.class);
-        musicListQueueIntent = new Intent(this, MusicPlayerService.class);
+        fullPlaylist = new Playlist("FULL_PLAYLIST", fullSongList);
 
         // initialize current playlist and song
         if (fullSongList.size() > 0){
@@ -290,91 +286,8 @@ public class MainActivity extends AppCompatActivity {
         musicServiceIntent.putExtra("musicListInit", mainActivityMessenger);
         startService(musicServiceIntent);
 
-        adapter = new SongListAdapter(this, R.layout.adapter_view_layout, fullSongList, this);
-        listView.setAdapter(adapter);
-
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                // obtain the selected song object
-                Song song = (Song) listView.getItemAtPosition(position);
-
-                // redirect the current playlist to reference the full (original) playlist
-                current_playlist = fullPlaylist;
-
-                // change current song
-                current_song = song;
-
-                // notify music player service about the current song change
-                musicListSelectIntent.putExtra("musicListSong", mainActivityMessenger);
-                startService(musicListSelectIntent);
-            }
-        });
-
-        listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
-        listView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
-            @Override
-            public void onItemCheckedStateChanged(android.view.ActionMode mode, int position, long id, boolean checked) {
-                // obtain the selected song object and add to user selection arraylist
-                Song song = (Song) listView.getItemAtPosition(position);
-
-                if (!checked) {
-                    userSelection.remove(song);
-                } else {
-                    userSelection.add(song);
-                }
-
-                if (userSelection.size() == 1) {
-                    mode.setTitle(userSelection.get(0).getTitle());
-                } else {
-                    mode.setTitle(userSelection.size() + " songs selected");
-                }
-            }
-
-            @Override
-            public boolean onCreateActionMode(android.view.ActionMode mode, Menu menu) {
-                mode.getMenuInflater().inflate(R.menu.example_menu, menu);
-                isActionMode = true;
-                actionMode = mode;
-                return true;
-            }
-
-            @Override
-            public boolean onPrepareActionMode(android.view.ActionMode mode, Menu menu) {
-                return false;
-            }
-
-            @Override
-            public boolean onActionItemClicked(android.view.ActionMode mode, MenuItem item) {
-                switch (item.getItemId()) {
-                    case R.id.createqueue:
-                        Toast.makeText(MainActivity.this, "Creating Queue of " + userSelection.size() + " songs", Toast.LENGTH_SHORT).show();
-                        // construct new current playlist, given the user selections
-                        current_playlist = createPlaylist(userSelection);
-                        current_song = userSelection.get(0);
-
-                        // notify music player service to start the new song in the new playlist (queue)
-                        musicListQueueIntent.putExtra("musicListSong", mainActivityMessenger);
-                        startService(musicListQueueIntent);
-
-                        mode.finish(); // Action picked, so close the CAB
-                        return true;
-                    case R.id.createplaylist:
-                        Toast.makeText(MainActivity.this, "Creating Playlist of " + userSelection.size() + " songs", Toast.LENGTH_SHORT).show();
-                        mode.finish(); // Action picked, so close the CAB
-                        return true;
-                    default:
-                        return false;
-                }
-            }
-
-            @Override
-            public void onDestroyActionMode(android.view.ActionMode mode) {
-                isActionMode = false;
-                actionMode = null;
-                userSelection.clear();
-            }
-        });
+        songListadapter = new SongListAdapter(this, R.layout.adapter_view_layout, fullSongList, this);
+        playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this);
     }
 
     public void initNightMode() {
@@ -389,28 +302,28 @@ public class MainActivity extends AppCompatActivity {
 
     public void toggleNightMode() {
         if (!nightMode) {
-            listView.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
+            tabLayout.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
+            tabLayout.setTabTextColors(getResources().getColorStateList(R.color.itemnightselectorblue));
             searchFilter.setTextColor(getResources().getColor(R.color.colorTextPrimaryLight));
             musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
-            adapter.setItemsFrameColor(getResources().getColor(R.color.nightPrimaryDark));
-            adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemnightselectorblue));
             nightModeButton.setImageResource(R.drawable.night);
             nightMode = true;
 
             // swap info button color
             info_btn.setImageResource(R.drawable.info_light);
         } else {
-            listView.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
+            tabLayout.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
+            tabLayout.setTabTextColors(getResources().getColorStateList(R.color.itemlightselectorblue));
             searchFilter.setTextColor(getResources().getColor(R.color.colorTextPrimaryDark));
             musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
-            adapter.setItemsFrameColor(getResources().getColor(R.color.lightPrimaryWhite));
-            adapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemlightselectorblue));
             nightModeButton.setImageResource(R.drawable.light);
             nightMode = false;
 
             // swap info button color
             info_btn.setImageResource(R.drawable.info_night);
         }
+        SongListTab.toggleTabColor();
+        PlaylistTab.toggleTabColor();
         swapMainColors();
         swapSlidingMenuColors();
     }
@@ -488,46 +401,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * creates a playlist given an arraylist of songs
-     * the playlist is a hashmap of Song to SongNode
-     * the SongNodes are created to form a circular doubly linked list
-     *
-     * @param songList arraylist containing the songs to populate the playlist
-     * @return playlist hashmap that contains every Song in songList, each mapping to a SongNode
-     */
-    public HashMap<Song, SongNode> createPlaylist(ArrayList<Song> songList) {
-        HashMap<Song, SongNode> playlist = new HashMap<>();
-
-        int size = songList.size();
-        if (size != 0) {
-            Song head = songList.get(0);
-            Song tail = songList.get(size - 1);
-            if (size == 1) {
-                SongNode songNode = new SongNode(tail, head, tail);
-                playlist.put(head, songNode);
-            } else {
-                for (int i = 0; i < size; i++) {
-                    Song song = songList.get(i);
-                    SongNode songNode;
-                    if (song.equals(tail)) {
-                        Song prevSong = songList.get(i - 1);
-                        songNode = new SongNode(prevSong, song, head);
-                    } else if (song.equals(head)) {
-                        Song nextSong = songList.get(i + 1);
-                        songNode = new SongNode(tail, song, nextSong);
-                    } else {
-                        Song prevSong = songList.get(i - 1);
-                        Song nextSong = songList.get(i + 1);
-                        songNode = new SongNode(prevSong, song, nextSong);
-                    }
-                    playlist.put(song, songNode);
-                }
-            }
-        }
-        return playlist;
-    }
-
     public void initFilterSearch() {
         // init searchfilter button functionality
         btn_searchFilter.setOnClickListener(new View.OnClickListener() {
@@ -560,7 +433,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence cs, int arg1, int arg2, int arg3) {
                 // filter based on song name
-                adapter.getFilter().filter(cs);
+                songListadapter.getFilter().filter(cs);
             }
 
             @Override
@@ -905,6 +778,76 @@ public class MainActivity extends AppCompatActivity {
         startService(notificationIntent);
     }
 
+    public void initViewPager(){
+        // remove any existing tabs prior to activity pause and re-add
+        tabLayout.removeAllTabs();
+        tabLayout.addTab(tabLayout.newTab().setText("Songs"));
+        tabLayout.addTab(tabLayout.newTab().setText("Playlists"));
+        tabLayout.setTabTextColors(getResources().getColorStateList(R.color.itemlightselectorblue));
+        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
+
+        pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, this);
+        viewPager.setAdapter(pagerAdapter);
+
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener(){
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                viewPager.setCurrentItem(tab.getPosition());
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
+            }
+        });
+
+        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+        viewPager.setPageTransformer(true, new ViewPager.PageTransformer() {
+            private static final float MIN_SCALE = 0.85f;
+            private static final float MIN_ALPHA = 0.5f;
+
+            @Override
+            public void transformPage(@NonNull View view, float position) {
+                int pageWidth = view.getWidth();
+                int pageHeight = view.getHeight();
+
+                if (position < -1) { // [-Infinity,-1)
+                    // This page is way off-screen to the left.
+                    view.setAlpha(0f);
+
+                } else if (position <= 1) { // [-1,1]
+                    // Modify the default slide transition to shrink the page as well
+                    float scaleFactor = Math.max(MIN_SCALE, 1 - Math.abs(position));
+                    float vertMargin = pageHeight * (1 - scaleFactor) / 2;
+                    float horzMargin = pageWidth * (1 - scaleFactor) / 2;
+                    if (position < 0) {
+                        view.setTranslationX(horzMargin - vertMargin / 2);
+                    } else {
+                        view.setTranslationX(-horzMargin + vertMargin / 2);
+                    }
+
+                    // Scale the page down (between MIN_SCALE and 1)
+                    view.setScaleX(scaleFactor);
+                    view.setScaleY(scaleFactor);
+
+                    // Fade the page relative to its size.
+                    view.setAlpha(MIN_ALPHA +
+                            (scaleFactor - MIN_SCALE) /
+                                    (1 - MIN_SCALE) * (1 - MIN_ALPHA));
+
+                } else { // (1,+Infinity]
+                    // This page is way off-screen to the right.
+                    view.setAlpha(0f);
+                }
+            }
+        });
+    }
+
     /**
      * Swaps the two main gradients and the text colors in the main display
      * swaps gradients to darker colors if nightmode
@@ -1052,6 +995,41 @@ public class MainActivity extends AppCompatActivity {
 
     public static Song getCurrent_song(){
         return current_song;
+    }
+    public static Playlist getCurrent_playlist(){
+        return current_playlist;
+    }
+    public static ArrayList<Playlist> getPlaylists(){
+        return playlistList;
+    }
+    public static Playlist getFullPlaylist(){
+        return fullPlaylist;
+    }
+    public static void setCurrent_song(Song song){
+        current_song = song;
+    }
+    public static void setCurrent_playlist(Playlist playlist){
+        current_playlist = playlist;
+    }
+
+    /**
+     * adds a new playlist to the playlist tab of the viewpager
+     * @param playlist the playlist item to be added
+     */
+    public void addPlaylist(Playlist playlist){
+        // add playlist item to the adapter
+        playlistAdapter.add(playlist);
+
+        // reconstruct viewpager adapter with the new playlist adapter change
+        PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, this);
+        viewPager.setAdapter(pagerAdapter);
+
+        // adjust tab colors
+        SongListTab.toggleTabColor();
+        PlaylistTab.toggleTabColor();
+
+        // move to playlist tab
+        viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
     }
 
     public static Notification getNotification(){

@@ -26,31 +26,30 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class SongListAdapter extends ArrayAdapter {
+public class PlaylistAdapter extends ArrayAdapter {
 
     private Activity mActivity;
     private Context mContext;
     private int mResource;
-    private HashSet<ViewHolder> mItems;
+    private HashSet<ViewHolder> items;
 
     /**
-     * Holds variables about an item (song) in a View
+     * Holds variables about an item (playlist) in a View
      */
     class ViewHolder {
-        TextView title;
-        TextView artist;
-        TextView album;
+        TextView name;
+        TextView size;
         ImageView albumArt;
         ImageView innerFrame;
         ImageView outerFrame;
     }
 
-    public SongListAdapter(Context context, int resource, ArrayList<Song> objects, Activity activity) {
+    public PlaylistAdapter(Context context, int resource, ArrayList<Playlist> objects, Activity activity) {
         super(context, resource, objects);
         mContext = context;
         mResource = resource;
         mActivity = activity;
-        mItems = new HashSet<>();
+        items = new HashSet<>();
     }
 
     @Override
@@ -67,30 +66,33 @@ public class SongListAdapter extends ArrayAdapter {
             cf = CompletableFuture.supplyAsync(new Supplier<Object[]>() {
                 @Override
                 public Object[] get() {
-                    Object[] arr = new Object[5];
+                    Object[] arr = new Object[4];
 
-                    // get song info and create Song object
-                    Song song = (Song) getItem(position);
-                    String title = song.getTitle();
-                    String artist = song.getArtist();
-                    String album = song.getAlbum();
-                    String albumID = song.getAlbumID();
-                    Bitmap albumArt = getAlbumArt(albumID);
+                    // get playlist info
+                    Playlist playlist = (Playlist) getItem(position);
+                    String name = playlist.getName();
+                    String size = playlist.getSizeString();
+                    Bitmap albumArt;
+                    if (!size.equals("0")) {
+                        String albumID = playlist.getSongList().get(0).getAlbumID();
+                        albumArt = getAlbumArt(albumID);
+                    }
+                    else{
+                        albumArt = null;
+                    }
 
                     // asynchronously find the views and hold them for immediate access later
-                    item.title = cv.findViewById(R.id.textView1);
-                    item.artist = cv.findViewById(R.id.textView2);
-                    item.album = cv.findViewById(R.id.textView3);
+                    item.name = cv.findViewById(R.id.textView1);
+                    item.size = cv.findViewById(R.id.textView2);
                     item.albumArt = cv.findViewById(R.id.album_art);
                     item.innerFrame = cv.findViewById(R.id.albumart_innerframe);
                     item.outerFrame = cv.findViewById(R.id.albumart_outerframe);
                     cv.setTag(item);
 
-                    arr[0] = title;
-                    arr[1] = artist;
-                    arr[2] = album;
-                    arr[3] = albumArt;
-                    arr[4] = item;
+                    arr[0] = name;
+                    arr[1] = size;
+                    arr[2] = albumArt;
+                    arr[3] = item;
                     return arr;
                 }
             });
@@ -102,22 +104,26 @@ public class SongListAdapter extends ArrayAdapter {
             cf = CompletableFuture.supplyAsync(new Supplier<Object[]>() {
                 @Override
                 public Object[] get() {
-                    Object[] arr = new Object[5];
+                    Object[] arr = new Object[4];
 
-                    // get song info and create Song object
-                    Song song = (Song) getItem(position);
-                    String title = song.getTitle();
-                    String artist = song.getArtist();
-                    String album = song.getAlbum();
-                    String albumID = song.getAlbumID();
-                    Bitmap albumArt = getAlbumArt(albumID);
+                    // get playlist info
+                    Playlist playlist = (Playlist) getItem(position);
+                    String name = playlist.getName();
+                    String size = playlist.getSizeString();
+                    Bitmap albumArt;
+                    if (!size.equals("0")) {
+                        String albumID = playlist.getSongList().get(0).getAlbumID();
+                        albumArt = getAlbumArt(albumID);
+                    }
+                    else{
+                        albumArt = null;
+                    }
                     ViewHolder item = (ViewHolder) cv.getTag();
 
-                    arr[0] = title;
-                    arr[1] = artist;
-                    arr[2] = album;
-                    arr[3] = albumArt;
-                    arr[4] = item;
+                    arr[0] = name;
+                    arr[1] = size;
+                    arr[2] = albumArt;
+                    arr[3] = item;
                     return arr;
                 }
             });
@@ -126,27 +132,25 @@ public class SongListAdapter extends ArrayAdapter {
         cf.thenAccept(new Consumer<Object[]>() {
             @Override
             public void accept(Object[] arr) {
-                final String title = (String) arr[0];
-                final String artist = (String) arr[1];
-                final String album = (String) arr[2];
-                final Bitmap albumArt = (Bitmap) arr[3];
-                final ViewHolder item = (ViewHolder) arr[4];
+                final String name = (String) arr[0];
+                final String size = ((String) arr[1]) + " songs";
+                final Bitmap albumArt = (Bitmap) arr[2];
+                final ViewHolder item = (ViewHolder) arr[3];
 
                 // set resources for the view, only through the ui (main) thread
                 mActivity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        item.title.setText(title);
-                        item.artist.setText(artist);
-                        item.album.setText(album);
+                        item.name.setText(name);
+                        item.size.setText(size);
                         item.albumArt.setImageBitmap(albumArt);
                         if (albumArt == null){
                             int defaultImage = mContext.getResources().getIdentifier("@drawable/default_image", null, mContext.getPackageName());
                             item.albumArt.setImageResource(defaultImage);
                         }
                         // put item in arraylist if it doesn't exist already and set the appropriate colors
-                        if (!mItems.contains(item)) {
-                            mItems.add(item);
+                        if (!items.contains(item)) {
+                            items.add(item);
                             if (MainActivity.nightMode){
                                 setItemsFrameColor(mContext.getResources().getColor(R.color.nightPrimaryDark));
                                 setItemsTitleTextColor(mContext.getResources().getColorStateList(R.color.itemnightselectorblue));
@@ -188,8 +192,8 @@ public class SongListAdapter extends ArrayAdapter {
      * @param code the color resource code to set the title
      */
     public void setItemsTitleTextColor(ColorStateList code){
-        for (ViewHolder item : mItems){
-            item.title.setTextColor(code);
+        for (ViewHolder item : items){
+            item.name.setTextColor(code);
         }
     }
 
@@ -198,7 +202,7 @@ public class SongListAdapter extends ArrayAdapter {
      * @param code the color resource code to set the title
      */
     public void setItemsFrameColor(int code){
-        for (ViewHolder item : mItems){
+        for (ViewHolder item : items){
             Drawable unwrappedInnerFrame = item.innerFrame.getDrawable();
             Drawable wrappedInnerFrame = DrawableCompat.wrap(unwrappedInnerFrame);
             DrawableCompat.setTint(wrappedInnerFrame, code);

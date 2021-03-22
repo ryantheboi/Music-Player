@@ -151,6 +151,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTheme(R.style.ThemeOverlay_AppCompat_MusicNight);
+
         System.out.println("created");
 
         // initialize all views
@@ -783,8 +785,6 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.removeAllTabs();
         tabLayout.addTab(tabLayout.newTab().setText("Songs"));
         tabLayout.addTab(tabLayout.newTab().setText("Playlists"));
-        tabLayout.setTabTextColors(getResources().getColorStateList(R.color.itemlightselectorblue));
-        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
         pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, this);
         viewPager.setAdapter(pagerAdapter);

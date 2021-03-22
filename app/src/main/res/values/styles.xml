@@ -51,4 +51,23 @@
         <item name="android:textColorHighlight">@android:color/holo_blue_light</item>
     </style>
 
+    <style name="ThemeOverlay.AppCompat.MusicNight" parent="">
+        <item name="colorPrimary">@color/nightPrimaryDark</item>
+        <item name="colorSecondary">@color/nightSecondaryDark</item>
+        <item name="itemTextColor">@color/itemnightselectorblue</item>
+        <item name="tabTextColor">@color/itemnightselectorblue</item>
+        <item name="subtitleTextColor">@color/itemdefaultselectorblue</item>
+        <item name="titleTextColor">@color/colorTextPrimaryLight</item>
+        <item name="colorAccent">@color/colorTextPrimaryLight</item>
+    </style>
+
+    <style name="ThemeOverlay.AppCompat.MusicLight" parent="">
+        <item name="colorPrimary">@color/lightPrimaryWhite</item>
+        <item name="colorSecondary">@color/lightSecondaryWhite</item>
+        <item name="itemTextColor">@color/itemlightselectorblue</item>
+        <item name="tabTextColor">@color/itemlightselectorblue</item>
+        <item name="subtitleTextColor">@color/itemdefaultselectorblue</item>
+        <item name="titleTextColor">@color/colorTextPrimaryDark</item>
+        <item name="colorAccent">@color/colorTextPrimaryDark</item>
+    </style>
 </resources>

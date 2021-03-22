@@ -7,22 +7,23 @@
         android:id="@+id/slidingPanel"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/lightSecondaryWhite"
+        android:background="?attr/colorPrimary"
         android:gravity="bottom">
 
         <RelativeLayout
             android:id="@+id/activity_musiclist"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/lightPrimaryWhite">
+            android:background="?attr/colorPrimary">
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/tabLayout"
                 android:layout_width="match_parent"
                 android:layout_height="30dp"
                 android:minHeight="30dp"
-                android:background="@color/lightPrimaryWhite"
-                android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-                android:layout_below="@id/btn_nightmode">
+                android:layout_below="@id/btn_nightmode"
+                android:background="?attr/colorPrimary"
+                app:tabTextColor="?attr/tabTextColor"
+                app:tabGravity="fill">
             </com.google.android.material.tabs.TabLayout>
             <androidx.viewpager.widget.ViewPager
                 android:id="@+id/viewPager"
@@ -70,7 +71,8 @@
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:weightSum="100">
+                android:weightSum="100"
+                android:background="?attr/colorSecondary">
                 <com.mikhaellopez.circularimageview.CircularImageView
                     android:id="@+id/sliding_albumart"
                     android:layout_width="match_parent"
@@ -96,7 +98,7 @@
                         android:ellipsize="marquee"
                         android:marqueeRepeatLimit ="marquee_forever"
                         android:scrollHorizontally="true"
-                        android:textColor="@color/itemlightselectorblue"
+                        android:textColor="?attr/itemTextColor"
                         android:textStyle="bold"
                         android:gravity="start"
                         android:textAlignment="viewStart"
@@ -109,7 +111,7 @@
                         android:singleLine="true"
                         android:ellipsize="marquee"
                         android:marqueeRepeatLimit ="marquee_forever"
-                        android:textColor="@color/itemdefaultselectorblue"
+                        android:textColor="?attr/subtitleTextColor"
                         android:gravity="start"
                         android:textAlignment="viewStart"
                         android:text="@string/TextView2"
@@ -280,7 +282,8 @@
                     android:layout_height="wrap_content"
                     android:src="@drawable/info_light"
                     android:background="#00000000"
-                    android:layout_marginLeft="300dp"/>
+                    android:layout_marginLeft="300dp"
+                    android:layout_marginStart="300dp"/>
 
             </RelativeLayout>
         </RelativeLayout>

@@ -60,6 +60,7 @@
                 android:layout_toEndOf="@+id/btn_searchfilter"
                 android:layout_marginTop="7dp"
                 android:hint="@string/Search"
+                android:textColor="?attr/itemTextColor"
                 android:visibility="invisible"/>
         </RelativeLayout>
 

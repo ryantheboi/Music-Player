@@ -67,7 +67,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import static android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT;
 import static android.os.Build.VERSION_CODES.Q;
 import static com.example.musicplayer.Notifications.CHANNEL_ID_1;
 
@@ -304,26 +303,25 @@ public class MainActivity extends AppCompatActivity {
 
     public void toggleNightMode() {
         if (!nightMode) {
-            tabLayout.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
-            tabLayout.setTabTextColors(getResources().getColorStateList(R.color.itemnightselectorblue));
-            searchFilter.setTextColor(getResources().getColor(R.color.colorTextPrimaryLight));
-            musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
+            setTheme(R.style.ThemeOverlay_AppCompat_MusicNight);
             nightModeButton.setImageResource(R.drawable.night);
             nightMode = true;
 
             // swap info button color
             info_btn.setImageResource(R.drawable.info_light);
         } else {
-            tabLayout.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
-            tabLayout.setTabTextColors(getResources().getColorStateList(R.color.itemlightselectorblue));
-            searchFilter.setTextColor(getResources().getColor(R.color.colorTextPrimaryDark));
-            musicListRelativeLayout.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
+            setTheme(R.style.ThemeOverlay_AppCompat_MusicLight);
             nightModeButton.setImageResource(R.drawable.light);
             nightMode = false;
 
             // swap info button color
             info_btn.setImageResource(R.drawable.info_night);
         }
+        ThemeColors.generateThemeValues(this);
+        tabLayout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        tabLayout.setTabTextColors(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.TAB_TEXT_COLOR)));
+        searchFilter.setTextColor(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR));
+        musicListRelativeLayout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
         SongListTab.toggleTabColor();
         PlaylistTab.toggleTabColor();
         swapMainColors();
@@ -904,12 +902,7 @@ public class MainActivity extends AppCompatActivity {
     @TargetApi(21)
     private void swapSlidingMenuColors() {
         if (swatchList != null) {
-            int base;
-            if (nightMode) {
-                base = getResources().getColor(R.color.nightSecondaryDark);
-            } else {
-                base = getResources().getColor(R.color.lightSecondaryWhite);
-            }
+            int base = ThemeColors.getColor(ThemeColors.COLOR_SECONDARY);
 
             // find the swatch that contrasts the most with the base
             contrastSwatch = swatchList.get(0);
@@ -921,10 +914,10 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            // change color of sliding menu buttons and text
+            // change color of sliding menu, its buttons, and text
             slidingUp_songName.setTextColor(contrastSwatch.getRgb());
             slidingUp_artistName.setTextColor(contrastSwatch.getRgb());
-            slidingUpPanelLayout.setBackgroundColor(base);
+            slidingUpMenuLayout.setBackgroundColor(base);
             Drawable unwrappedDrawablePauseplay = slidingUp_pauseplay_btn.getDrawable();
             Drawable unwrappedDrawableNext = slidingUp_next_btn.getDrawable();
             Drawable unwrappedDrawablePrev = slidingUp_prev_btn.getDrawable();

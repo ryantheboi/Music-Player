@@ -9,7 +9,6 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.graphics.drawable.DrawableCompat;
-import androidx.palette.graphics.Palette;
 import androidx.viewpager.widget.ViewPager;
 
 import android.Manifest;
@@ -27,7 +26,6 @@ import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
@@ -65,7 +63,6 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.List;
 
 import static android.os.Build.VERSION_CODES.Q;
 import static com.example.musicplayer.Notifications.CHANNEL_ID_1;
@@ -119,11 +116,6 @@ public class MainActivity extends AppCompatActivity {
     private Intent seekBarSeekIntent;
     private static Song current_song = Song.EMPTY_SONG;
     private Bitmap current_albumImage;
-    private Palette.Swatch vibrantSwatch;
-    private Palette.Swatch darkVibrantSwatch;
-    private Palette.Swatch dominantSwatch;
-    private Palette.Swatch contrastSwatch;
-    private List<Palette.Swatch> swatchList;
     private RelativeLayout mainActivityRelativeLayout;
     private LinearLayout slidingUpMenuLayout;
     private SlidingUpPanelLayout slidingUpPanelLayout;
@@ -853,37 +845,17 @@ public class MainActivity extends AppCompatActivity {
      */
     @TargetApi(16)
     public void swapMainColors() {
-        int textSongColor;
-        int textArtistColor;
-        int textSeekbarColor;
-        int primaryColor;
+        int textSongColor = ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR);
+        int textArtistColor = ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR);
+        int textSeekbarColor = ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR);
+        int primaryColor = ThemeColors.getColor(ThemeColors.COLOR_PRIMARY);
         int secondaryColor;
         if (nightMode) {
-            // assign primary and secondary colors
-            textSongColor = getResources().getColor(R.color.colorTextPrimaryLight);
-            textArtistColor = getResources().getColor(R.color.colorTextSecondaryLight);
-            textSeekbarColor = getResources().getColor(R.color.colorTextPrimaryLight);
-            primaryColor = getResources().getColor(R.color.nightPrimaryDark);
-            if (darkVibrantSwatch != null) {
-                secondaryColor = darkVibrantSwatch.getRgb();
-            } else if (dominantSwatch != null) {
-                secondaryColor = dominantSwatch.getRgb();
-            } else {
-                secondaryColor = getResources().getColor(R.color.nightPrimaryGrey);
-            }
+            // secondary color based on dark vibrant swatch
+            secondaryColor = ThemeColors.getDarkVibrantColor();
         } else {
-            // assign primary and secondary colors
-            textSongColor = getResources().getColor(R.color.colorTextPrimaryDark);
-            textArtistColor = getResources().getColor(R.color.colorTextSecondaryDark);
-            textSeekbarColor = getResources().getColor(R.color.colorTextPrimaryDark);
-            primaryColor = getResources().getColor(R.color.lightPrimaryWhite);
-            if (vibrantSwatch != null) {
-                secondaryColor = vibrantSwatch.getRgb();
-            } else if (dominantSwatch != null) {
-                secondaryColor = dominantSwatch.getRgb();
-            } else {
-                secondaryColor = Color.YELLOW;
-            }
+            // secondary color based on vibrant swatch
+            secondaryColor = ThemeColors.getVibrantColor();
         }
         songName.setTextColor(textSongColor);
         artistName.setTextColor(textArtistColor);
@@ -900,39 +872,28 @@ public class MainActivity extends AppCompatActivity {
      * text and button colors are decided as the swatch that contrasts the most with the background
      */
     @TargetApi(21)
-    private void swapSlidingMenuColors() {
-        if (swatchList != null) {
-            int base = ThemeColors.getColor(ThemeColors.COLOR_SECONDARY);
+    public void swapSlidingMenuColors() {
+        int base = ThemeColors.getColor(ThemeColors.COLOR_SECONDARY);
+        int contrastColor = ThemeColors.getContrastColor(base);
 
-            // find the swatch that contrasts the most with the base
-            contrastSwatch = swatchList.get(0);
-            int maxDiffRGB = 0;
-            for (Palette.Swatch swatch : swatchList) {
-                if (Math.abs(base - swatch.getRgb()) > maxDiffRGB) {
-                    maxDiffRGB = Math.abs(base - swatch.getRgb());
-                    contrastSwatch = swatch;
-                }
-            }
+        // change color of sliding menu, its buttons, and text
+        slidingUp_songName.setTextColor(contrastColor);
+        slidingUp_artistName.setTextColor(contrastColor);
+        slidingUpMenuLayout.setBackgroundColor(base);
+        Drawable unwrappedDrawablePauseplay = slidingUp_pauseplay_btn.getDrawable();
+        Drawable unwrappedDrawableNext = slidingUp_next_btn.getDrawable();
+        Drawable unwrappedDrawablePrev = slidingUp_prev_btn.getDrawable();
+        Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
+        Drawable wrappedDrawableNext = DrawableCompat.wrap(unwrappedDrawableNext);
+        Drawable wrappedDrawablePrev = DrawableCompat.wrap(unwrappedDrawablePrev);
+        DrawableCompat.setTint(wrappedDrawablePauseplay, contrastColor);
+        DrawableCompat.setTint(wrappedDrawableNext, contrastColor);
+        DrawableCompat.setTint(wrappedDrawablePrev, contrastColor);
 
-            // change color of sliding menu, its buttons, and text
-            slidingUp_songName.setTextColor(contrastSwatch.getRgb());
-            slidingUp_artistName.setTextColor(contrastSwatch.getRgb());
-            slidingUpMenuLayout.setBackgroundColor(base);
-            Drawable unwrappedDrawablePauseplay = slidingUp_pauseplay_btn.getDrawable();
-            Drawable unwrappedDrawableNext = slidingUp_next_btn.getDrawable();
-            Drawable unwrappedDrawablePrev = slidingUp_prev_btn.getDrawable();
-            Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
-            Drawable wrappedDrawableNext = DrawableCompat.wrap(unwrappedDrawableNext);
-            Drawable wrappedDrawablePrev = DrawableCompat.wrap(unwrappedDrawablePrev);
-            DrawableCompat.setTint(wrappedDrawablePauseplay, contrastSwatch.getRgb());
-            DrawableCompat.setTint(wrappedDrawableNext, contrastSwatch.getRgb());
-            DrawableCompat.setTint(wrappedDrawablePrev, contrastSwatch.getRgb());
-
-            // change color of the button ripples
-            slidingUp_pauseplay_btn_ripple.setColor(ColorStateList.valueOf(contrastSwatch.getRgb()));
-            slidingUp_next_btn_ripple.setColor(ColorStateList.valueOf(contrastSwatch.getRgb()));
-            slidingUp_prev_btn_ripple.setColor(ColorStateList.valueOf(contrastSwatch.getRgb()));
-        }
+        // change color of the button ripples
+        slidingUp_pauseplay_btn_ripple.setColor(ColorStateList.valueOf(contrastColor));
+        slidingUp_next_btn_ripple.setColor(ColorStateList.valueOf(contrastColor));
+        slidingUp_prev_btn_ripple.setColor(ColorStateList.valueOf(contrastColor));
     }
 
     /**
@@ -1085,11 +1046,11 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
                             pauseplay_btn.setImageResource(R.drawable.ic_play);
                             slidingUp_pauseplay_btn.setImageResource(R.drawable.ic_play24dp);
-                            if (contrastSwatch != null){ // change sliding menu pauseplay button color
-                                Drawable unwrappedDrawablePauseplay = slidingUp_pauseplay_btn.getDrawable();
-                                Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
-                                DrawableCompat.setTint(wrappedDrawablePauseplay, contrastSwatch.getRgb());
-                            }
+
+                            // change sliding menu pauseplay button color
+                            Drawable unwrappedDrawablePauseplay = slidingUp_pauseplay_btn.getDrawable();
+                            Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
+                            DrawableCompat.setTint(wrappedDrawablePauseplay, ThemeColors.getContrastColor());
                         }
                     });
                     notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_play24dp, "play", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
@@ -1102,11 +1063,11 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
                             pauseplay_btn.setImageResource(R.drawable.ic_pause);
                             slidingUp_pauseplay_btn.setImageResource(R.drawable.ic_pause24dp);
-                            if (contrastSwatch != null){ // change sliding menu pauseplay button color
-                                Drawable unwrappedDrawablePauseplay = slidingUp_pauseplay_btn.getDrawable();
-                                Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
-                                DrawableCompat.setTint(wrappedDrawablePauseplay, contrastSwatch.getRgb());
-                            }
+
+                            // change sliding menu pauseplay button color
+                            Drawable unwrappedDrawablePauseplay = slidingUp_pauseplay_btn.getDrawable();
+                            Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
+                            DrawableCompat.setTint(wrappedDrawablePauseplay, ThemeColors.getContrastColor());
                         }
                     });
                     notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_pause24dp, "pause", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
@@ -1198,20 +1159,12 @@ public class MainActivity extends AppCompatActivity {
                     notificationManager.notify(1, notificationChannel1);
 
                     // update palette swatch colors for the animated gradients
-                    Palette.from(current_albumImage).maximumColorCount(8).generate(new Palette.PaletteAsyncListener() {
+                    ThemeColors.generatePaletteColors(current_albumImage);
+                    runOnUiThread(new Runnable() {
                         @Override
-                        public void onGenerated(@Nullable Palette palette) {
-                            vibrantSwatch = palette.getVibrantSwatch();
-                            darkVibrantSwatch = palette.getDarkVibrantSwatch();
-                            dominantSwatch = palette.getDominantSwatch();
-                            swatchList = palette.getSwatches();
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    swapMainColors();
-                                    swapSlidingMenuColors();
-                                }
-                            });
+                        public void run() {
+                            swapMainColors();
+                            swapSlidingMenuColors();
                         }
                     });
                     break;

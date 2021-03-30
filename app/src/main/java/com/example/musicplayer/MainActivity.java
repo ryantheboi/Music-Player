@@ -46,6 +46,8 @@ import android.view.ActionMode;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -57,7 +59,6 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.google.android.material.tabs.TabLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
@@ -71,7 +72,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSION_REQUEST = 1;
     private ImageButton nightModeButton;
-    public static boolean nightMode = false;
     private RelativeLayout musicListRelativeLayout;
     private ArrayList<Song> fullSongList;
     private static ArrayList<Playlist> playlistList;
@@ -138,6 +138,8 @@ public class MainActivity extends AppCompatActivity {
     private ImageView btn_searchFilter;
     private TabLayout tabLayout;
     private ViewPager viewPager;
+    public static boolean nightMode;
+    private boolean isPaletteOut;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -285,10 +287,21 @@ public class MainActivity extends AppCompatActivity {
 
     public void initNightMode() {
         nightMode = false;
+        isPaletteOut = false;
+        Messenger themeMessenger = new Messenger(messageHandler);
+        final Intent chooseThemeIntent = new Intent(this, ChooseThemeActivity.class);
+        chooseThemeIntent.putExtra("mainActivityMessenger", themeMessenger);
+        final Animation rotate = AnimationUtils.loadAnimation(this, R.anim.rotate_themebtn_animation);
+
         nightModeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                toggleNightMode();
+                //toggleNightMode();
+                if (!isPaletteOut) {
+                    isPaletteOut = true;
+                    nightModeButton.startAnimation(rotate);
+                    startActivity(chooseThemeIntent);
+                }
             }
         });
     }
@@ -728,7 +741,6 @@ public class MainActivity extends AppCompatActivity {
         info_btn.setClickable(false);
     }
 
-
     @TargetApi(19)
     public void initNotification() {
         mediaSession = new MediaSessionCompat(this, "media");
@@ -1167,6 +1179,11 @@ public class MainActivity extends AppCompatActivity {
                             swapSlidingMenuColors();
                         }
                     });
+                    break;
+                case ChooseThemeActivity.CHOOSE_THEME_DONE:
+                    isPaletteOut = false;
+                    Animation rotate_reverse = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_themebtn_reverse_animation);
+                    nightModeButton.startAnimation(rotate_reverse);
                     break;
             }
         }

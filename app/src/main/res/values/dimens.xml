@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="palette_width">240dp</dimen>
+    <dimen name="palette_height">200dp</dimen>
+
+    <dimen name="palette_offset_x">6dp</dimen>
+    <dimen name="palette_offset_y">40dp</dimen>
+</resources>

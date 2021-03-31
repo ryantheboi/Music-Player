@@ -1,7 +1,6 @@
 package com.example.musicplayer;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
@@ -71,7 +70,8 @@ import static com.example.musicplayer.Notifications.CHANNEL_ID_1;
 public class MainActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSION_REQUEST = 1;
-    private ImageButton nightModeButton;
+    private boolean isThemeSelecting;
+    private ImageButton theme_btn;
     private RelativeLayout musicListRelativeLayout;
     private ArrayList<Song> fullSongList;
     private static ArrayList<Playlist> playlistList;
@@ -139,7 +139,6 @@ public class MainActivity extends AppCompatActivity {
     private TabLayout tabLayout;
     private ViewPager viewPager;
     public static boolean nightMode;
-    private boolean isPaletteOut;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -151,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
         // initialize all views
         setContentView(R.layout.activity_musiclist);
         musicListRelativeLayout = findViewById(R.id.activity_musiclist);
-        nightModeButton = findViewById(R.id.btn_nightmode);
+        theme_btn = findViewById(R.id.btn_nightmode);
         searchFilter = findViewById(R.id.searchFilter);
         btn_searchFilter = findViewById(R.id.btn_searchfilter);
         slidingUpMenuLayout = findViewById(R.id.sliding_menu);
@@ -210,7 +209,7 @@ public class MainActivity extends AppCompatActivity {
             // init listview functionality and playlist
             initMusicList(); // starts music service for the first time
 
-            initNightMode();
+            initThemeButton();
 
             // init main sliding up panel
             initMainAnimation();
@@ -285,44 +284,31 @@ public class MainActivity extends AppCompatActivity {
         playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this);
     }
 
-    public void initNightMode() {
-        nightMode = false;
-        isPaletteOut = false;
+    public void initThemeButton() {
+        isThemeSelecting = false;
         Messenger themeMessenger = new Messenger(messageHandler);
         final Intent chooseThemeIntent = new Intent(this, ChooseThemeActivity.class);
         chooseThemeIntent.putExtra("mainActivityMessenger", themeMessenger);
         final Animation rotate = AnimationUtils.loadAnimation(this, R.anim.rotate_themebtn_animation);
 
-        nightModeButton.setOnClickListener(new View.OnClickListener() {
+        theme_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //toggleNightMode();
-                if (!isPaletteOut) {
-                    isPaletteOut = true;
-                    nightModeButton.startAnimation(rotate);
+                if (!isThemeSelecting) {
+                    isThemeSelecting = true;
+                    theme_btn.startAnimation(rotate);
                     startActivity(chooseThemeIntent);
                 }
             }
         });
     }
 
-    public void toggleNightMode() {
-        if (!nightMode) {
-            setTheme(R.style.ThemeOverlay_AppCompat_MusicNight);
-            nightModeButton.setImageResource(R.drawable.night);
-            nightMode = true;
-
-            // swap info button color
-            info_btn.setImageResource(R.drawable.info_light);
-        } else {
-            setTheme(R.style.ThemeOverlay_AppCompat_MusicLight);
-            nightModeButton.setImageResource(R.drawable.light);
-            nightMode = false;
-
-            // swap info button color
-            info_btn.setImageResource(R.drawable.info_night);
-        }
-        ThemeColors.generateThemeValues(this);
+    /**
+     * Set the theme to the resource id provided and apply its colors to this activity
+     * @param theme_resid the resource id of the theme to apply
+     */
+    public void updateTheme(int theme_resid) {
+        setTheme(theme_resid);
         tabLayout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
         tabLayout.setTabTextColors(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.TAB_TEXT_COLOR)));
         searchFilter.setTextColor(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR));
@@ -482,8 +468,7 @@ public class MainActivity extends AppCompatActivity {
                     if (ContextCompat.checkSelfPermission(MainActivity.this,
                             Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
                         Toast.makeText(this, "Permission granted!", Toast.LENGTH_SHORT).show();
-                        initMusicList();
-                        initNightMode();
+                        onStart();
                     }
                 } else {
                     Toast.makeText(this, "Permission denied..", Toast.LENGTH_SHORT).show();
@@ -861,14 +846,8 @@ public class MainActivity extends AppCompatActivity {
         int textArtistColor = ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR);
         int textSeekbarColor = ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR);
         int primaryColor = ThemeColors.getColor(ThemeColors.COLOR_PRIMARY);
-        int secondaryColor;
-        if (nightMode) {
-            // secondary color based on dark vibrant swatch
-            secondaryColor = ThemeColors.getDarkVibrantColor();
-        } else {
-            // secondary color based on vibrant swatch
-            secondaryColor = ThemeColors.getVibrantColor();
-        }
+        int secondaryColor= ThemeColors.getGradientColor();
+
         songName.setTextColor(textSongColor);
         artistName.setTextColor(textArtistColor);
         musicPosition.setTextColor(textSeekbarColor);
@@ -1180,10 +1159,30 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
                     break;
-                case ChooseThemeActivity.CHOOSE_THEME_DONE:
-                    isPaletteOut = false;
-                    Animation rotate_reverse = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_themebtn_reverse_animation);
-                    nightModeButton.startAnimation(rotate_reverse);
+                case ChooseThemeActivity.THEME_SELECTED:
+                    final int theme_resid = ThemeColors.getThemeResourceId();
+                    final int theme_btn_resid = ThemeColors.getThemeBtnResourceId();
+
+                    // change theme colors and button image to match the current theme
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            theme_btn.setImageResource(theme_btn_resid);
+                            updateTheme(theme_resid);
+                        }
+                    });
+                    break;
+                case ChooseThemeActivity.THEME_DONE:
+                    // user is finished selecting a theme
+                    isThemeSelecting = false;
+
+                    // rotate theme btn back to original orientation
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            theme_btn.startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_themebtn_reverse_animation));
+                        }
+                    });
                     break;
             }
         }

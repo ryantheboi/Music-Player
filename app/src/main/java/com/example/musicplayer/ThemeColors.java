@@ -18,6 +18,7 @@ public class ThemeColors {
     public static final int TITLE_TEXT_COLOR = 5;
     public static final int SUBTITLE_TEXT_COLOR = 6;
 
+    private static int themeResourceId;
     private static SparseIntArray themeValues = new SparseIntArray();
     private static Palette.Swatch vibrantSwatch;
     private static Palette.Swatch darkVibrantSwatch;
@@ -33,7 +34,9 @@ public class ThemeColors {
      * @param context the calling context that sets the theme prior to generating the theme values
      */
     @TargetApi(18)
-    public static void generateThemeValues(Context context){
+    public static void generateThemeValues(Context context, int resid){
+        themeResourceId = resid;
+
         TypedValue colorPrimaryValue = new TypedValue();
         TypedValue colorSecondaryValue = new TypedValue();
         TypedValue colorAccentValue = new TypedValue();
@@ -79,6 +82,40 @@ public class ThemeColors {
     @TargetApi(18)
     public static int getColor(int color){
         return themeValues.get(color);
+    }
+
+    /**
+     * Gets the gradient color to fit the current theme
+     * @return the gradient rgb color that fits the theme
+     */
+    public static int getGradientColor(){
+        switch (themeResourceId){
+            case R.style.ThemeOverlay_AppCompat_MusicLight:
+                return getVibrantColor();
+            case R.style.ThemeOverlay_AppCompat_MusicNight:
+                return getDarkVibrantColor();
+            default:
+                return getDominantColor();
+        }
+    }
+
+    /**
+     * Gets the main activity's theme button image resid corresponding to the current theme
+     * @return the drawable resource id that represents the current theme
+     */
+    public static int getThemeBtnResourceId(){
+        switch(themeResourceId){
+            case R.style.ThemeOverlay_AppCompat_MusicLight:
+                return R.drawable.light;
+            case R.style.ThemeOverlay_AppCompat_MusicNight:
+                return R.drawable.night;
+            default:
+                return R.drawable.light;
+        }
+    }
+
+    public static int getThemeResourceId(){
+        return themeResourceId;
     }
 
     /**

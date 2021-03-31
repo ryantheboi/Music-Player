@@ -8,12 +8,14 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 
 public class ChooseThemeActivity extends Activity {
     private Messenger mainActivity_messenger;
-    public static final int CHOOSE_THEME_DONE = 99;
+    public static final int THEME_SELECTED = 99;
+    public static final int THEME_DONE = 98;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,16 +55,48 @@ public class ChooseThemeActivity extends Activity {
 
         // set buttons
         ImageButton light = findViewById(R.id.btn_light);
+        light.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                updateTheme(R.style.ThemeOverlay_AppCompat_MusicLight);
+            }
+        });
 
         ImageButton night = findViewById(R.id.btn_night);
+        night.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                updateTheme(R.style.ThemeOverlay_AppCompat_MusicNight);
+            }
+        });
+    }
+
+    /**
+     * Set the theme, update ThemeColors to utilize current theme values, and inform main activity
+     * @param resid the resource id of the theme that was selected by the user
+     */
+    private void updateTheme(int resid) {
+        setTheme(resid);
+        ThemeColors.generateThemeValues(this, resid);
+
+        // inform the main activity that a theme was selected
+        Message msg = Message.obtain();
+        Bundle bundle = new Bundle();
+        bundle.putInt("update", THEME_SELECTED);
+        msg.setData(bundle);
+        try {
+            mainActivity_messenger.send(msg);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void finish() {
-        // inform the main activity that this activity is finished
+        // inform main activity that the user is done choosing a theme
         Message msg = Message.obtain();
         Bundle bundle = new Bundle();
-        bundle.putInt("update", CHOOSE_THEME_DONE);
+        bundle.putInt("update", THEME_DONE);
         msg.setData(bundle);
         try {
             mainActivity_messenger.send(msg);

@@ -174,16 +174,9 @@ public class SongListTab extends Fragment {
     }
 
     public static void toggleTabColor(){
-        if (MainActivity.nightMode) {
-            listView.setBackgroundColor(mainActivity.getResources().getColor(R.color.nightPrimaryDark));
-            songListAdapter.setItemsFrameColor(mainActivity.getResources().getColor(R.color.nightPrimaryDark));
-            songListAdapter.setItemsTitleTextColor(mainActivity.getResources().getColorStateList(R.color.itemnightselectorblue));
-        }
-        else{
-            listView.setBackgroundColor(mainActivity.getResources().getColor(R.color.lightPrimaryWhite));
-            songListAdapter.setItemsFrameColor(mainActivity.getResources().getColor(R.color.lightPrimaryWhite));
-            songListAdapter.setItemsTitleTextColor(mainActivity.getResources().getColorStateList(R.color.itemlightselectorblue));
-        }
+        listView.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        songListAdapter.setItemsFrameColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        songListAdapter.setItemsTitleTextColor(mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
     }
 
 }

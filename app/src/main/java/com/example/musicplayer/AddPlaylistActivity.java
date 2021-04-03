@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -16,9 +17,11 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import androidx.core.graphics.drawable.DrawableCompat;
 
 public class AddPlaylistActivity extends Activity {
 
@@ -26,9 +29,11 @@ public class AddPlaylistActivity extends Activity {
     private ListView listView;
     private RelativeLayout addPlaylist_layout;
     private ImageButton back_btn;
+    private ImageView addPlaylist_innerframe;
+    private ImageView addPlaylist_outerframe;
     private Button addPlaylist_button;
-    private TextView addTo_tv;
     private TextView addPlaylist_tv;
+    private TextView addTo_tv;
     private PlaylistAdapter playlistAdapter;
     private AlertDialog.Builder addPlaylist_dialogBuilder;
     private AlertDialog addPlaylist_dialog;
@@ -111,8 +116,8 @@ public class AddPlaylistActivity extends Activity {
                 // construct dialog to input playlist name
                 addPlaylist_dialogBuilder.setTitle(R.string.NewPlaylist);
                 // avoid adding the child again if it already exists
-                if (addPlaylist_view.getParent() != null){
-                    ((ViewGroup)addPlaylist_view.getParent()).removeView(addPlaylist_view);
+                if (addPlaylist_view.getParent() != null) {
+                    ((ViewGroup) addPlaylist_view.getParent()).removeView(addPlaylist_view);
                 }
                 addPlaylist_dialogBuilder.setView(addPlaylist_view);
 
@@ -148,7 +153,7 @@ public class AddPlaylistActivity extends Activity {
         });
     }
 
-    private void initViews(){
+    private void initViews() {
         // init layout and inflated view
         addPlaylist_layout = findViewById(R.id.activity_playlist);
         addPlaylist_view = LayoutInflater.from(this).inflate(R.layout.input_dialog_playlist, addPlaylist_layout, false);
@@ -160,6 +165,10 @@ public class AddPlaylistActivity extends Activity {
         // init listview
         listView = findViewById(R.id.listview_playlists);
 
+        // init addPlaylist button's frame
+        addPlaylist_innerframe = findViewById(R.id.imageview_addPlaylist_innerframe);
+        addPlaylist_outerframe = findViewById(R.id.imageview_addPlaylist_outerframe);
+
         // init buttons
         back_btn = findViewById(R.id.ibtn_addPlaylist_back);
         addPlaylist_button = findViewById(R.id.btn_addPlaylist);
@@ -168,17 +177,15 @@ public class AddPlaylistActivity extends Activity {
         addPlaylist_input = addPlaylist_view.findViewById(R.id.input);
     }
 
-    private void initObjects(){
+    /**
+     * Initializes new instances of objects that cannot be found by views
+     */
+    private void initObjects() {
         playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, MainActivity.getPlaylists(), this);
-        if (MainActivity.nightMode) {
-            addPlaylist_dialogBuilder = new AlertDialog.Builder(this, R.style.AlertDialogDark);
-        }
-        else{
-            addPlaylist_dialogBuilder = new AlertDialog.Builder(this, R.style.AlertDialogLight);
-        }
+        addPlaylist_dialogBuilder = new AlertDialog.Builder(this, ThemeColors.getAlertDialogStyleResourceId());
     }
 
-    private void setWindowLayout(){
+    private void setWindowLayout() {
         // set the window layout for a clean look
         DisplayMetrics dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
@@ -187,23 +194,31 @@ public class AddPlaylistActivity extends Activity {
         getWindow().setLayout(width, height);
     }
 
-    private void setThemeColors(){
-        // adjust activity colors for nightmode
-        if (MainActivity.nightMode){
-            addTo_tv.setTextColor(getResources().getColor(R.color.colorTextPrimaryLight));
-            addPlaylist_tv.setTextColor(getResources().getColor(R.color.colorTextPrimaryLight));
-            addPlaylist_input.setTextColor(getResources().getColor(R.color.colorTextPrimaryLight));
-            playlistAdapter.setItemsFrameColor(getResources().getColor(R.color.nightPrimaryDark));
-            playlistAdapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemnightselectorblue));
-            addPlaylist_layout.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
-        }
-        else{
-            addTo_tv.setTextColor(getResources().getColor(R.color.colorTextPrimaryDark));
-            addPlaylist_tv.setTextColor(getResources().getColor(R.color.colorTextPrimaryDark));
-            addPlaylist_input.setTextColor(getResources().getColor(R.color.colorTextPrimaryDark));
-            playlistAdapter.setItemsFrameColor(getResources().getColor(R.color.lightPrimaryWhite));
-            playlistAdapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemlightselectorblue));
-            addPlaylist_layout.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
-        }
+    /**
+     * adjust activity colors for the current theme
+     */
+    private void setThemeColors() {
+        addPlaylist_layout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        this.setAddPlaylistBtnFrameColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        addTo_tv.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+        addPlaylist_tv.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+        addPlaylist_input.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+        playlistAdapter.setItemsFrameColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        playlistAdapter.setItemsTitleTextColor(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
+    }
+
+    /**
+     * sets the color of the albumart frame of every item in the list view
+     *
+     * @param code the color resource code to set the frame
+     */
+    private void setAddPlaylistBtnFrameColor(int code) {
+        Drawable unwrappedInnerFrame = addPlaylist_innerframe.getDrawable();
+        Drawable wrappedInnerFrame = DrawableCompat.wrap(unwrappedInnerFrame);
+        DrawableCompat.setTint(wrappedInnerFrame, code);
+
+        Drawable unwrappedOuterFrame = addPlaylist_outerframe.getDrawable();
+        Drawable wrappedOuterFrame = DrawableCompat.wrap(unwrappedOuterFrame);
+        DrawableCompat.setTint(wrappedOuterFrame, code);
     }
 }

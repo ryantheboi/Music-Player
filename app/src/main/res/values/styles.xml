@@ -18,7 +18,7 @@
         <item name="android:windowIsTranslucent">true</item>
     </style>
 
-    <style name="AlertDialogDark" parent="Theme.AppCompat.Dialog.Alert">
+    <style name="AlertDialogNight" parent="Theme.AppCompat.Dialog.Alert">
         <!-- Used for the buttons -->
         <item name="colorAccent">@color/itemnightselectorblue</item>
         <!-- Used for the title and text -->
@@ -58,7 +58,7 @@
         <item name="tabTextColor">@color/itemnightselectorblue</item>
         <item name="subtitleTextColor">@color/itemdefaultselectorblue</item>
         <item name="titleTextColor">@color/colorTextPrimaryLight</item>
-        <item name="colorAccent">@color/colorTextPrimaryLight</item>
+        <item name="colorAccent">@color/itemnightselectorblue</item>
     </style>
 
     <style name="ThemeOverlay.AppCompat.MusicLight" parent="">
@@ -68,6 +68,6 @@
         <item name="tabTextColor">@color/itemlightselectorblue</item>
         <item name="subtitleTextColor">@color/itemdefaultselectorblue</item>
         <item name="titleTextColor">@color/colorTextPrimaryDark</item>
-        <item name="colorAccent">@color/colorTextPrimaryDark</item>
+        <item name="colorAccent">@color/itemlightselectorblue</item>
     </style>
 </resources>

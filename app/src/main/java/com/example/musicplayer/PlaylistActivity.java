@@ -167,18 +167,18 @@ public class PlaylistActivity extends Activity {
             }
         });
 
-        // adjust activity colors for nightmode
-        if (MainActivity.nightMode){
-            playlist_name_tv.setTextColor(getResources().getColor(R.color.colorTextPrimaryLight));
-            songListAdapter.setItemsFrameColor(getResources().getColor(R.color.nightPrimaryDark));
-            songListAdapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemnightselectorblue));
-            playlist_layout.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
-        }
-        else{
-            playlist_name_tv.setTextColor(getResources().getColor(R.color.colorTextPrimaryDark));
-            songListAdapter.setItemsFrameColor(getResources().getColor(R.color.lightPrimaryWhite));
-            songListAdapter.setItemsTitleTextColor(getResources().getColorStateList(R.color.itemlightselectorblue));
-            playlist_layout.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
-        }
+        // adjust activity colors for the current theme
+        setThemeColors();
+
+    }
+
+    /**
+     * adjust activity colors for the current theme
+     */
+    private void setThemeColors() {
+        playlist_layout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        songListAdapter.setItemsFrameColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        playlist_name_tv.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+        songListAdapter.setItemsTitleTextColor(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
     }
 }

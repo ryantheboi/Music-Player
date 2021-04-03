@@ -147,14 +147,8 @@ public class SongListAdapter extends ArrayAdapter {
                         // put item in arraylist if it doesn't exist already and set the appropriate colors
                         if (!mItems.contains(item)) {
                             mItems.add(item);
-                            if (MainActivity.nightMode){
-                                setItemsFrameColor(mContext.getResources().getColor(R.color.nightPrimaryDark));
-                                setItemsTitleTextColor(mContext.getResources().getColorStateList(R.color.itemnightselectorblue));
-                            }
-                            else{
-                                setItemsFrameColor(mContext.getResources().getColor(R.color.lightPrimaryWhite));
-                                setItemsTitleTextColor(mContext.getResources().getColorStateList(R.color.itemlightselectorblue));
-                            }
+                            setItemsFrameColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+                            setItemsTitleTextColor(mContext.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
                         }
                     }
                 });
@@ -194,8 +188,8 @@ public class SongListAdapter extends ArrayAdapter {
     }
 
     /**
-     * sets the color of the title of every item in the list view
-     * @param code the color resource code to set the title
+     * sets the color of the albumart frame of every item in the list view
+     * @param code the color resource code to set the frame
      */
     public void setItemsFrameColor(int code){
         for (ViewHolder item : mItems){

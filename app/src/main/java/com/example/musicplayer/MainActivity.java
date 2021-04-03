@@ -138,12 +138,12 @@ public class MainActivity extends AppCompatActivity {
     private ImageView btn_searchFilter;
     private TabLayout tabLayout;
     private ViewPager viewPager;
-    public static boolean nightMode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setTheme(R.style.ThemeOverlay_AppCompat_MusicNight);
+        setTheme(R.style.ThemeOverlay_AppCompat_MusicLight);
+        ThemeColors.generateThemeValues(this, R.style.ThemeOverlay_AppCompat_MusicLight);
 
         System.out.println("created");
 
@@ -224,11 +224,12 @@ public class MainActivity extends AppCompatActivity {
 
             initSlidingUpPanel();
 
-            initFilterSearch();
-
             initNotification();
 
             initViewPager();
+
+            // should be initialized last to set the touch listener for all views
+            initFilterSearch();
         }
     }
 
@@ -311,7 +312,7 @@ public class MainActivity extends AppCompatActivity {
         setTheme(theme_resid);
         tabLayout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
         tabLayout.setTabTextColors(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.TAB_TEXT_COLOR)));
-        searchFilter.setTextColor(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR));
+        searchFilter.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
         musicListRelativeLayout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
         SongListTab.toggleTabColor();
         PlaylistTab.toggleTabColor();

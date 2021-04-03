@@ -100,6 +100,21 @@ public class ThemeColors {
     }
 
     /**
+     * Gets the alert dialog style that matches the current theme
+     * @return the style resource id that represents the alert dialog style for the current theme
+     */
+    public static int getAlertDialogStyleResourceId(){
+        switch(themeResourceId){
+            case R.style.ThemeOverlay_AppCompat_MusicLight:
+                return R.style.AlertDialogLight;
+            case R.style.ThemeOverlay_AppCompat_MusicNight:
+                return R.style.AlertDialogNight;
+            default:
+                return R.drawable.light;
+        }
+    }
+
+    /**
      * Gets the main activity's theme button image resid corresponding to the current theme
      * @return the drawable resource id that represents the current theme
      */

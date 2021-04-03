@@ -11,9 +11,14 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 
 public class ChooseThemeActivity extends Activity {
     private Messenger mainActivity_messenger;
+    private ImageView palette_background;
+    private ImageButton light_btn;
+    private ImageButton night_btn;
+
     public static final int THEME_SELECTED = 99;
     public static final int THEME_DONE = 98;
 
@@ -38,9 +43,47 @@ public class ChooseThemeActivity extends Activity {
             }
         }
 
-        DisplayMetrics dm = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(dm);
+        initViews();
+        initBackgroundClickListener();
+        initThemeBtnClickListeners();
+        setWindowLayout();
+    }
 
+    private void initViews() {
+        palette_background = findViewById(R.id.palette_background);
+        light_btn = findViewById(R.id.btn_light);
+        night_btn = findViewById(R.id.btn_night);
+    }
+
+    private void initBackgroundClickListener(){
+        // set background image to finish activity on click
+        palette_background.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+    }
+
+    private void initThemeBtnClickListeners(){
+        // light mode
+        light_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                updateTheme(R.style.ThemeOverlay_AppCompat_MusicLight);
+            }
+        });
+
+        // night mode
+        night_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                updateTheme(R.style.ThemeOverlay_AppCompat_MusicNight);
+            }
+        });
+    }
+
+    private void setWindowLayout() {
         float width = getResources().getDimension(R.dimen.palette_width);
         float height = getResources().getDimension(R.dimen.palette_height);
 
@@ -52,23 +95,6 @@ public class ChooseThemeActivity extends Activity {
         params.y = (int) getResources().getDimension(R.dimen.palette_offset_y);
 
         getWindow().setAttributes(params);
-
-        // set buttons
-        ImageButton light = findViewById(R.id.btn_light);
-        light.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                updateTheme(R.style.ThemeOverlay_AppCompat_MusicLight);
-            }
-        });
-
-        ImageButton night = findViewById(R.id.btn_night);
-        night.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                updateTheme(R.style.ThemeOverlay_AppCompat_MusicNight);
-            }
-        });
     }
 
     /**

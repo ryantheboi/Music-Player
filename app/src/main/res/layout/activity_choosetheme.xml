@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@android:color/transparent">
 
-    <ImageView
+    <ImageButton
         android:id="@+id/palette_background"
         android:layout_width="240dp"
         android:layout_height="200dp"
@@ -13,6 +13,18 @@
         android:src="@drawable/palette"
         android:scaleType="centerCrop"
         android:alpha="0.90"
+        />
+
+    <ImageButton
+        android:id="@+id/palette_unclickable_btn"
+        android:layout_width="70dp"
+        android:layout_height="40dp"
+        android:fillViewport="true"
+        android:layout_marginTop="123dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginStart="30dp"
+        android:isScrollContainer="true"
+        android:background="#00000000"
         />
 
     <ScrollView
@@ -32,16 +44,16 @@
 
             <ImageButton
                 android:id="@+id/btn_light"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_marginTop="40dp"
                 android:background="#00000000"
                 android:src="@drawable/light" />
 
             <ImageButton
                 android:id="@+id/btn_night"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:background="#00000000"
                 android:src="@drawable/night" />
 

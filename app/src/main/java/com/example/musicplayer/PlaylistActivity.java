@@ -1,7 +1,11 @@
 package com.example.musicplayer;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.RippleDrawable;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.Menu;
@@ -13,6 +17,8 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import androidx.core.graphics.drawable.DrawableCompat;
 
 import java.util.ArrayList;
 
@@ -180,5 +186,20 @@ public class PlaylistActivity extends Activity {
         songListAdapter.setItemsFrameColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
         playlist_name_tv.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
         songListAdapter.setItemsTitleTextColor(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
+        songListAdapter.setItemsAlbumArtistTextColor(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
+        setBackBtnColor();
+    }
+
+    /**
+     * sets the color of the back button and its ripple to match the current theme
+     */
+    @TargetApi(21)
+    private void setBackBtnColor(){
+        Drawable unwrappedBackBtn = back_btn.getDrawable();
+        Drawable wrappedBackBtn = DrawableCompat.wrap(unwrappedBackBtn);
+        DrawableCompat.setTint(wrappedBackBtn, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
+
+        RippleDrawable back_btn_ripple = (RippleDrawable) back_btn.getBackground();
+        back_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
     }
 }

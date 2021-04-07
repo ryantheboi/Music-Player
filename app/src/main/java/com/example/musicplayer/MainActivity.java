@@ -93,6 +93,9 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton pauseplay_btn;
     private ImageButton next_btn;
     private ImageButton prev_btn;
+    private RippleDrawable prev_btn_ripple;
+    private RippleDrawable pauseplay_btn_ripple;
+    private RippleDrawable next_btn_ripple;
     private AnimationDrawable mainAnimation;
     private GradientDrawable gradient1;
     private GradientDrawable gradient2;
@@ -134,8 +137,9 @@ public class MainActivity extends AppCompatActivity {
     private RippleDrawable slidingUp_next_btn_ripple;
     private MessageHandler messageHandler;
     private MessageHandler seekbarHandler;
-    private EditText searchFilter;
-    private ImageView btn_searchFilter;
+    private EditText searchFilter_editText;
+    private ImageView searchFilter_btn;
+    private RippleDrawable searchFilter_btn_ripple;
     private TabLayout tabLayout;
     private ViewPager viewPager;
 
@@ -151,8 +155,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_musiclist);
         musicListRelativeLayout = findViewById(R.id.activity_musiclist);
         theme_btn = findViewById(R.id.btn_nightmode);
-        searchFilter = findViewById(R.id.searchFilter);
-        btn_searchFilter = findViewById(R.id.btn_searchfilter);
+        searchFilter_editText = findViewById(R.id.searchFilter);
+        searchFilter_btn = findViewById(R.id.btn_searchfilter);
         slidingUpMenuLayout = findViewById(R.id.sliding_menu);
         slidingUp_albumArt = findViewById(R.id.sliding_albumart);
         slidingUp_songName = findViewById(R.id.sliding_title);
@@ -304,22 +308,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * Set the theme to the resource id provided and apply its colors to this activity
-     * @param theme_resid the resource id of the theme to apply
-     */
-    public void updateTheme(int theme_resid) {
-        setTheme(theme_resid);
-        tabLayout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
-        tabLayout.setTabTextColors(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.TAB_TEXT_COLOR)));
-        searchFilter.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
-        musicListRelativeLayout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
-        SongListTab.toggleTabColor();
-        PlaylistTab.toggleTabColor();
-        swapMainColors();
-        swapSlidingMenuColors();
-    }
-
     @TargetApi(Q)
     public void getMusic() {
         ContentResolver contentResolver = getContentResolver();
@@ -393,25 +381,29 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @TargetApi(21)
     public void initFilterSearch() {
+        // init searchfilter button ripple
+        searchFilter_btn_ripple = (RippleDrawable) searchFilter_btn.getBackground();
+
         // init searchfilter button functionality
-        btn_searchFilter.setOnClickListener(new View.OnClickListener() {
+        searchFilter_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (searchFilter.hasFocus()){
+                if (searchFilter_editText.hasFocus()){
                     // hide keyboard and clear focus from searchfilter
                     InputMethodManager inputMethodManager =
                             (InputMethodManager) MainActivity.this.getSystemService(
                                     Activity.INPUT_METHOD_SERVICE);
                     inputMethodManager.hideSoftInputFromWindow(
                             MainActivity.this.getCurrentFocus().getWindowToken(), 0);
-                    searchFilter.clearFocus();
-                    searchFilter.setVisibility(View.INVISIBLE);
+                    searchFilter_editText.clearFocus();
+                    searchFilter_editText.setVisibility(View.INVISIBLE);
                 }
                 else {
                     // show keyboard and focus on the searchfilter
-                    searchFilter.setVisibility(View.VISIBLE);
-                    if (searchFilter.requestFocus()) {
+                    searchFilter_editText.setVisibility(View.VISIBLE);
+                    if (searchFilter_editText.requestFocus()) {
                         InputMethodManager inputMethodManager = (InputMethodManager)
                                 getSystemService(Activity.INPUT_METHOD_SERVICE);
                         inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
@@ -421,7 +413,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // init searchfilter text usage functionality
-        searchFilter.addTextChangedListener(new TextWatcher() {
+        searchFilter_editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void onTextChanged(CharSequence cs, int arg1, int arg2, int arg3) {
                 // filter based on song name
@@ -441,19 +433,19 @@ public class MainActivity extends AppCompatActivity {
         ArrayList<View> views = getAllChildren(slidingUpPanelLayout);
         for (View innerView : views){
             // excluding the searchfilter and its button
-            if (innerView != searchFilter && innerView != btn_searchFilter) {
+            if (innerView != searchFilter_editText && innerView != searchFilter_btn) {
                 innerView.setOnTouchListener(new View.OnTouchListener() {
                     @Override
                     public boolean onTouch(View v, MotionEvent event) {
                         // only attempt to hide keyboard if the list filter is in focus
-                        if (searchFilter.hasFocus()) {
+                        if (searchFilter_editText.hasFocus()) {
                             InputMethodManager inputMethodManager =
                                     (InputMethodManager) MainActivity.this.getSystemService(
                                             Activity.INPUT_METHOD_SERVICE);
                             inputMethodManager.hideSoftInputFromWindow(
                                     MainActivity.this.getCurrentFocus().getWindowToken(), 0);
                         }
-                        searchFilter.clearFocus();
+                        searchFilter_editText.clearFocus();
                         return false;
                     }
                 });
@@ -630,10 +622,12 @@ public class MainActivity extends AppCompatActivity {
      * Each one will trigger a unique event from MusicPlayerService
      */
     @SuppressLint("ClickableViewAccessibility")
+    @TargetApi(21)
     public void initMainButtons() {
         Messenger mainMessenger = new Messenger(messageHandler);
 
-        // init pauseplay button click functionality
+        // init pauseplay button click functionality and its ripple
+        pauseplay_btn_ripple = (RippleDrawable) pauseplay_btn.getBackground();
         mainPausePlayIntent = new Intent(this, MusicPlayerService.class);
         mainPausePlayIntent.putExtra("pauseplay", mainMessenger);
 
@@ -644,7 +638,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // init next button click functionality
+        // init next button click functionality and its ripple
+        next_btn_ripple= (RippleDrawable) next_btn.getBackground();
         mainNextIntent = new Intent(this, MusicPlayerService.class);
         mainNextIntent.putExtra("next", mainMessenger);
 
@@ -655,7 +650,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // init prev button click functionality
+        // init prev button click functionality and its ripple
+        prev_btn_ripple = (RippleDrawable) prev_btn.getBackground();
         mainPrevIntent = new Intent(this, MusicPlayerService.class);
         mainPrevIntent.putExtra("prev", mainMessenger);
 
@@ -837,12 +833,27 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Swaps the two main gradients and the text colors in the main display
-     * swaps gradients to darker colors if nightmode
-     * swaps gradients to lighter colors otherwise
+     * Set the theme to the resource id provided and apply its colors to this activity
+     * @param theme_resid the resource id of the theme to apply
      */
-    @TargetApi(16)
-    public void swapMainColors() {
+    public void updateTheme(int theme_resid) {
+        setTheme(theme_resid);
+        musicListRelativeLayout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        SongListTab.toggleTabColor();
+        PlaylistTab.toggleTabColor();
+        updateSeekBarColors();
+        updateTabLayoutColors();
+        updateSearchFilterColors();
+        updateMainColors();
+        updateSlidingMenuColors();
+    }
+
+    /**
+     * updates the two main gradients and the text colors in the main display
+     * gradient colors are derived from the current theme and song
+     */
+    @TargetApi(21)
+    public void updateMainColors() {
         int textSongColor = ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR);
         int textArtistColor = ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR);
         int textSeekbarColor = ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR);
@@ -857,14 +868,30 @@ public class MainActivity extends AppCompatActivity {
         gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
         gradient2.setColors(new int[]{primaryColor, secondaryColor});
         gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
+
+        // update drawable vector colors
+        Drawable unwrappedDrawablePauseplay = pauseplay_btn.getDrawable();
+        Drawable unwrappedDrawableNext = next_btn.getDrawable();
+        Drawable unwrappedDrawablePrev = prev_btn.getDrawable();
+        Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
+        Drawable wrappedDrawableNext = DrawableCompat.wrap(unwrappedDrawableNext);
+        Drawable wrappedDrawablePrev = DrawableCompat.wrap(unwrappedDrawablePrev);
+        DrawableCompat.setTint(wrappedDrawablePauseplay, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
+        DrawableCompat.setTint(wrappedDrawableNext, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
+        DrawableCompat.setTint(wrappedDrawablePrev, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
+
+        // update ripple colors
+        pauseplay_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
+        next_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
+        prev_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
     }
 
     /**
-     * swaps the background, text, and button colors of the sliding menu
+     * updates the background, text, and button colors of the sliding menu
      * text and button colors are decided as the swatch that contrasts the most with the background
      */
     @TargetApi(21)
-    public void swapSlidingMenuColors() {
+    public void updateSlidingMenuColors() {
         int base = ThemeColors.getColor(ThemeColors.COLOR_SECONDARY);
         int contrastColor = ThemeColors.getContrastColor(base);
 
@@ -886,6 +913,34 @@ public class MainActivity extends AppCompatActivity {
         slidingUp_pauseplay_btn_ripple.setColor(ColorStateList.valueOf(contrastColor));
         slidingUp_next_btn_ripple.setColor(ColorStateList.valueOf(contrastColor));
         slidingUp_prev_btn_ripple.setColor(ColorStateList.valueOf(contrastColor));
+    }
+
+    @TargetApi(23)
+    private void updateSeekBarColors(){
+        seekBar.getThumb().setTint(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+        seekBar.getProgressDrawable().setTint(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+        ((RippleDrawable)seekBar.getBackground()).setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
+    }
+
+    private void updateTabLayoutColors(){
+        tabLayout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        tabLayout.setTabTextColors(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.TAB_TEXT_COLOR)));
+        tabLayout.setSelectedTabIndicatorColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+    }
+
+    @TargetApi(21)
+    private void updateSearchFilterColors(){
+        searchFilter_editText.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+        searchFilter_editText.setHintTextColor(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
+        searchFilter_editText.setBackgroundTintList(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
+
+        // update the drawable vector color
+        Drawable unwrappedDrawableSearchFilter = searchFilter_btn.getDrawable();
+        Drawable wrappedDrawableSearchFilter = DrawableCompat.wrap(unwrappedDrawableSearchFilter);
+        DrawableCompat.setTint(wrappedDrawableSearchFilter, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
+
+        // update the ripple color
+        searchFilter_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
     }
 
     /**
@@ -1043,6 +1098,11 @@ public class MainActivity extends AppCompatActivity {
                             Drawable unwrappedDrawablePauseplay = slidingUp_pauseplay_btn.getDrawable();
                             Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
                             DrawableCompat.setTint(wrappedDrawablePauseplay, ThemeColors.getContrastColor());
+
+                            // change main pauseplay button color
+                            Drawable unwrappedMainDrawablePauseplay = pauseplay_btn.getDrawable();
+                            Drawable wrappedMainDrawablePauseplay = DrawableCompat.wrap(unwrappedMainDrawablePauseplay);
+                            DrawableCompat.setTint(wrappedMainDrawablePauseplay, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
                         }
                     });
                     notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_play24dp, "play", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
@@ -1060,6 +1120,11 @@ public class MainActivity extends AppCompatActivity {
                             Drawable unwrappedDrawablePauseplay = slidingUp_pauseplay_btn.getDrawable();
                             Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
                             DrawableCompat.setTint(wrappedDrawablePauseplay, ThemeColors.getContrastColor());
+
+                            // change main pauseplay button color
+                            Drawable unwrappedMainDrawablePauseplay = pauseplay_btn.getDrawable();
+                            Drawable wrappedMainDrawablePauseplay = DrawableCompat.wrap(unwrappedMainDrawablePauseplay);
+                            DrawableCompat.setTint(wrappedMainDrawablePauseplay, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
                         }
                     });
                     notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_pause24dp, "pause", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
@@ -1155,8 +1220,8 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            swapMainColors();
-                            swapSlidingMenuColors();
+                            updateMainColors();
+                            updateSlidingMenuColors();
                         }
                     });
                     break;

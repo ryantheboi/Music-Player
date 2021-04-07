@@ -17,4 +17,24 @@
     <color name="lightPrimaryWhite">#F4F4F4</color>
     <color name="lightSecondaryWhite">#ECECEC</color>
 
+    <!-- Ram theme -->
+    <color name="ramPink100">#FFC2D4</color>
+    <color name="ramPink200">#FFB3C9</color>
+    <color name="ramPink300">#FF85A9</color>
+    <color name="ramPink400">#FF769F</color>
+    <color name="ramPink500">#FF4880</color>
+    <color name="ramPink600">#FF306F</color>
+    <color name="ramPink700">#FF165D</color>
+    <color name="ramPink800">#FF004D</color>
+
+    <!-- Rem theme -->
+    <color name="remBlue100">#C2D5FF</color>
+    <color name="remBlue200">#B4CBFF</color>
+    <color name="remBlue300">#94B5FF</color>
+    <color name="remBlue400">#7AA3FF</color>
+    <color name="remBlue500">#6A98FF</color>
+    <color name="remBlue600">#437DFF</color>
+    <color name="remBlue700">#2669FF</color>
+    <color name="remBlue800">#0653FF</color>
+
 </resources>

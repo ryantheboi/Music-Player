@@ -225,7 +225,7 @@
                         android:textSize="20sp" />
                 </LinearLayout>
 
-            <TextView
+                <TextView
                     android:id="@+id/music_position"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -249,9 +249,9 @@
                     android:id="@+id/btn_play"
                     android:layout_width="70dp"
                     android:layout_height="70dp"
-                    android:layout_below="@+id/seekBar"
+                    android:layout_alignParentBottom="true"
                     android:layout_centerHorizontal="true"
-                    android:layout_marginTop="40dp"
+                    android:layout_marginBottom="5dp"
                     android:src="@drawable/ic_play"
                     android:background="@drawable/button_ripple"/>
 
@@ -260,8 +260,8 @@
                     android:layout_width="70dp"
                     android:layout_height="70dp"
                     android:layout_toRightOf="@+id/btn_play"
-                    android:layout_below="@+id/seekBar"
-                    android:layout_marginTop="40dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginBottom="5dp"
                     android:layout_marginLeft="50dp"
                     android:src="@drawable/ic_next"
                     android:background="@drawable/button_ripple"/>
@@ -271,8 +271,8 @@
                     android:layout_width="70dp"
                     android:layout_height="70dp"
                     android:layout_toLeftOf="@+id/btn_play"
-                    android:layout_below="@+id/seekBar"
-                    android:layout_marginTop="40dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginBottom="5dp"
                     android:layout_marginRight="50dp"
                     android:src="@drawable/ic_prev"
                     android:background="@drawable/button_ripple"/>

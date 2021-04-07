@@ -57,6 +57,21 @@
                 android:background="#00000000"
                 android:src="@drawable/night" />
 
+            <ImageButton
+                android:id="@+id/btn_rem"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="40dp"
+                android:background="#00000000"
+                android:src="@drawable/rem" />
+
+            <ImageButton
+                android:id="@+id/btn_ram"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="#00000000"
+                android:src="@drawable/ram" />
+
         </LinearLayout>
     </ScrollView>
 

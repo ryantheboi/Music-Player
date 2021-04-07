@@ -40,6 +40,28 @@
         <item name="android:background">@color/lightPrimaryWhite</item>
     </style>
 
+    <style name="AlertDialogRam" parent="Theme.AppCompat.Dialog.Alert">
+        <!-- Used for the buttons -->
+        <item name="colorAccent">@color/itemramselector</item>
+        <!-- Used for the title and text -->
+        <item name="android:textColorPrimary">@color/ramPink700</item>
+        <!-- Used for the disabled buttons -->
+        <item name="android:textColorSecondary">@color/ramPink600</item>
+        <!-- Used for the background -->
+        <item name="android:background">@color/ramPink100</item>
+    </style>
+
+    <style name="AlertDialogRem" parent="Theme.AppCompat.Dialog.Alert">
+        <!-- Used for the buttons -->
+        <item name="colorAccent">@color/itemremselector</item>
+        <!-- Used for the title and text -->
+        <item name="android:textColorPrimary">@color/remBlue700</item>
+        <!-- Used for the disabled buttons -->
+        <item name="android:textColorSecondary">@color/remBlue600</item>
+        <!-- Used for the background -->
+        <item name="android:background">@color/remBlue100</item>
+    </style>
+
     <style name="EditTextHint" parent="TextAppearance.AppCompat">
         <item name="android:textColorHint">@color/colorTextGrey</item>
         <item name="android:textSize">18sp</item>
@@ -69,5 +91,25 @@
         <item name="subtitleTextColor">@color/itemdefaultselectorblue</item>
         <item name="titleTextColor">@color/colorTextPrimaryDark</item>
         <item name="colorAccent">@color/itemlightselectorblue</item>
+    </style>
+
+    <style name="ThemeOverlay.AppCompat.MusicRam" parent="">
+        <item name="colorPrimary">@color/ramPink100</item>
+        <item name="colorSecondary">@color/ramPink200</item>
+        <item name="itemTextColor">@color/itemramselector</item>
+        <item name="tabTextColor">@color/itemramselector</item>
+        <item name="subtitleTextColor">@color/itemramselectorlite</item>
+        <item name="titleTextColor">@color/ramPink600</item>
+        <item name="colorAccent">@color/itemramselector</item>
+    </style>
+
+    <style name="ThemeOverlay.AppCompat.MusicRem" parent="">
+        <item name="colorPrimary">@color/remBlue100</item>
+        <item name="colorSecondary">@color/remBlue200</item>
+        <item name="itemTextColor">@color/itemremselector</item>
+        <item name="tabTextColor">@color/itemremselector</item>
+        <item name="subtitleTextColor">@color/itemremselectorlite</item>
+        <item name="titleTextColor">@color/remBlue600</item>
+        <item name="colorAccent">@color/itemremselector</item>
     </style>
 </resources>

@@ -95,7 +95,7 @@ public class ThemeColors {
             case R.style.ThemeOverlay_AppCompat_MusicNight:
                 return getDarkVibrantColor();
             default:
-                return getDominantColor();
+                return themeValues.get(COLOR_PRIMARY);
         }
     }
 
@@ -109,8 +109,46 @@ public class ThemeColors {
                 return R.style.AlertDialogLight;
             case R.style.ThemeOverlay_AppCompat_MusicNight:
                 return R.style.AlertDialogNight;
+            case R.style.ThemeOverlay_AppCompat_MusicRam:
+                return R.style.AlertDialogRam;
+            case R.style.ThemeOverlay_AppCompat_MusicRem:
+                return R.style.AlertDialogRem;
             default:
-                return R.drawable.light;
+                return R.style.AlertDialogLight;
+        }
+    }
+
+    /**
+     * Gets the resource id of the current theme's color tint for drawable vectors to use
+     * @return the color resource id appropriate for drawable vectors in the current theme
+     */
+    public static int getDrawableVectorColorId(){
+        switch(themeResourceId){
+            case R.style.ThemeOverlay_AppCompat_MusicLight:
+                return R.color.nightSecondaryDark;
+            case R.style.ThemeOverlay_AppCompat_MusicNight:
+                return R.color.lightSecondaryWhite;
+            case R.style.ThemeOverlay_AppCompat_MusicRam:
+                return R.color.ramPink700;
+            case R.style.ThemeOverlay_AppCompat_MusicRem:
+                return R.color.remBlue700;
+            default:
+                return R.color.colorTextGrey;
+        }
+    }
+
+    /**
+     * Gets the resource id of the current theme's color tint for ripples to use
+     * @return the color resource id appropriate for RippleDrawables in the current theme
+     */
+    public static int getRippleDrawableColorId(){
+        switch(themeResourceId){
+            case R.style.ThemeOverlay_AppCompat_MusicRam:
+                return R.color.ramPink400;
+            case R.style.ThemeOverlay_AppCompat_MusicRem:
+                return R.color.remBlue400;
+            default:
+                return R.color.colorTextGrey;
         }
     }
 
@@ -124,6 +162,10 @@ public class ThemeColors {
                 return R.drawable.light;
             case R.style.ThemeOverlay_AppCompat_MusicNight:
                 return R.drawable.night;
+            case R.style.ThemeOverlay_AppCompat_MusicRam:
+                return R.drawable.ram;
+            case R.style.ThemeOverlay_AppCompat_MusicRem:
+                return R.drawable.rem;
             default:
                 return R.drawable.light;
         }

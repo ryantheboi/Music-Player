@@ -83,5 +83,6 @@ public class PlaylistTab extends Fragment {
         listView.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
         playlistAdapter.setItemsFrameColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
         playlistAdapter.setItemsTitleTextColor(mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
+        playlistAdapter.setItemsSizeTextColor(mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
     }
 }

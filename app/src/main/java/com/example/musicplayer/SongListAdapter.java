@@ -149,6 +149,7 @@ public class SongListAdapter extends ArrayAdapter {
                             mItems.add(item);
                             setItemsFrameColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
                             setItemsTitleTextColor(mContext.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
+                            setItemsAlbumArtistTextColor(mContext.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
                         }
                     }
                 });
@@ -179,11 +180,22 @@ public class SongListAdapter extends ArrayAdapter {
 
     /**
      * sets the color of the title of every item in the list view
-     * @param code the color resource code to set the title
+     * @param code the color resource code to set the title textview
      */
     public void setItemsTitleTextColor(ColorStateList code){
         for (ViewHolder item : mItems){
             item.title.setTextColor(code);
+        }
+    }
+
+    /**
+     * sets the color of the album and artist of every item in the list view
+     * @param code the color resource code to set the album and artist textviews
+     */
+    public void setItemsAlbumArtistTextColor(ColorStateList code){
+        for (ViewHolder item : mItems){
+            item.album.setTextColor(code);
+            item.artist.setTextColor(code);
         }
     }
 

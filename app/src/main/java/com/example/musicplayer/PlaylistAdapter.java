@@ -153,6 +153,7 @@ public class PlaylistAdapter extends ArrayAdapter {
                             items.add(item);
                             setItemsFrameColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
                             setItemsTitleTextColor(mContext.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
+                            setItemsSizeTextColor(mContext.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
                         }
                     }
                 });
@@ -183,11 +184,21 @@ public class PlaylistAdapter extends ArrayAdapter {
 
     /**
      * sets the color of the title of every item in the list view
-     * @param code the color resource code to set the title
+     * @param code the color resource code to set the title textview
      */
     public void setItemsTitleTextColor(ColorStateList code){
         for (ViewHolder item : items){
             item.name.setTextColor(code);
+        }
+    }
+
+    /**
+     * sets the color of the size of every item in the list view
+     * @param code the color resource code to set the size textview
+     */
+    public void setItemsSizeTextColor(ColorStateList code){
+        for (ViewHolder item : items){
+            item.size.setTextColor(code);
         }
     }
 

@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
@@ -18,6 +17,8 @@ public class ChooseThemeActivity extends Activity {
     private ImageView palette_background;
     private ImageButton light_btn;
     private ImageButton night_btn;
+    private ImageButton ram_btn;
+    private ImageButton rem_btn;
 
     public static final int THEME_SELECTED = 99;
     public static final int THEME_DONE = 98;
@@ -53,6 +54,8 @@ public class ChooseThemeActivity extends Activity {
         palette_background = findViewById(R.id.palette_background);
         light_btn = findViewById(R.id.btn_light);
         night_btn = findViewById(R.id.btn_night);
+        ram_btn = findViewById(R.id.btn_ram);
+        rem_btn = findViewById(R.id.btn_rem);
     }
 
     private void initBackgroundClickListener(){
@@ -79,6 +82,21 @@ public class ChooseThemeActivity extends Activity {
             @Override
             public void onClick(View v) {
                 updateTheme(R.style.ThemeOverlay_AppCompat_MusicNight);
+            }
+        });
+
+        // ram mode
+        ram_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                updateTheme(R.style.ThemeOverlay_AppCompat_MusicRam);
+            }
+        });
+
+        rem_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                updateTheme(R.style.ThemeOverlay_AppCompat_MusicRem);
             }
         });
     }

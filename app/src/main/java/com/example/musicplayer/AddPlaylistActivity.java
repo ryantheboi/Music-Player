@@ -1,10 +1,13 @@
 package com.example.musicplayer;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.RippleDrawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -29,6 +32,7 @@ public class AddPlaylistActivity extends Activity {
     private ListView listView;
     private RelativeLayout addPlaylist_layout;
     private ImageButton back_btn;
+    private ImageView addPlaylist_imageView;
     private ImageView addPlaylist_innerframe;
     private ImageView addPlaylist_outerframe;
     private Button addPlaylist_button;
@@ -156,7 +160,7 @@ public class AddPlaylistActivity extends Activity {
     private void initViews() {
         // init layout and inflated view
         addPlaylist_layout = findViewById(R.id.activity_playlist);
-        addPlaylist_view = LayoutInflater.from(this).inflate(R.layout.input_dialog_playlist, addPlaylist_layout, false);
+        addPlaylist_view = LayoutInflater.from(this).inflate(R.layout.input_dialog_addplaylist, addPlaylist_layout, false);
 
         // init textviews
         addTo_tv = findViewById(R.id.textview_addTo);
@@ -165,7 +169,8 @@ public class AddPlaylistActivity extends Activity {
         // init listview
         listView = findViewById(R.id.listview_playlists);
 
-        // init addPlaylist button's frame
+        // init addPlaylist imageview and its frame
+        addPlaylist_imageView = findViewById(R.id.imageview_addPlaylist);
         addPlaylist_innerframe = findViewById(R.id.imageview_addPlaylist_innerframe);
         addPlaylist_outerframe = findViewById(R.id.imageview_addPlaylist_outerframe);
 
@@ -197,19 +202,24 @@ public class AddPlaylistActivity extends Activity {
     /**
      * adjust activity colors for the current theme
      */
+    @TargetApi(21)
     private void setThemeColors() {
         addPlaylist_layout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
         this.setAddPlaylistBtnFrameColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
         addTo_tv.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
         addPlaylist_tv.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
         addPlaylist_input.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+        addPlaylist_input.setHintTextColor(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
+        addPlaylist_input.setBackgroundTintList(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
         playlistAdapter.setItemsFrameColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
         playlistAdapter.setItemsTitleTextColor(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
+        playlistAdapter.setItemsSizeTextColor(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
+        setBackBtnColor();
+        setAddPlaylistImageViewColor();
     }
 
     /**
      * sets the color of the albumart frame of every item in the list view
-     *
      * @param code the color resource code to set the frame
      */
     private void setAddPlaylistBtnFrameColor(int code) {
@@ -220,5 +230,28 @@ public class AddPlaylistActivity extends Activity {
         Drawable unwrappedOuterFrame = addPlaylist_outerframe.getDrawable();
         Drawable wrappedOuterFrame = DrawableCompat.wrap(unwrappedOuterFrame);
         DrawableCompat.setTint(wrappedOuterFrame, code);
+    }
+
+    /**
+     * sets the color of the back button and its ripple to match the current theme
+     */
+    @TargetApi(21)
+    private void setBackBtnColor(){
+        Drawable unwrappedBackBtn = back_btn.getDrawable();
+        Drawable wrappedBackBtn = DrawableCompat.wrap(unwrappedBackBtn);
+        DrawableCompat.setTint(wrappedBackBtn, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
+
+        RippleDrawable back_btn_ripple = (RippleDrawable) back_btn.getBackground();
+        back_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
+    }
+
+    /**
+     * sets the color of the addplaylist imageview and its ripple to match the current theme
+     */
+    @TargetApi(21)
+    private void setAddPlaylistImageViewColor(){
+        Drawable unwrappedImageView = addPlaylist_imageView.getDrawable();
+        Drawable wrappedImageView = DrawableCompat.wrap(unwrappedImageView);
+        DrawableCompat.setTint(wrappedImageView, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
     }
 }

@@ -3,10 +3,10 @@
     <item
         android:id="@+id/createqueue"
         android:title="Queue"
-        android:icon="@drawable/ic_queue_play24dp" />
+        android:actionLayout="@layout/menuitem_queue_button"/>
 
     <item
         android:id="@+id/createplaylist"
         android:title="Playlist"
-        android:icon="@drawable/ic_library_music24dp" />
+        android:actionLayout="@layout/menuitem_playlist_button"/>
 </menu>

@@ -18,6 +18,19 @@
         <item name="android:windowIsTranslucent">true</item>
     </style>
 
+    <!-- ActionBar (from Toolbar) and ActionMode theme -->
+    <style name="ToolbarAppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="actionModeStyle">@style/ToolbarActionMode</item>
+        <item name="actionModeCloseDrawable">@drawable/ic_close24dp</item>
+        <item name="windowActionModeOverlay">true</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="ToolbarActionMode" parent="@style/Widget.AppCompat.ActionMode">
+        <item name="android:paddingRight">10dp</item>
+    </style>
+
     <style name="AlertDialogNight" parent="Theme.AppCompat.Dialog.Alert">
         <!-- Used for the buttons -->
         <item name="colorAccent">@color/itemnightselectorblue</item>
@@ -73,7 +86,7 @@
         <item name="android:textColorHighlight">@android:color/holo_blue_light</item>
     </style>
 
-    <style name="ThemeOverlay.AppCompat.MusicNight" parent="">
+    <style name="ThemeOverlay.AppCompat.MusicNight" parent="ToolbarAppTheme">
         <item name="colorPrimary">@color/nightPrimaryDark</item>
         <item name="colorSecondary">@color/nightSecondaryDark</item>
         <item name="itemTextColor">@color/itemnightselectorblue</item>
@@ -83,7 +96,7 @@
         <item name="colorAccent">@color/itemnightselectorblue</item>
     </style>
 
-    <style name="ThemeOverlay.AppCompat.MusicLight" parent="">
+    <style name="ThemeOverlay.AppCompat.MusicLight" parent="ToolbarAppTheme">
         <item name="colorPrimary">@color/lightPrimaryWhite</item>
         <item name="colorSecondary">@color/lightSecondaryWhite</item>
         <item name="itemTextColor">@color/itemlightselectorblue</item>
@@ -93,7 +106,7 @@
         <item name="colorAccent">@color/itemlightselectorblue</item>
     </style>
 
-    <style name="ThemeOverlay.AppCompat.MusicRam" parent="">
+    <style name="ThemeOverlay.AppCompat.MusicRam" parent="ToolbarAppTheme">
         <item name="colorPrimary">@color/ramPink100</item>
         <item name="colorSecondary">@color/ramPink200</item>
         <item name="itemTextColor">@color/itemramselector</item>
@@ -103,7 +116,7 @@
         <item name="colorAccent">@color/itemramselector</item>
     </style>
 
-    <style name="ThemeOverlay.AppCompat.MusicRem" parent="">
+    <style name="ThemeOverlay.AppCompat.MusicRem" parent="ToolbarAppTheme">
         <item name="colorPrimary">@color/remBlue100</item>
         <item name="colorSecondary">@color/remBlue200</item>
         <item name="itemTextColor">@color/itemremselector</item>

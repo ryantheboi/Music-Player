@@ -1,7 +1,10 @@
 package com.example.musicplayer;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -40,7 +43,9 @@ import android.os.Messenger;
 import android.provider.MediaStore;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.text.Editable;
+import android.text.SpannableString;
 import android.text.TextWatcher;
+import android.text.style.ForegroundColorSpan;
 import android.view.ActionMode;
 import android.view.MotionEvent;
 import android.view.View;
@@ -72,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSION_REQUEST = 1;
     private boolean isThemeSelecting;
     private ImageButton theme_btn;
-    private RelativeLayout musicListRelativeLayout;
+    private CoordinatorLayout musicListRelativeLayout;
     private ArrayList<Song> fullSongList;
     private static ArrayList<Playlist> playlistList;
     private static Playlist current_playlist;
@@ -84,6 +89,13 @@ public class MainActivity extends AppCompatActivity {
     private Intent musicServiceIntent;
     public static boolean isActionMode = false;
     public static ActionMode actionMode = null;
+    private EditText searchFilter_editText;
+    private ImageView searchFilter_btn;
+    private RippleDrawable searchFilter_btn_ripple;
+    private TabLayout tabLayout;
+    private ViewPager viewPager;
+    public Toolbar toolbar;
+    private ActionBar actionBar;
 
     // sliding up panel
     private boolean largeAlbumArt;
@@ -137,11 +149,6 @@ public class MainActivity extends AppCompatActivity {
     private RippleDrawable slidingUp_next_btn_ripple;
     private MessageHandler messageHandler;
     private MessageHandler seekbarHandler;
-    private EditText searchFilter_editText;
-    private ImageView searchFilter_btn;
-    private RippleDrawable searchFilter_btn_ripple;
-    private TabLayout tabLayout;
-    private ViewPager viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -179,6 +186,7 @@ public class MainActivity extends AppCompatActivity {
         info_btn = findViewById(R.id.btn_info);
         tabLayout = findViewById(R.id.tabLayout);
         viewPager = findViewById(R.id.viewPager);
+        toolbar = findViewById(R.id.toolbar);
     }
 
     @Override
@@ -231,6 +239,8 @@ public class MainActivity extends AppCompatActivity {
             initNotification();
 
             initViewPager();
+
+            initActionBar();
 
             // should be initialized last to set the touch listener for all views
             initFilterSearch();
@@ -379,6 +389,15 @@ public class MainActivity extends AppCompatActivity {
 
             songCursor.close();
         }
+    }
+
+    /**
+     * Sets the action bar as the toolbar, which can be overlaid by an actionmode
+     */
+    public void initActionBar(){
+        // using toolbar as ActionBar
+        setSupportActionBar(toolbar);
+        actionBar = getSupportActionBar();
     }
 
     @TargetApi(21)
@@ -846,6 +865,7 @@ public class MainActivity extends AppCompatActivity {
         updateSearchFilterColors();
         updateMainColors();
         updateSlidingMenuColors();
+        updateActionBarColors();
     }
 
     /**
@@ -941,6 +961,18 @@ public class MainActivity extends AppCompatActivity {
 
         // update the ripple color
         searchFilter_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
+    }
+
+    @TargetApi(21)
+    private void updateActionBarColors(){
+        // set color of the toolbar, which is the support action bar
+        toolbar.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+
+        // set title string with color
+        String titleString = getString(R.string.app_name);
+        SpannableString titleSpannableString =  new SpannableString(titleString);
+        titleSpannableString.setSpan(new ForegroundColorSpan(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR)), 0, titleString.length(), 0);
+        actionBar.setTitle(titleSpannableString);
     }
 
     /**

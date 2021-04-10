@@ -7,13 +7,18 @@ import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -34,6 +39,7 @@ public class PlaylistActivity extends Activity {
     private static ArrayList<Song> userSelection = new ArrayList<>();
 
     @Override
+    @TargetApi(21)
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -77,6 +83,9 @@ public class PlaylistActivity extends Activity {
         songListAdapter = new SongListAdapter(this, R.layout.adapter_view_layout, playlist.getSongList(), this);
         listView.setAdapter(songListAdapter);
 
+        // init decorView (Action Mode toolbar)
+        final ViewGroup decorView = (ViewGroup) this.getWindow().getDecorView();
+
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
@@ -109,22 +118,69 @@ public class PlaylistActivity extends Activity {
                 }
 
                 if (userSelection.size() == 1) {
-                    mode.setTitle(userSelection.get(0).getTitle());
+                    String titleString = userSelection.get(0).getTitle();
+                    SpannableString titleSpannableString =  new SpannableString(titleString);
+                    titleSpannableString.setSpan(new ForegroundColorSpan(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR)), 0, titleString.length(), 0);
+                    mode.setTitle(titleSpannableString);
                 } else {
-                    mode.setTitle(userSelection.size() + " songs selected");
+                    String titleString = userSelection.size() + " songs selected";
+                    SpannableString titleSpannableString =  new SpannableString(titleString);
+                    titleSpannableString.setSpan(new ForegroundColorSpan(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR)), 0, titleString.length(), 0);
+                    mode.setTitle(titleSpannableString);
                 }
             }
 
             @Override
-            public boolean onCreateActionMode(android.view.ActionMode mode, Menu menu) {
+            @TargetApi(21)
+            public boolean onCreateActionMode(final android.view.ActionMode mode, final Menu menu) {
                 mode.getMenuInflater().inflate(R.menu.songs_menu, menu);
+
+                // update the tint and ripple color of every item in the menu
+                for (int i = 0; i < menu.size(); i++) {
+                    final int item_id = i;
+                    FrameLayout menuitem_layout = (FrameLayout) menu.getItem(i).getActionView();
+                    ImageView menuitem_iv = menuitem_layout.findViewById(R.id.icon);
+
+                    Drawable unwrappedDrawable = menuitem_iv.getDrawable();
+                    Drawable wrappedDrawable = DrawableCompat.wrap(unwrappedDrawable);
+                    DrawableCompat.setTint(wrappedDrawable, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
+
+                    RippleDrawable rippleDrawable = (RippleDrawable) menuitem_iv.getBackground();
+                    rippleDrawable.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
+
+                    // set this click listener to manually call the action mode's click listener
+                    menuitem_iv.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            onActionItemClicked(mode, menu.getItem(item_id));
+                        }
+                    });
+                }
+
                 MainActivity.isActionMode = true;
                 MainActivity.actionMode = mode;
                 return true;
             }
 
             @Override
+            @TargetApi(21)
             public boolean onPrepareActionMode(android.view.ActionMode mode, Menu menu) {
+                // update the colors of the close button and background bar on the ui thread
+                decorView.post(new Runnable() {
+                    @Override
+                    public void run()
+                    {
+                        int buttonId = R.id.action_mode_close_button;
+                        androidx.appcompat.widget.AppCompatImageView v = decorView.findViewById(buttonId);
+
+                        if (v != null)
+                        {
+                            ((View)v.getParent()).setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+                            ((RippleDrawable)v.getBackground()).setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
+                            v.setColorFilter(getResources().getColor(ThemeColors.getDrawableVectorColorId()));
+                        }
+                    }
+                });
                 return false;
             }
 

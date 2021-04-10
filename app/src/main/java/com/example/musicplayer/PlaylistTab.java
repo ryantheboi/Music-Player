@@ -1,5 +1,6 @@
 package com.example.musicplayer;
 
+import android.annotation.TargetApi;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -57,6 +58,7 @@ public class PlaylistTab extends Fragment {
     }
 
     @Override
+    @TargetApi(21)
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -64,6 +66,8 @@ public class PlaylistTab extends Fragment {
         listView = fragmentView.findViewById(R.id.fragment_listview_playlists);
         listView.setAdapter(playlistAdapter);
 
+        // support scrolling with the coordinator layout
+        listView.setNestedScrollingEnabled(true);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {

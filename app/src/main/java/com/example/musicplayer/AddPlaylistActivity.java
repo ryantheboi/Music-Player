@@ -24,6 +24,8 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.core.graphics.drawable.DrawableCompat;
 
 public class AddPlaylistActivity extends Activity {
@@ -134,7 +136,7 @@ public class AddPlaylistActivity extends Activity {
                         addPlaylist.setName(addPlaylist_input.getText().toString());
                         addPlaylist_input.getText().clear();
                         // TODO add playlist to main activity's list of playlists
-                        System.out.println("new playlist not added");
+                        Toast.makeText(getApplicationContext(), "adding playlist not implemented yet", Toast.LENGTH_SHORT).show();
                     }
                 });
 

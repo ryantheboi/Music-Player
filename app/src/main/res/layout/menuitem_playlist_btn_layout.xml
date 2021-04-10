@@ -10,7 +10,7 @@
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:layout_gravity="center"
-        android:src="@drawable/ic_queue_play24dp"
-        android:background="@drawable/button_ripple"/>
+        android:src="@drawable/ic_playlist_add24dp"
+        android:background="?attr/selectableItemBackgroundBorderless"/>
 
 </FrameLayout>

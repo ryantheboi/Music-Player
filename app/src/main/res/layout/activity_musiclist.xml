@@ -27,17 +27,42 @@
                     android:id="@+id/toolbar"
                     android:layout_width="match_parent"
                     android:layout_height="?attr/actionBarSize"
-                    android:background="?attr/colorPrimary"
-                    app:layout_scrollFlags="scroll|enterAlways"/>
+                    app:layout_scrollFlags="scroll|enterAlways"
+                    android:paddingRight="10dp"
+                    android:paddingEnd="10dp">
+
+                    <TextView
+                        android:id="@+id/toolbar_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="20dp"
+                        android:layout_marginStart="20dp"
+                        android:singleLine="true"
+                        android:text="@string/app_name"
+                        android:textStyle="bold"
+                        android:textColor="?attr/titleTextColor"
+                        android:textSize="20sp" />
+                    <EditText
+                        android:id="@+id/toolbar_searchFilter"
+                        android:theme="@style/EditTextHint"
+                        android:layout_width="150dp"
+                        android:layout_height="50dp"
+                        android:layout_marginTop="7dp"
+                        android:layout_marginLeft="10dp"
+                        android:layout_marginStart="10dp"
+                        android:hint="@string/Search"
+                        android:textColor="?attr/itemTextColor"
+                        android:visibility="invisible"/>
+                </androidx.appcompat.widget.Toolbar>
 
                 <com.google.android.material.tabs.TabLayout
                     android:id="@+id/tabLayout"
                     android:layout_width="match_parent"
                     android:layout_height="30dp"
                     android:minHeight="30dp"
-                    android:layout_below="@id/btn_nightmode"
                     android:background="?attr/colorPrimary"
                     app:tabTextColor="?attr/tabTextColor"
+                    app:tabIndicatorColor="?attr/titleTextColor"
                     app:tabGravity="fill"/>
 
             </com.google.android.material.appbar.AppBarLayout>
@@ -48,35 +73,6 @@
                 android:layout_height="match_parent"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior">
             </androidx.viewpager.widget.ViewPager>
-
-            <ImageButton
-                android:id="@+id/btn_nightmode"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_marginStart="320dp"
-                android:layout_marginLeft="320dp"
-                android:background="#00000000"
-                android:src="@drawable/light"/>
-            <ImageButton
-                android:id="@+id/btn_searchfilter"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_marginLeft="5dp"
-                android:layout_marginStart="5dp"
-                android:layout_marginTop="2dp"
-                android:background="@drawable/button_ripple"
-                android:src="@drawable/ic_search24dp"/>
-            <EditText
-                android:id="@+id/searchFilter"
-                android:theme="@style/EditTextHint"
-                android:layout_width="250dp"
-                android:layout_height="40dp"
-                android:layout_toRightOf="@+id/btn_searchfilter"
-                android:layout_toEndOf="@+id/btn_searchfilter"
-                android:layout_marginTop="7dp"
-                android:hint="@string/Search"
-                android:textColor="?attr/itemTextColor"
-                android:visibility="invisible"/>
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
         <RelativeLayout

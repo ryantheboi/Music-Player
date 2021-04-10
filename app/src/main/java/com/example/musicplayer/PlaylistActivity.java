@@ -187,7 +187,7 @@ public class PlaylistActivity extends Activity {
             @Override
             public boolean onActionItemClicked(android.view.ActionMode mode, MenuItem item) {
                 switch (item.getItemId()) {
-                    case R.id.createqueue:
+                    case R.id.menuitem_createqueue:
                         // construct new current playlist, given the user selections
                         MainActivity.setCurrent_playlist(new Playlist("USER_SELECTION", userSelection));
                         MainActivity.setCurrent_song(userSelection.get(0));
@@ -198,7 +198,7 @@ public class PlaylistActivity extends Activity {
 
                         mode.finish(); // Action picked, so close the CAB
                         return true;
-                    case R.id.createplaylist:
+                    case R.id.menuitem_createplaylist:
                         // construct named playlist
                         Playlist playlist = new Playlist(getString(R.string.Favorites), userSelection);
                         addPlaylistIntent.putExtra("addPlaylist", playlist);

@@ -43,10 +43,9 @@ import android.os.Messenger;
 import android.provider.MediaStore;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.text.Editable;
-import android.text.SpannableString;
 import android.text.TextWatcher;
-import android.text.style.ForegroundColorSpan;
 import android.view.ActionMode;
+import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -55,6 +54,7 @@ import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -76,7 +76,8 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSION_REQUEST = 1;
     private boolean isThemeSelecting;
-    private ImageButton theme_btn;
+    private ImageView theme_btn;
+    private RippleDrawable theme_btn_ripple;
     private CoordinatorLayout musicListRelativeLayout;
     private ArrayList<Song> fullSongList;
     private static ArrayList<Playlist> playlistList;
@@ -94,7 +95,8 @@ public class MainActivity extends AppCompatActivity {
     private RippleDrawable searchFilter_btn_ripple;
     private TabLayout tabLayout;
     private ViewPager viewPager;
-    public Toolbar toolbar;
+    private Toolbar toolbar;
+    private TextView toolbar_title;
     private ActionBar actionBar;
 
     // sliding up panel
@@ -161,9 +163,7 @@ public class MainActivity extends AppCompatActivity {
         // initialize all views
         setContentView(R.layout.activity_musiclist);
         musicListRelativeLayout = findViewById(R.id.activity_musiclist);
-        theme_btn = findViewById(R.id.btn_nightmode);
-        searchFilter_editText = findViewById(R.id.searchFilter);
-        searchFilter_btn = findViewById(R.id.btn_searchfilter);
+        searchFilter_editText = findViewById(R.id.toolbar_searchFilter);
         slidingUpMenuLayout = findViewById(R.id.sliding_menu);
         slidingUp_albumArt = findViewById(R.id.sliding_albumart);
         slidingUp_songName = findViewById(R.id.sliding_title);
@@ -187,6 +187,7 @@ public class MainActivity extends AppCompatActivity {
         tabLayout = findViewById(R.id.tabLayout);
         viewPager = findViewById(R.id.viewPager);
         toolbar = findViewById(R.id.toolbar);
+        toolbar_title = findViewById(R.id.toolbar_title);
     }
 
     @Override
@@ -220,8 +221,6 @@ public class MainActivity extends AppCompatActivity {
 
             // init listview functionality and playlist
             initMusicList(); // starts music service for the first time
-
-            initThemeButton();
 
             // init main sliding up panel
             initMainAnimation();
@@ -395,17 +394,27 @@ public class MainActivity extends AppCompatActivity {
      * Sets the action bar as the toolbar, which can be overlaid by an actionmode
      */
     public void initActionBar(){
-        // using toolbar as ActionBar
+        // using toolbar as ActionBar without title
         setSupportActionBar(toolbar);
         actionBar = getSupportActionBar();
+        actionBar.setDisplayShowTitleEnabled(false);
     }
 
+    @Override
     @TargetApi(21)
-    public void initFilterSearch() {
-        // init searchfilter button ripple
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu for the actionbar, if it is present.
+        getMenuInflater().inflate(R.menu.toolbar_menu, menu);
+        FrameLayout menuitem_searchfilter_layout = (FrameLayout) menu.findItem(R.id.menuitem_searchfilter).getActionView();
+        searchFilter_btn = menuitem_searchfilter_layout.findViewById(R.id.icon);
         searchFilter_btn_ripple = (RippleDrawable) searchFilter_btn.getBackground();
 
-        // init searchfilter button functionality
+        FrameLayout menuitem_theme_layout = (FrameLayout) menu.findItem(R.id.menuitem_theme).getActionView();
+        theme_btn = menuitem_theme_layout.findViewById(R.id.icon);
+        theme_btn_ripple = (RippleDrawable) theme_btn.getBackground();
+        initThemeButton();
+
+        // set this click listener to manually call the action mode's click listener
         searchFilter_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -430,7 +439,11 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        return true;
+    }
 
+    @TargetApi(23)
+    public void initFilterSearch() {
         // init searchfilter text usage functionality
         searchFilter_editText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -965,14 +978,12 @@ public class MainActivity extends AppCompatActivity {
 
     @TargetApi(21)
     private void updateActionBarColors(){
-        // set color of the toolbar, which is the support action bar
+        // set color of the toolbar, which is the support action bar, and its title
         toolbar.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        toolbar_title.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
 
-        // set title string with color
-        String titleString = getString(R.string.app_name);
-        SpannableString titleSpannableString =  new SpannableString(titleString);
-        titleSpannableString.setSpan(new ForegroundColorSpan(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR)), 0, titleString.length(), 0);
-        actionBar.setTitle(titleSpannableString);
+        // update ripple color of theme button
+        theme_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
     }
 
     /**

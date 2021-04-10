@@ -40,6 +40,8 @@
         <item name="android:textColorSecondary">@color/colorTextGrey</item>
         <!-- Used for the background -->
         <item name="android:background">@color/nightPrimaryDark</item>
+        <!-- Used for dialog button background ripple -->
+        <item name="android:colorControlHighlight">@color/colorTextGrey</item>
     </style>
 
     <style name="AlertDialogLight" parent="Theme.AppCompat.Dialog.Alert">
@@ -51,6 +53,8 @@
         <item name="android:textColorSecondary">@color/colorTextGrey</item>
         <!-- Used for the background -->
         <item name="android:background">@color/lightPrimaryWhite</item>
+        <!-- Used for dialog button background ripple -->
+        <item name="android:colorControlHighlight">@color/colorTextGrey</item>
     </style>
 
     <style name="AlertDialogRam" parent="Theme.AppCompat.Dialog.Alert">
@@ -62,6 +66,8 @@
         <item name="android:textColorSecondary">@color/ramPink600</item>
         <!-- Used for the background -->
         <item name="android:background">@color/ramPink100</item>
+        <!-- Used for dialog button background ripple -->
+        <item name="android:colorControlHighlight">@color/ramPink400</item>
     </style>
 
     <style name="AlertDialogRem" parent="Theme.AppCompat.Dialog.Alert">
@@ -73,6 +79,8 @@
         <item name="android:textColorSecondary">@color/remBlue600</item>
         <!-- Used for the background -->
         <item name="android:background">@color/remBlue100</item>
+        <!-- Used for dialog button background ripple -->
+        <item name="android:colorControlHighlight">@color/remBlue400</item>
     </style>
 
     <style name="EditTextHint" parent="TextAppearance.AppCompat">

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/menuitem_searchfilter"
+        android:title="@string/SearchFilter"
+        app:showAsAction="ifRoom"
+        app:actionLayout="@layout/menuitem_searchfilter_btn_layout"/>
+
+    <item
+        android:id="@+id/menuitem_theme"
+        android:title="@string/ChooseTheme"
+        app:showAsAction="ifRoom"
+        app:actionLayout="@layout/menuitem_theme_btn_layout"/>
+</menu>

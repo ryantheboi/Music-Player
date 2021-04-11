@@ -76,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSION_REQUEST = 1;
     private boolean isThemeSelecting;
+    private boolean isInfoDisplaying;
     private ImageView theme_btn;
     private RippleDrawable theme_btn_ripple;
     private CoordinatorLayout musicListRelativeLayout;
@@ -104,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView albumArt;
     private Button albumArt_btn;
     private ImageButton info_btn;
+    private RippleDrawable info_btn_ripple;
     private ImageButton pauseplay_btn;
     private ImageButton next_btn;
     private ImageButton prev_btn;
@@ -247,6 +249,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         System.out.println("resumed");
         mainAnimation.start();
+        isInfoDisplaying = false;
         super.onResume();
     }
 
@@ -750,12 +753,16 @@ public class MainActivity extends AppCompatActivity {
      * Upon clicking the button, the current song will be sent in the intent
      */
     public void initInfoButton() {
+        info_btn_ripple = (RippleDrawable) info_btn.getBackground();
         infoIntent = new Intent(this, MusicDetailsActivity.class);
         info_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                infoIntent.putExtra("currentSong", current_song);
-                startActivity(infoIntent);
+                if (!isInfoDisplaying) {
+                    isInfoDisplaying = true;
+                    infoIntent.putExtra("currentSong", current_song);
+                    startActivity(infoIntent);
+                }
             }
         });
 
@@ -911,17 +918,21 @@ public class MainActivity extends AppCompatActivity {
         gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
 
         // update drawable vector colors
+        Drawable unwrappedDrawableInfo = info_btn.getDrawable();
         Drawable unwrappedDrawablePauseplay = pauseplay_btn.getDrawable();
         Drawable unwrappedDrawableNext = next_btn.getDrawable();
         Drawable unwrappedDrawablePrev = prev_btn.getDrawable();
+        Drawable wrappedDrawableInfo = DrawableCompat.wrap(unwrappedDrawableInfo);
         Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
         Drawable wrappedDrawableNext = DrawableCompat.wrap(unwrappedDrawableNext);
         Drawable wrappedDrawablePrev = DrawableCompat.wrap(unwrappedDrawablePrev);
+        DrawableCompat.setTint(wrappedDrawableInfo, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
         DrawableCompat.setTint(wrappedDrawablePauseplay, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
         DrawableCompat.setTint(wrappedDrawableNext, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
         DrawableCompat.setTint(wrappedDrawablePrev, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
 
         // update ripple colors
+        info_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
         pauseplay_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
         next_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
         prev_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));

@@ -240,9 +240,6 @@ public class MainActivity extends AppCompatActivity {
             initViewPager();
 
             initActionBar();
-
-            // should be initialized last to set the touch listener for all views
-            initFilterSearch();
         }
     }
 
@@ -251,6 +248,26 @@ public class MainActivity extends AppCompatActivity {
         System.out.println("resumed");
         mainAnimation.start();
         super.onResume();
+    }
+
+    @Override
+    @TargetApi(21)
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // inflate the menu for the actionbar, if it is present.
+        getMenuInflater().inflate(R.menu.toolbar_menu, menu);
+
+        // theme button menu item
+        FrameLayout menuitem_theme_layout = (FrameLayout) menu.findItem(R.id.menuitem_theme).getActionView();
+        theme_btn = menuitem_theme_layout.findViewById(R.id.icon);
+        theme_btn_ripple = (RippleDrawable) theme_btn.getBackground();
+        initThemeButton();
+
+        // search filter button menu item and its corresponding edittext
+        FrameLayout menuitem_searchfilter_layout = (FrameLayout) menu.findItem(R.id.menuitem_searchfilter).getActionView();
+        searchFilter_btn = menuitem_searchfilter_layout.findViewById(R.id.icon);
+        searchFilter_btn_ripple = (RippleDrawable) searchFilter_btn.getBackground();
+        initFilterSearch();
+        return true;
     }
 
     @Override
@@ -400,32 +417,22 @@ public class MainActivity extends AppCompatActivity {
         actionBar.setDisplayShowTitleEnabled(false);
     }
 
-    @Override
-    @TargetApi(21)
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu for the actionbar, if it is present.
-        getMenuInflater().inflate(R.menu.toolbar_menu, menu);
-        FrameLayout menuitem_searchfilter_layout = (FrameLayout) menu.findItem(R.id.menuitem_searchfilter).getActionView();
-        searchFilter_btn = menuitem_searchfilter_layout.findViewById(R.id.icon);
-        searchFilter_btn_ripple = (RippleDrawable) searchFilter_btn.getBackground();
-
-        FrameLayout menuitem_theme_layout = (FrameLayout) menu.findItem(R.id.menuitem_theme).getActionView();
-        theme_btn = menuitem_theme_layout.findViewById(R.id.icon);
-        theme_btn_ripple = (RippleDrawable) theme_btn.getBackground();
-        initThemeButton();
-
+    @TargetApi(23)
+    @SuppressLint("ClickableViewAccessibility")
+    public void initFilterSearch() {
         // set this click listener to manually call the action mode's click listener
         searchFilter_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (searchFilter_editText.hasFocus()){
-                    // hide keyboard and clear focus from searchfilter
+                    // hide keyboard and clear focus and text from searchfilter
                     InputMethodManager inputMethodManager =
                             (InputMethodManager) MainActivity.this.getSystemService(
                                     Activity.INPUT_METHOD_SERVICE);
                     inputMethodManager.hideSoftInputFromWindow(
                             MainActivity.this.getCurrentFocus().getWindowToken(), 0);
                     searchFilter_editText.clearFocus();
+                    searchFilter_editText.getText().clear();
                     searchFilter_editText.setVisibility(View.INVISIBLE);
                 }
                 else {
@@ -439,11 +446,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-        return true;
-    }
 
-    @TargetApi(23)
-    public void initFilterSearch() {
         // init searchfilter text usage functionality
         searchFilter_editText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -461,8 +464,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // set touch listener for all views to hide the keyboard when touched
+        // init arraylist of all views under the sliding up panel layout
         ArrayList<View> views = getAllChildren(slidingUpPanelLayout);
+
+        // theme btn is a menu item (not a child view of this layout), so manually add to arraylist
+        views.add(theme_btn);
+
+        // set touch listener for all views to hide the keyboard when touched
         for (View innerView : views){
             // excluding the searchfilter and its button
             if (innerView != searchFilter_editText && innerView != searchFilter_btn) {

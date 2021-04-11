@@ -47,7 +47,7 @@
                         android:theme="@style/EditTextHint"
                         android:layout_width="150dp"
                         android:layout_height="50dp"
-                        android:layout_marginTop="7dp"
+                        android:layout_marginTop="4dp"
                         android:layout_marginLeft="10dp"
                         android:layout_marginStart="10dp"
                         android:hint="@string/Search"

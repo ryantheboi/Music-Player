@@ -113,6 +113,8 @@ public class ThemeColors {
                 return R.style.AlertDialogRam;
             case R.style.ThemeOverlay_AppCompat_MusicRem:
                 return R.style.AlertDialogRem;
+            case R.style.ThemeOverlay_AppCompat_MusicSucrose:
+                return R.style.AlertDialogSucrose;
             default:
                 return R.style.AlertDialogLight;
         }
@@ -132,6 +134,8 @@ public class ThemeColors {
                 return R.color.ramPink700;
             case R.style.ThemeOverlay_AppCompat_MusicRem:
                 return R.color.remBlue700;
+            case R.style.ThemeOverlay_AppCompat_MusicSucrose:
+                return R.color.sucroseCaramel200;
             default:
                 return R.color.colorTextGrey;
         }
@@ -147,6 +151,8 @@ public class ThemeColors {
                 return R.color.ramPink400;
             case R.style.ThemeOverlay_AppCompat_MusicRem:
                 return R.color.remBlue400;
+            case R.style.ThemeOverlay_AppCompat_MusicSucrose:
+                return R.color.sucroseCaramel100;
             default:
                 return R.color.colorTextGrey;
         }
@@ -166,6 +172,8 @@ public class ThemeColors {
                 return R.drawable.ram;
             case R.style.ThemeOverlay_AppCompat_MusicRem:
                 return R.drawable.rem;
+            case R.style.ThemeOverlay_AppCompat_MusicSucrose:
+                return R.drawable.sucrose;
             default:
                 return R.drawable.light;
         }

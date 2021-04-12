@@ -19,6 +19,7 @@ public class ChooseThemeActivity extends Activity {
     private ImageButton night_btn;
     private ImageButton ram_btn;
     private ImageButton rem_btn;
+    private ImageButton sucrose_btn;
 
     public static final int THEME_SELECTED = 99;
     public static final int THEME_DONE = 98;
@@ -56,6 +57,7 @@ public class ChooseThemeActivity extends Activity {
         night_btn = findViewById(R.id.btn_night);
         ram_btn = findViewById(R.id.btn_ram);
         rem_btn = findViewById(R.id.btn_rem);
+        sucrose_btn = findViewById(R.id.btn_sucrose);
     }
 
     private void initBackgroundClickListener(){
@@ -97,6 +99,13 @@ public class ChooseThemeActivity extends Activity {
             @Override
             public void onClick(View v) {
                 updateTheme(R.style.ThemeOverlay_AppCompat_MusicRem);
+            }
+        });
+
+        sucrose_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                updateTheme(R.style.ThemeOverlay_AppCompat_MusicSucrose);
             }
         });
     }

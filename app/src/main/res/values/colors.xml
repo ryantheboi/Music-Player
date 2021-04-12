@@ -37,4 +37,14 @@
     <color name="remBlue700">#2669FF</color>
     <color name="remBlue800">#0653FF</color>
 
+    <!-- Sucrose theme -->
+    <color name="sucroseMint100">#F0FECD</color>
+    <color name="sucroseMint200">#EDFFBD</color>
+    <color name="sucroseMint400">#E1FF91</color>
+    <color name="sucroseMint600">#AED34E</color>
+    <color name="sucroseMint800">#9ED30F</color>
+    <color name="sucroseCaramel100">#AB7853</color>
+    <color name="sucroseCaramel200">#A96D42</color>
+    <color name="sucroseCaramel300">#A96635</color>
+
 </resources>

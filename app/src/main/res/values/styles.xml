@@ -83,6 +83,19 @@
         <item name="android:colorControlHighlight">@color/remBlue400</item>
     </style>
 
+    <style name="AlertDialogSucrose" parent="Theme.AppCompat.Dialog.Alert">
+        <!-- Used for the buttons -->
+        <item name="colorAccent">@color/itemsucroseselector</item>
+        <!-- Used for the title and text -->
+        <item name="android:textColorPrimary">@color/sucroseCaramel300</item>
+        <!-- Used for the disabled buttons -->
+        <item name="android:textColorSecondary">@color/sucroseMint600</item>
+        <!-- Used for the background -->
+        <item name="android:background">@color/sucroseMint100</item>
+        <!-- Used for dialog button background ripple -->
+        <item name="android:colorControlHighlight">@color/sucroseMint400</item>
+    </style>
+
     <style name="EditTextHint" parent="TextAppearance.AppCompat">
         <item name="android:textColorHint">@color/colorTextGrey</item>
         <item name="android:textSize">18sp</item>
@@ -132,5 +145,15 @@
         <item name="subtitleTextColor">@color/itemremselectorlite</item>
         <item name="titleTextColor">@color/remBlue600</item>
         <item name="colorAccent">@color/itemremselector</item>
+    </style>
+
+    <style name="ThemeOverlay.AppCompat.MusicSucrose" parent="ToolbarAppTheme">
+        <item name="colorPrimary">@color/sucroseMint100</item>
+        <item name="colorSecondary">@color/sucroseMint200</item>
+        <item name="itemTextColor">@color/itemsucroseselector</item>
+        <item name="tabTextColor">@color/itemsucroseselector</item>
+        <item name="subtitleTextColor">@color/itemsucroseselectorlite</item>
+        <item name="titleTextColor">@color/sucroseCaramel300</item>
+        <item name="colorAccent">@color/itemsucroseselector</item>
     </style>
 </resources>

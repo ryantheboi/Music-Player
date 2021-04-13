@@ -5,4 +5,6 @@
 
     <dimen name="palette_offset_x">6dp</dimen>
     <dimen name="palette_offset_y">40dp</dimen>
+
+    <dimen name="theme_button_ripple">26dp</dimen>
 </resources>

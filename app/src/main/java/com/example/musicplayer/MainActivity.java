@@ -254,7 +254,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    @TargetApi(21)
+    @TargetApi(23)
     public boolean onCreateOptionsMenu(Menu menu) {
         // inflate the menu for the actionbar, if it is present.
         getMenuInflater().inflate(R.menu.toolbar_menu, menu);
@@ -263,6 +263,7 @@ public class MainActivity extends AppCompatActivity {
         FrameLayout menuitem_theme_layout = (FrameLayout) menu.findItem(R.id.menuitem_theme).getActionView();
         theme_btn = menuitem_theme_layout.findViewById(R.id.icon);
         theme_btn_ripple = (RippleDrawable) theme_btn.getBackground();
+        theme_btn_ripple.setRadius((int) getResources().getDimension(R.dimen.theme_button_ripple));
         initThemeButton();
 
         // search filter button menu item and its corresponding edittext

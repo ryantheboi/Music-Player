@@ -93,7 +93,7 @@
         <!-- Used for the background -->
         <item name="android:background">@color/sucroseMint100</item>
         <!-- Used for dialog button background ripple -->
-        <item name="android:colorControlHighlight">@color/sucroseMint400</item>
+        <item name="android:colorControlHighlight">@color/sucroseMint600</item>
     </style>
 
     <style name="EditTextHint" parent="TextAppearance.AppCompat">

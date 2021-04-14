@@ -127,17 +127,17 @@ public class ThemeColors {
     public static int getDrawableVectorColorId(){
         switch(themeResourceId){
             case R.style.ThemeOverlay_AppCompat_MusicLight:
-                return R.color.nightSecondaryDark;
+                return R.color.nightDark100;
             case R.style.ThemeOverlay_AppCompat_MusicNight:
-                return R.color.lightSecondaryWhite;
+                return R.color.lightWhite200;
             case R.style.ThemeOverlay_AppCompat_MusicRam:
                 return R.color.ramPink700;
             case R.style.ThemeOverlay_AppCompat_MusicRem:
                 return R.color.remBlue700;
             case R.style.ThemeOverlay_AppCompat_MusicSucrose:
-                return R.color.sucroseCaramel200;
+                return R.color.sucroseCaramel300;
             default:
-                return R.color.colorTextGrey;
+                return R.color.generalGrey;
         }
     }
 
@@ -154,7 +154,7 @@ public class ThemeColors {
             case R.style.ThemeOverlay_AppCompat_MusicSucrose:
                 return R.color.sucroseCaramel100;
             default:
-                return R.color.colorTextGrey;
+                return R.color.generalGrey;
         }
     }
 

@@ -80,7 +80,7 @@ public class PlaylistActivity extends Activity {
 
         // initialize listview and adapter using the songs in the playlist
         listView = findViewById(R.id.listview_playlist_songs);
-        songListAdapter = new SongListAdapter(this, R.layout.adapter_view_layout, playlist.getSongList(), this);
+        songListAdapter = new SongListAdapter(this, R.layout.adapter_song_layout, playlist.getSongList(), this);
         listView.setAdapter(songListAdapter);
 
         // init decorView (Action Mode toolbar)

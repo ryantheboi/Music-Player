@@ -43,7 +43,6 @@
             android:textSize="16sp"
             android:singleLine="true"
             android:textColor="?attr/itemTextColor"
-            android:textStyle="bold"
             android:gravity="start"
             android:textAlignment="viewStart"
             android:text="@string/TextView1"

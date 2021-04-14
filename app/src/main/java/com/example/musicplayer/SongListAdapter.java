@@ -141,7 +141,7 @@ public class SongListAdapter extends ArrayAdapter {
                         item.album.setText(album);
                         item.albumArt.setImageBitmap(albumArt);
                         if (albumArt == null){
-                            int defaultImage = mContext.getResources().getIdentifier("@drawable/default_image", null, mContext.getPackageName());
+                            int defaultImage = mContext.getResources().getIdentifier("@drawable/default_albumart", null, mContext.getPackageName());
                             item.albumArt.setImageResource(defaultImage);
                         }
                         // put item in arraylist if it doesn't exist already and set the appropriate colors

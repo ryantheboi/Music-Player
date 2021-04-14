@@ -28,14 +28,12 @@
                     android:layout_width="match_parent"
                     android:layout_height="?attr/actionBarSize"
                     app:layout_scrollFlags="scroll|enterAlways"
-                    android:paddingRight="10dp"
                     android:paddingEnd="10dp">
 
                     <TextView
                         android:id="@+id/toolbar_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginLeft="20dp"
                         android:layout_marginStart="20dp"
                         android:singleLine="true"
                         android:text="@string/app_name"
@@ -48,7 +46,6 @@
                         android:layout_width="150dp"
                         android:layout_height="50dp"
                         android:layout_marginTop="4dp"
-                        android:layout_marginLeft="10dp"
                         android:layout_marginStart="10dp"
                         android:hint="@string/Search"
                         android:textColor="?attr/itemTextColor"
@@ -89,12 +86,12 @@
                     android:id="@+id/sliding_albumart"
                     android:layout_width="match_parent"
                     android:layout_height="65dp"
-                    android:src="@drawable/music_default"
-                    app:civ_border_color="@color/pureBlack"
-                    app:civ_border_width="1dp"
+                    android:src="@drawable/default_albumart"
+                    app:civ_border_color="@color/generalBlack"
+                    app:civ_border_width="0.3dp"
                     android:layout_weight="40"
-                    android:layout_marginLeft="4dp"
-                    android:layout_marginStart="4dp"/>
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="2.2dp"/>
 
                 <LinearLayout
                     android:id="@+id/sliding_text"
@@ -142,7 +139,6 @@
                         android:background="@drawable/button_ripple"/>
                     <ImageButton
                         android:id="@+id/sliding_btn_play"
-                        android:layout_toRightOf="@id/sliding_btn_prev"
                         android:layout_toEndOf="@id/sliding_btn_prev"
                         android:layout_width="55dp"
                         android:layout_height="60dp"
@@ -150,7 +146,6 @@
                         android:background="@drawable/button_ripple"/>
                     <ImageButton
                         android:id="@+id/sliding_btn_next"
-                        android:layout_toRightOf="@id/sliding_btn_play"
                         android:layout_toEndOf="@id/sliding_btn_play"
                         android:layout_width="55dp"
                         android:layout_height="60dp"
@@ -177,8 +172,8 @@
                     android:layout_alignParentTop="true"
                     android:layout_centerHorizontal="true"
                     android:layout_marginTop="61dp"
-                    android:src="@drawable/music_default"
-                    app:civ_border_color="@color/pureBlack"
+                    android:src="@drawable/default_albumart"
+                    app:civ_border_color="@color/generalBlack"
                     app:civ_border_width="0.5dp" />
 
                 <Button
@@ -197,8 +192,7 @@
                     android:layout_height="wrap_content"
                     android:layout_below="@+id/circularImageView"
                     android:layout_marginTop="30dp"
-                    android:layout_alignParentStart="true"
-                    android:layout_alignParentLeft="true"/>
+                    android:layout_alignParentStart="true"/>
 
                 <LinearLayout
                     android:id="@+id/song_text"
@@ -217,7 +211,7 @@
                         android:marqueeRepeatLimit ="marquee_forever"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/colorTextPrimaryDark"
+                        android:textColor="@color/generalTextDark"
                         android:layout_marginBottom="10dp"
                         android:text="@string/Song"
                         android:textSize="30sp"
@@ -232,7 +226,7 @@
                         android:marqueeRepeatLimit ="marquee_forever"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/colorTextSecondaryDark"
+                        android:textColor="@color/generalTextDark"
                         android:text="@string/Artist"
                         android:textSize="20sp" />
                 </LinearLayout>
@@ -254,7 +248,6 @@
                     android:layout_below="@+id/seekBar"
                     android:text="@string/InitialTime"
                     android:layout_alignEnd="@+id/seekBar"
-                    android:layout_alignRight="@+id/seekBar"
                     android:textSize="20sp" />
 
                 <ImageButton
@@ -271,10 +264,10 @@
                     android:id="@+id/btn_next"
                     android:layout_width="70dp"
                     android:layout_height="70dp"
-                    android:layout_toRightOf="@+id/btn_play"
+                    android:layout_toEndOf="@+id/btn_play"
                     android:layout_alignParentBottom="true"
                     android:layout_marginBottom="5dp"
-                    android:layout_marginLeft="50dp"
+                    android:layout_marginStart="50dp"
                     android:src="@drawable/ic_next"
                     android:background="@drawable/button_ripple"/>
 
@@ -282,10 +275,10 @@
                     android:id="@+id/btn_prev"
                     android:layout_width="70dp"
                     android:layout_height="70dp"
-                    android:layout_toLeftOf="@+id/btn_play"
+                    android:layout_toStartOf="@+id/btn_play"
                     android:layout_alignParentBottom="true"
                     android:layout_marginBottom="5dp"
-                    android:layout_marginRight="50dp"
+                    android:layout_marginEnd="50dp"
                     android:src="@drawable/ic_prev"
                     android:background="@drawable/button_ripple"/>
 

@@ -315,7 +315,7 @@ public class MainActivity extends AppCompatActivity {
         musicServiceIntent.putExtra("musicListInit", mainActivityMessenger);
         startService(musicServiceIntent);
 
-        songListadapter = new SongListAdapter(this, R.layout.adapter_view_layout, fullSongList, this);
+        songListadapter = new SongListAdapter(this, R.layout.adapter_song_layout, fullSongList, this);
         playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this);
     }
 
@@ -776,7 +776,7 @@ public class MainActivity extends AppCompatActivity {
         mediaSession = new MediaSessionCompat(this, "media");
         notificationManager = NotificationManagerCompat.from(this);
 
-        Bitmap largeImage = BitmapFactory.decodeResource(getResources(), R.drawable.kaminomanimani);
+        Bitmap largeImage = BitmapFactory.decodeResource(getResources(), R.drawable.default_albumart);
         Intent activityIntent = new Intent(this, MainActivity.class);
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, activityIntent, 0);
 
@@ -1245,7 +1245,7 @@ public class MainActivity extends AppCompatActivity {
                             in.close();
                         }
                     }catch(Exception e){
-                        current_albumImage = BitmapFactory.decodeResource(getResources(), R.drawable.default_image);
+                        current_albumImage = BitmapFactory.decodeResource(getResources(), R.drawable.default_albumart);
                         e.printStackTrace();
                     }
 

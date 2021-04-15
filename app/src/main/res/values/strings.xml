@@ -15,6 +15,10 @@
     <string name="AddTo">Add to</string>
     <string name="NewPlaylist">New Playlist</string>
     <string name="PlaylistName">Playlist Name</string>
+    <string name="CreateQueue">Create Queue</string>
+    <string name="CreatePlaylist">Create Playlist</string>
+    <string name="SearchFilter">Search Filter</string>
+    <string name="ChooseTheme">Choose Theme</string>
 
 
 </resources>

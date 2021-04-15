@@ -145,20 +145,15 @@ public class PlaylistAdapter extends ArrayAdapter {
                         item.size.setText(size);
                         item.albumArt.setImageBitmap(albumArt);
                         if (albumArt == null){
-                            int defaultImage = mContext.getResources().getIdentifier("@drawable/default_image", null, mContext.getPackageName());
+                            int defaultImage = mContext.getResources().getIdentifier("@drawable/default_albumart", null, mContext.getPackageName());
                             item.albumArt.setImageResource(defaultImage);
                         }
                         // put item in arraylist if it doesn't exist already and set the appropriate colors
                         if (!items.contains(item)) {
                             items.add(item);
-                            if (MainActivity.nightMode){
-                                setItemsFrameColor(mContext.getResources().getColor(R.color.nightPrimaryDark));
-                                setItemsTitleTextColor(mContext.getResources().getColorStateList(R.color.itemnightselectorblue));
-                            }
-                            else{
-                                setItemsFrameColor(mContext.getResources().getColor(R.color.lightPrimaryWhite));
-                                setItemsTitleTextColor(mContext.getResources().getColorStateList(R.color.itemlightselectorblue));
-                            }
+                            setItemsFrameColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+                            setItemsTitleTextColor(mContext.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
+                            setItemsSizeTextColor(mContext.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
                         }
                     }
                 });
@@ -189,7 +184,7 @@ public class PlaylistAdapter extends ArrayAdapter {
 
     /**
      * sets the color of the title of every item in the list view
-     * @param code the color resource code to set the title
+     * @param code the color resource code to set the title textview
      */
     public void setItemsTitleTextColor(ColorStateList code){
         for (ViewHolder item : items){
@@ -198,8 +193,18 @@ public class PlaylistAdapter extends ArrayAdapter {
     }
 
     /**
-     * sets the color of the title of every item in the list view
-     * @param code the color resource code to set the title
+     * sets the color of the size of every item in the list view
+     * @param code the color resource code to set the size textview
+     */
+    public void setItemsSizeTextColor(ColorStateList code){
+        for (ViewHolder item : items){
+            item.size.setTextColor(code);
+        }
+    }
+
+    /**
+     * sets the color of the albumart frame of every item in the list view
+     * @param code the color resource code to set the frame
      */
     public void setItemsFrameColor(int code){
         for (ViewHolder item : items){

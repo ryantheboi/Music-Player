@@ -4,17 +4,49 @@
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
 
-    <color name="pureBlack">#000000</color>
-    <color name="nightPrimaryDark">#232123</color>
-    <color name="nightSecondaryDark">#2D2D2D</color>
-    <color name="nightPrimaryGrey">#8a8a8a</color>
-    <color name="colorTextGrey">#737373</color>
-    <color name="colorTextBlue">#008BFF</color>
-    <color name="colorTextPrimaryDark">#030303</color>
-    <color name="colorTextSecondaryDark">#0F0F0F</color>
-    <color name="colorTextPrimaryLight">#F2EDED</color>
-    <color name="colorTextSecondaryLight">#F1ECEC</color>
-    <color name="lightPrimaryWhite">#F4F4F4</color>
-    <color name="lightSecondaryWhite">#ECECEC</color>
+    <!-- General colors -->
+    <color name="generalBlack">#000000</color>
+    <color name="generalGrey">#737373</color>
+    <color name="generalBlue">#008BFF</color>
+    <color name="generalTextLight">#F2EDED</color>
+    <color name="generalTextDark">#030303</color>
+
+    <!-- Light theme -->
+    <color name="lightWhite100">#F4F4F4</color>
+    <color name="lightWhite200">#ECECEC</color>
+
+    <!-- Night theme -->
+    <color name="nightDark200">#232123</color>
+    <color name="nightDark100">#2D2D2D</color>
+
+    <!-- Ram theme -->
+    <color name="ramPink100">#FFC2D4</color>
+    <color name="ramPink200">#FFB3C9</color>
+    <color name="ramPink300">#FF85A9</color>
+    <color name="ramPink400">#FF769F</color>
+    <color name="ramPink500">#FF4880</color>
+    <color name="ramPink600">#FF306F</color>
+    <color name="ramPink700">#FF165D</color>
+    <color name="ramPink800">#FF004D</color>
+
+    <!-- Rem theme -->
+    <color name="remBlue100">#C2D5FF</color>
+    <color name="remBlue200">#B4CBFF</color>
+    <color name="remBlue300">#94B5FF</color>
+    <color name="remBlue400">#7AA3FF</color>
+    <color name="remBlue500">#6A98FF</color>
+    <color name="remBlue600">#437DFF</color>
+    <color name="remBlue700">#2669FF</color>
+    <color name="remBlue800">#0653FF</color>
+
+    <!-- Sucrose theme -->
+    <color name="sucroseMint100">#F0FECD</color>
+    <color name="sucroseMint200">#EDFFBD</color>
+    <color name="sucroseMint400">#CFEC81</color>
+    <color name="sucroseMint600">#AED34E</color>
+    <color name="sucroseMint800">#9ED30F</color>
+    <color name="sucroseCaramel100">#AC7F5F</color>
+    <color name="sucroseCaramel300">#AD581A</color>
+    <color name="sucroseCaramel500">#AD520F</color>
 
 </resources>

@@ -1,5 +1,6 @@
 package com.example.musicplayer;
 
+import android.annotation.TargetApi;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -57,6 +58,7 @@ public class PlaylistTab extends Fragment {
     }
 
     @Override
+    @TargetApi(21)
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -64,6 +66,8 @@ public class PlaylistTab extends Fragment {
         listView = fragmentView.findViewById(R.id.fragment_listview_playlists);
         listView.setAdapter(playlistAdapter);
 
+        // support scrolling with the coordinator layout
+        listView.setNestedScrollingEnabled(true);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
@@ -80,15 +84,9 @@ public class PlaylistTab extends Fragment {
     }
 
     public static void toggleTabColor(){
-        if (MainActivity.nightMode) {
-            listView.setBackgroundColor(mainActivity.getResources().getColor(R.color.nightPrimaryDark));
-            playlistAdapter.setItemsFrameColor(mainActivity.getResources().getColor(R.color.nightPrimaryDark));
-            playlistAdapter.setItemsTitleTextColor(mainActivity.getResources().getColorStateList(R.color.itemnightselectorblue));
-        }
-        else{
-            listView.setBackgroundColor(mainActivity.getResources().getColor(R.color.lightPrimaryWhite));
-            playlistAdapter.setItemsFrameColor(mainActivity.getResources().getColor(R.color.lightPrimaryWhite));
-            playlistAdapter.setItemsTitleTextColor(mainActivity.getResources().getColorStateList(R.color.itemlightselectorblue));
-        }
+        listView.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        playlistAdapter.setItemsFrameColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        playlistAdapter.setItemsTitleTextColor(mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
+        playlistAdapter.setItemsSizeTextColor(mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
     }
 }

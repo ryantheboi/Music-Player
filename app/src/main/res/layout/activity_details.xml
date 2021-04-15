@@ -22,7 +22,7 @@
         android:textStyle="bold"
         android:layout_marginTop="20dp"
         android:layout_marginLeft="20dp"
-        android:textColor="@color/pureBlack"
+        android:textColor="@color/generalBlack"
         />
 
     <ScrollView

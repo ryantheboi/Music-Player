@@ -60,17 +60,12 @@ public class MusicDetailsActivity extends Activity {
         TextView heading = findViewById(R.id.music_details_heading);
         TextView msgWindow = findViewById(R.id.music_details);
         ImageView details_background = findViewById(R.id.music_details_background);
-        if (MainActivity.nightMode){
-            heading.setTextColor(Color.WHITE);
-            msgWindow.setTextColor(getResources().getColor(R.color.colorTextPrimaryLight));
-            details_background.setBackgroundColor(getResources().getColor(R.color.nightPrimaryDark));
-        }
-        else{
-            heading.setTextColor(Color.BLACK);
-            msgWindow.setTextColor(getResources().getColor(R.color.colorTextPrimaryDark));
-            details_background.setBackgroundColor(getResources().getColor(R.color.lightPrimaryWhite));
 
-        }
+        // set theme colors
+        details_background.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_SECONDARY));
+        heading.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+        msgWindow.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+
         appendDetail("ID", Integer.toString(song.getID()));
         appendDetail("Title", song.getTitle());
         appendDetail("Artist", song.getArtist());

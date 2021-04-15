@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/choosetheme_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent">
+
+    <ImageButton
+        android:id="@+id/palette_background"
+        android:layout_width="240dp"
+        android:layout_height="200dp"
+        android:background="#00000000"
+        android:src="@drawable/palette"
+        android:scaleType="centerCrop"
+        android:alpha="0.90"
+        />
+
+    <ImageButton
+        android:id="@+id/palette_unclickable_btn"
+        android:layout_width="70dp"
+        android:layout_height="40dp"
+        android:fillViewport="true"
+        android:layout_marginTop="123dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginStart="30dp"
+        android:isScrollContainer="true"
+        android:background="#00000000"
+        />
+
+    <HorizontalScrollView
+        android:layout_width="170dp"
+        android:layout_height="90dp"
+        android:fillViewport="true"
+        android:layout_marginTop="33dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginStart="30dp"
+        android:isScrollContainer="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btn_light"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="40dp"
+                android:background="#00000000"
+                android:scaleType="fitCenter"
+                android:src="@drawable/light" />
+
+            <ImageButton
+                android:id="@+id/btn_night"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="#00000000"
+                android:scaleType="fitCenter"
+                android:src="@drawable/night" />
+
+            <ImageButton
+                android:id="@+id/btn_rem"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="40dp"
+                android:background="#00000000"
+                android:scaleType="fitCenter"
+                android:src="@drawable/rem" />
+
+            <ImageButton
+                android:id="@+id/btn_ram"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="#00000000"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ram" />
+
+            <ImageButton
+                android:id="@+id/btn_sucrose"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="40dp"
+                android:background="#00000000"
+                android:scaleType="fitCenter"
+                android:src="@drawable/sucrose" />
+
+        </LinearLayout>
+    </HorizontalScrollView>
+
+</FrameLayout>

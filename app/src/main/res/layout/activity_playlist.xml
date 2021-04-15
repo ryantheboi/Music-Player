@@ -2,7 +2,7 @@
 <RelativeLayout android:id="@+id/activity_playlist"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/lightPrimaryWhite"
+    android:background="?attr/colorPrimary"
     xmlns:android="http://schemas.android.com/apk/res/android">
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar_playlist"
@@ -24,7 +24,7 @@
         android:layout_marginTop="4dp"
         android:text="@string/Playlist"
         android:textSize="20sp"
-        android:textColor="@color/colorTextPrimaryDark"/>
+        android:textColor="?attr/titleTextColor"/>
     <TextView
         android:id="@+id/textview_playlist_size"
         android:layout_width="wrap_content"
@@ -34,7 +34,7 @@
         android:layout_below="@+id/textview_playlist_name"
         android:text="@string/Size"
         android:textSize="15sp"
-        android:textColor="@color/colorTextGrey"/>
+        android:textColor="?attr/subtitleTextColor"/>
     <ListView
         android:id="@+id/listview_playlist_songs"
         android:layout_below="@+id/toolbar_playlist"

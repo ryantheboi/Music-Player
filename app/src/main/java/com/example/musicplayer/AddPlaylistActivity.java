@@ -9,6 +9,10 @@ import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -24,7 +28,6 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.core.graphics.drawable.DrawableCompat;
 
@@ -45,6 +48,12 @@ public class AddPlaylistActivity extends Activity {
     private AlertDialog addPlaylist_dialog;
     private View addPlaylist_view;
     private EditText addPlaylist_input;
+    private Messenger mainActivityMessenger;
+    private Messenger addPlaylistMessenger;
+
+    public static final int FINISH = 0;
+    public static final int ADD_PLAYLIST = 97;
+    public static final int EXTEND_PLAYLIST = 96;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,23 +70,31 @@ public class AddPlaylistActivity extends Activity {
         Bundle b = intent.getExtras();
         if (b != null) {
             for (String key : b.keySet()) {
-                if (key.equals("addPlaylist")) {
-                    // get the song which needs its details to be displayed
-                    addPlaylist = intent.getParcelableExtra("addPlaylist");
-                    break;
+                switch (key){
+                    case "addPlaylist":
+                        // get the playlist of interest for this activity
+                        addPlaylist = intent.getParcelableExtra("addPlaylist");
+                        break;
+                    case "messenger":
+                        mainActivityMessenger = intent.getParcelableExtra("messenger");
                 }
             }
         }
+
+        // init this messenger
+        addPlaylistMessenger = new Messenger(new AddPlaylistMessenger());
 
         // init listview adapter and item click functionality
         listView.setAdapter(playlistAdapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                // obtain the selected playlist object
+                // obtain the selected playlist object to extend it with the current selection
                 Playlist playlist = (Playlist) listView.getItemAtPosition(position);
                 playlist.extend(addPlaylist);
-                finish();
+
+                // notify MainActivity about change to existing playlist
+                sendPlaylistUpdateMessage(playlist, EXTEND_PLAYLIST);
             }
         });
 
@@ -135,8 +152,11 @@ public class AddPlaylistActivity extends Activity {
                         // change playlist name to the user input and clear edittext
                         addPlaylist.setName(addPlaylist_input.getText().toString());
                         addPlaylist_input.getText().clear();
-                        // TODO add playlist to main activity's list of playlists
-                        Toast.makeText(getApplicationContext(), "adding playlist not implemented yet", Toast.LENGTH_SHORT).show();
+                        // assign unique id to playlist
+                        addPlaylist.setId(DatabaseRepository.generatePlaylistId());
+
+                        // notify MainActivity about new playlist
+                        sendPlaylistUpdateMessage(addPlaylist, ADD_PLAYLIST);
                     }
                 });
 
@@ -255,5 +275,34 @@ public class AddPlaylistActivity extends Activity {
         Drawable unwrappedImageView = addPlaylist_imageView.getDrawable();
         Drawable wrappedImageView = DrawableCompat.wrap(unwrappedImageView);
         DrawableCompat.setTint(wrappedImageView, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
+    }
+
+    private void sendPlaylistUpdateMessage(Playlist playlist, int operation){
+        // send message
+        Message msg = Message.obtain();
+        Bundle bundle = new Bundle();
+        bundle.putInt("update", operation);
+        bundle.putParcelable("playlist", playlist);
+        bundle.putParcelable("messenger", addPlaylistMessenger);
+        msg.setData(bundle);
+        try {
+            mainActivityMessenger.send(msg);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private final class AddPlaylistMessenger extends Handler {
+
+        @Override
+        public void handleMessage(final Message msg) {
+            Bundle bundle = msg.getData();
+            int operation = (int) bundle.get("msg");
+            switch (operation) {
+                case FINISH:
+                    finish();
+                    break;
+            }
+        }
     }
 }

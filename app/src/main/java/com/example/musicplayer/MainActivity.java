@@ -154,6 +154,9 @@ public class MainActivity extends AppCompatActivity {
     private MessageHandler messageHandler;
     private MessageHandler seekbarHandler;
 
+    // database
+    private DatabaseRepository databaseRepository;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -161,6 +164,9 @@ public class MainActivity extends AppCompatActivity {
         ThemeColors.generateThemeValues(this, R.style.ThemeOverlay_AppCompat_MusicLight);
 
         System.out.println("created");
+
+        // initialize database repository to handle all retrievals and transactions
+        databaseRepository = new DatabaseRepository(this);
 
         // initialize all views
         setContentView(R.layout.activity_musiclist);
@@ -300,10 +306,10 @@ public class MainActivity extends AppCompatActivity {
      * The music service is started here in order to send the main activity's messenger
      */
     public void initMusicList() {
-        playlistList = new ArrayList<>();
         fullSongList = new ArrayList<>();
         getMusic(); // populates fullSongList
         fullPlaylist = new Playlist("FULL_PLAYLIST", fullSongList);
+        playlistList = databaseRepository.getAllPlaylists();
 
         // initialize current playlist and song
         if (fullSongList.size() > 0){
@@ -1077,23 +1083,47 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * adds a new playlist to the playlist tab of the viewpager
+     * Adds (or extends) a playlist to the room database and to the playlist tab of the viewpager
      * @param playlist the playlist item to be added
+     * @param messenger the messenger to notify after successfully adding the playlist
+     * @param operation the operation being performed with the playlist
      */
-    public void addPlaylist(Playlist playlist){
-        // add playlist item to the adapter
-        playlistAdapter.add(playlist);
+    public void addPlaylist(final Playlist playlist, final Messenger messenger, final int operation){
+        // insert playlist into room database
+        databaseRepository.insertPlaylist(playlist);
 
-        // reconstruct viewpager adapter with the new playlist adapter change
-        PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, this);
-        viewPager.setAdapter(pagerAdapter);
+        final MainActivity mainActivity = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                // update current playlist adapter with the newly created playlist
+                if (operation == AddPlaylistActivity.ADD_PLAYLIST){
+                    playlistAdapter.add(playlist);
+                }
 
-        // adjust tab colors
-        SongListTab.toggleTabColor();
-        PlaylistTab.toggleTabColor();
+                // reconstruct viewpager adapter with the new playlist adapter change
+                PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, mainActivity);
+                viewPager.setAdapter(pagerAdapter);
 
-        // move to playlist tab
-        viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
+                // adjust tab colors
+                SongListTab.toggleTabColor();
+                PlaylistTab.toggleTabColor();
+
+                // move to playlist tab
+                viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
+
+                // send message to end the addplaylistactivity, as the views are now updated
+                Message msg = Message.obtain();
+                Bundle bundle = new Bundle();
+                bundle.putInt("msg", AddPlaylistActivity.FINISH);
+                msg.setData(bundle);
+                try {
+                    messenger.send(msg);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     public static Notification getNotification(){
@@ -1312,6 +1342,12 @@ public class MainActivity extends AppCompatActivity {
                             theme_btn.startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_themebtn_reverse_animation));
                         }
                     });
+                    break;
+                case AddPlaylistActivity.ADD_PLAYLIST:
+                    addPlaylist((Playlist) bundle.get("playlist"), (Messenger) bundle.get("messenger"), AddPlaylistActivity.ADD_PLAYLIST);
+                    break;
+                case AddPlaylistActivity.EXTEND_PLAYLIST:
+                    addPlaylist((Playlist) bundle.get("playlist"), (Messenger) bundle.get("messenger"), AddPlaylistActivity.EXTEND_PLAYLIST);
                     break;
             }
         }

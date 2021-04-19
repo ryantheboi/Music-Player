@@ -199,7 +199,6 @@ public class SongListTab extends Fragment {
             public boolean onActionItemClicked(android.view.ActionMode mode, MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.menuitem_createqueue:
-                        Toast.makeText(mainActivity, "Creating Queue of " + userSelection.size() + " songs", Toast.LENGTH_SHORT).show();
                         // construct new current playlist, given the user selections
                         MainActivity.setCurrent_playlist(new Playlist("USER_SELECTION", userSelection));
                         MainActivity.setCurrent_song(userSelection.get(0));
@@ -211,11 +210,10 @@ public class SongListTab extends Fragment {
                         mode.finish(); // Action picked, so close the CAB
                         return true;
                     case R.id.menuitem_createplaylist:
-                        Toast.makeText(mainActivity, "Creating Playlist of " + userSelection.size() + " songs", Toast.LENGTH_SHORT).show();
-
                         // construct named playlist and send it to addPlaylist activity
                         Playlist playlist = new Playlist(getString(R.string.Favorites), userSelection);
                         addPlaylistIntent.putExtra("addPlaylist", playlist);
+                        addPlaylistIntent.putExtra("messenger", mainActivityMessenger);
                         startActivity(addPlaylistIntent);
 
                         mode.finish(); // Action picked, so close the CAB

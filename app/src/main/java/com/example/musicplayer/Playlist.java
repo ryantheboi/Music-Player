@@ -5,27 +5,41 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
+import androidx.room.Entity;
+import androidx.room.Ignore;
+import androidx.room.PrimaryKey;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
+@Entity(tableName = "Playlists")
 public class Playlist implements Parcelable {
-    private static int total_playlists = 0;
+    @PrimaryKey
     private int id;
+
     private String name;
     private ArrayList<Song> songList;
+
+    @Ignore
     private HashMap<Song, SongNode> songHashMap;
 
+    /**
+     * Constructor does not need id field parameter
+     * id is manually generated when the playlist is expected to persist in database storage
+     * otherwise, id is -1 for temporary playlists (e.g. queues)
+     */
     public Playlist(String name, ArrayList<Song> songList) {
-        this.id = total_playlists;
+        this.id = -1;
         this.name = name;
         this.songList = new ArrayList<>(songList);
         this.songHashMap = createHashMap(songList);
-        total_playlists += 1;
     }
 
-    public int getID() {
+    public int getId() {
         return id;
+    }
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -109,9 +123,14 @@ public class Playlist implements Parcelable {
     /**
      * Adds every new song in the given playlist to this playlist's collection of songs
      * Reconstructs the underlying hashmap with the updated collection of songs
-     * @param playlist
+     * @param playlist the playlist to append to this playlist
      */
     public void extend(Playlist playlist){
+        // create songHashMap if it doesn't already exist (because it's not included in parcel)
+        if (songHashMap == null) {
+            songHashMap = createHashMap(songList);
+        }
+
         // loop through list of songs to check if a song exists before adding
         ArrayList<Song> playlist_songs = playlist.getSongList();
         for (Song song : playlist_songs){

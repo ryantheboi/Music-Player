@@ -195,14 +195,10 @@ public class Song implements Parcelable {
             int prime = 31;
             int result = 1;
             result = prime * result + id;
-            result = prime * result + duration;
             result = prime * result + albumID.hashCode();
             result = prime * result + title.hashCode();
             result = prime * result + artist.hashCode();
             result = prime * result + album.hashCode();
-            result = prime * result + dateAdded.hashCode();
-            result = prime * result + dateModified.hashCode();
-            result = prime * result + size.hashCode();
             return result;
         }catch (Exception e){
             return super.hashCode();
@@ -213,14 +209,10 @@ public class Song implements Parcelable {
     public boolean equals(Object obj) {
         try {
             return this.id == ((Song) obj).id &&
-                    this.duration == ((Song) obj).duration &&
                     this.albumID.equals(((Song) obj).albumID) &&
                     this.title.equals(((Song) obj).title) &&
                     this.artist.equals(((Song) obj).artist) &&
-                    this.album.equals(((Song) obj).album) &&
-                    this.dateAdded.equals(((Song) obj).dateAdded) &&
-                    this.dateModified.equals(((Song) obj).dateModified) &&
-                    this.size.equals(((Song) obj).size);
+                    this.album.equals(((Song) obj).album);
         }catch (Exception e){
             return super.equals(obj);
         }

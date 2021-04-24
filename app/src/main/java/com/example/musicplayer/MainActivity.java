@@ -68,6 +68,7 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import static android.os.Build.VERSION_CODES.Q;
 import static com.example.musicplayer.Notifications.CHANNEL_ID_1;
@@ -306,10 +307,14 @@ public class MainActivity extends AppCompatActivity {
      * The music service is started here in order to send the main activity's messenger
      */
     public void initMusicList() {
+        // initialize full list of songs from device and playlists from database
         fullSongList = new ArrayList<>();
         getMusic(); // populates fullSongList
         fullPlaylist = new Playlist("FULL_PLAYLIST", fullSongList);
         playlistList = databaseRepository.getAllPlaylists();
+
+        // remove any songs that were not able to be found in the device
+        cleanPlaylistDatabase();
 
         // initialize current playlist and song
         if (fullSongList.size() > 0){
@@ -1010,6 +1015,33 @@ public class MainActivity extends AppCompatActivity {
 
         // update ripple color of theme button
         theme_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
+    }
+
+    /**
+     * Cleans playlist database of any songs that can no longer be found in the full list of songs
+     */
+    private void cleanPlaylistDatabase(){
+        HashMap<Song, SongNode> fullSongHashMap = new HashMap<>(fullPlaylist.getSongHashMap());
+        for (Playlist playlist : playlistList){
+            // accumulate list of removed songs for this playlist (if any)
+            ArrayList<Song> playlist_songs = playlist.getSongList();
+            ArrayList<Song> playlist_removed_songs = new ArrayList<>();
+            for (Song song : playlist_songs){
+                if (!fullSongHashMap.containsKey(song)){
+                    playlist_removed_songs.add(song);
+                }
+            }
+
+            // recreate the playlist excluding its removed songs (if any) and replace in database
+            if (playlist_removed_songs.size() > 0){
+                for (Song removed_song : playlist_removed_songs){
+                    // removes song from the playlist reference
+                    playlist_songs.remove(removed_song);
+                }
+                Playlist updated_playlist = new Playlist(playlist.getId(), playlist.getName(), playlist_songs);
+                databaseRepository.insertPlaylist(updated_playlist);
+            }
+        }
     }
 
     /**

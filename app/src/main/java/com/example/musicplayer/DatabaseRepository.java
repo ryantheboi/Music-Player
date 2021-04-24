@@ -76,11 +76,8 @@ public class DatabaseRepository {
     public void insertPlaylist(Playlist playlist){
         // insert playlist into db
         this.temp_playlist = playlist;
-
         databaseHandler.removeMessages(INSERT_PLAYLIST);
         databaseHandler.obtainMessage(INSERT_PLAYLIST).sendToTarget();
-
-        System.out.println("fake insert");
     }
 
     public void deletePlaylist(Playlist playlist){

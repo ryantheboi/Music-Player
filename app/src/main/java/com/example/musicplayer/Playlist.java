@@ -24,10 +24,23 @@ public class Playlist implements Parcelable {
     private HashMap<Song, SongNode> songHashMap;
 
     /**
-     * Constructor does not need id field parameter
+     * Constructor used by database to create a playlist for every row
+     */
+    public Playlist(int id, String name, ArrayList<Song> songList) {
+        this.id = id;
+        this.name = name;
+        this.songList = new ArrayList<>(songList);
+        this.songHashMap = createHashMap(songList);
+        System.out.println(this.getId() + ": " + this.getName() + " - " + this.getSongList());
+
+    }
+
+    /**
+     * Overloaded Constructor which does not need id field parameter
      * id is manually generated when the playlist is expected to persist in database storage
      * otherwise, id is -1 for temporary playlists (e.g. queues)
      */
+    @Ignore
     public Playlist(String name, ArrayList<Song> songList) {
         this.id = -1;
         this.name = name;
@@ -51,6 +64,10 @@ public class Playlist implements Parcelable {
 
     public ArrayList<Song> getSongList() {
         return songList;
+    }
+
+    public HashMap<Song, SongNode> getSongHashMap(){
+        return songHashMap;
     }
 
     public String getSizeString() {

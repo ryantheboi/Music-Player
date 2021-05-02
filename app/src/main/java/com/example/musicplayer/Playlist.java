@@ -31,8 +31,6 @@ public class Playlist implements Parcelable {
         this.name = name;
         this.songList = new ArrayList<>(songList);
         this.songHashMap = createHashMap(songList);
-        System.out.println(this.getId() + ": " + this.getName() + " - " + this.getSongList());
-
     }
 
     /**

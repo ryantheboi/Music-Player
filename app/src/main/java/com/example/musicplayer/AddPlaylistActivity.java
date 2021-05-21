@@ -91,10 +91,12 @@ public class AddPlaylistActivity extends Activity {
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
                 // obtain the selected playlist object to extend it with the current selection
                 Playlist playlist = (Playlist) listView.getItemAtPosition(position);
-                playlist.extend(addPlaylist);
+                boolean isExtended = playlist.extend(addPlaylist);
 
-                // notify MainActivity about change to existing playlist
-                sendPlaylistUpdateMessage(playlist, EXTEND_PLAYLIST);
+                // extend was successful, notify MainActivity about change to existing playlist
+                if (isExtended) {
+                    sendPlaylistUpdateMessage(playlist, EXTEND_PLAYLIST);
+                }
             }
         });
 

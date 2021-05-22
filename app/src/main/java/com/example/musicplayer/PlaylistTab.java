@@ -3,6 +3,7 @@ package com.example.musicplayer;
 import android.annotation.TargetApi;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Messenger;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +24,7 @@ public class PlaylistTab extends Fragment {
     private static ListView listView;
     private static PlaylistAdapter playlistAdapter;
     private static MainActivity mainActivity;
+    private static Messenger mainMessenger;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -39,12 +41,13 @@ public class PlaylistTab extends Fragment {
      * @return A new instance of fragment Tab.
      */
     // TODO: Rename and change types and number of parameters
-    public static PlaylistTab newInstance(String param1, PlaylistAdapter adapter, MainActivity activity) {
+    public static PlaylistTab newInstance(String param1, PlaylistAdapter adapter, Messenger messenger, MainActivity activity) {
         PlaylistTab fragment = new PlaylistTab();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         fragment.setArguments(args);
         playlistAdapter = adapter;
+        mainMessenger = messenger;
         mainActivity = activity;
         return fragment;
     }
@@ -76,6 +79,7 @@ public class PlaylistTab extends Fragment {
 
                 Intent playlistIntent = new Intent(mainActivity, PlaylistActivity.class);
                 playlistIntent.putExtra("playlist", playlist);
+                playlistIntent.putExtra("mainMessenger", mainMessenger);
                 mainActivity.startActivity(playlistIntent);
             }
         });

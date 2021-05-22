@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menuitem_createqueue"
+        android:title="@string/CreateQueue"
+        android:actionLayout="@layout/menuitem_queue_btn_layout"/>
+
+    <item
+        android:id="@+id/menuitem_createplaylist"
+        android:title="@string/CreatePlaylist"
+        android:actionLayout="@layout/menuitem_playlist_btn_layout"/>
+
+    <item
+        android:id="@+id/menuitem_removesong"
+        android:title="@string/RemoveSong"
+        android:actionLayout="@layout/menuitem_remove_btn_layout"/>
+</menu>

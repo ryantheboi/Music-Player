@@ -10,6 +10,7 @@ import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 
 @Entity(tableName = "Playlists")
@@ -168,6 +169,29 @@ public class Playlist implements Parcelable {
         // reconstruct hashmap with the updated song list
         songHashMap = createHashMap(songList);
         return true;
+    }
+
+    /**
+     * Removes the collection of songs from this playlist
+     * @param songs the songs to remove from this playlist
+     */
+    public void removeAll(Collection<Song> songs){
+        songList.removeAll(songs);
+
+        // reconstruct hashmap with the updated song list
+        songHashMap = createHashMap(songList);
+    }
+
+    /**
+     * Replaces this songlist with the songlist from another playlist
+     * @param playlist the playlist whose songlist shall be adopted
+     */
+    public void adoptSongList(Playlist playlist){
+        this.songList.clear();
+        this.songList.addAll(playlist.getSongList());
+
+        // reconstruct hashmap with the updated song list
+        songHashMap = createHashMap(songList);
     }
 
     @Override

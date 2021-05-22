@@ -1132,6 +1132,14 @@ public class MainActivity extends AppCompatActivity {
                 if (operation == AddPlaylistActivity.ADD_PLAYLIST){
                     playlistAdapter.add(playlist);
                 }
+                else {
+                    // check if songs were removed from existing playlist
+                    Playlist original_playlist = (Playlist) playlistAdapter.getItem(playlistAdapter.getPosition(playlist));
+                    if (original_playlist.getSize() > playlist.getSize()){
+                        // modify the original playlist to adopt the changes
+                        original_playlist.adoptSongList(playlist);
+                    }
+                }
 
                 // reconstruct viewpager adapter with the new playlist adapter change
                 PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, mainActivity);
@@ -1144,15 +1152,17 @@ public class MainActivity extends AppCompatActivity {
                 // move to playlist tab
                 viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
 
-                // send message to end the addplaylistactivity, as the views are now updated
-                Message msg = Message.obtain();
-                Bundle bundle = new Bundle();
-                bundle.putInt("msg", AddPlaylistActivity.FINISH);
-                msg.setData(bundle);
-                try {
-                    messenger.send(msg);
-                } catch (Exception e) {
-                    e.printStackTrace();
+                if (messenger != null) {
+                    // send message to end the addplaylistactivity, as the views are now updated
+                    Message msg = Message.obtain();
+                    Bundle bundle = new Bundle();
+                    bundle.putInt("msg", AddPlaylistActivity.FINISH);
+                    msg.setData(bundle);
+                    try {
+                        messenger.send(msg);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         });

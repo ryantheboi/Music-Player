@@ -19,6 +19,7 @@
     <string name="CreatePlaylist">Create Playlist</string>
     <string name="SearchFilter">Search Filter</string>
     <string name="ChooseTheme">Choose Theme</string>
+    <string name="RemoveSong">Remove Song</string>
 
 
 </resources>

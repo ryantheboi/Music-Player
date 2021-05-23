@@ -20,6 +20,7 @@
     <string name="SearchFilter">Search Filter</string>
     <string name="ChooseTheme">Choose Theme</string>
     <string name="RemoveSong">Remove Song</string>
+    <string name="RemovePlaylist">Remove Playlist</string>
 
 
 </resources>

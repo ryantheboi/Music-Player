@@ -15,13 +15,15 @@ public class DatabaseRepository {
     private LinkedBlockingQueue<Query> messageQueue;
 
     // playlist objects
-    private ArrayList<Playlist> playlistArrayList;
+    private ArrayList<Playlist> allPlaylists;
+    private ArrayList<Playlist> selectPlaylists;
     private static int playlist_maxid = -1;
 
     private final int GET_ALL_PLAYLISTS = 0;
-    private final int GET_MAX_PLAYLIST_ID = 1;
-    private final int INSERT_PLAYLIST = 2;
-    private final int DELETE_PLAYLIST = 3;
+    private final int GET_PLAYLISTS_ID = 1;
+    private final int GET_MAX_PLAYLIST_ID = 2;
+    private final int INSERT_PLAYLIST = 3;
+    private final int DELETE_PLAYLIST = 4;
 
     /**
      * Holds the query message and the object involved (if exists)
@@ -75,7 +77,12 @@ public class DatabaseRepository {
                             int message = query.message;
                             switch (message) {
                                 case GET_ALL_PLAYLISTS:
-                                    playlistArrayList = new ArrayList<>(playlistDao.getAll());
+                                    allPlaylists = new ArrayList<>(playlistDao.getAll());
+                                    break;
+                                case GET_PLAYLISTS_ID:
+                                    System.out.println("BEGINNING PLAYLIST ID GET");
+                                    selectPlaylists = new ArrayList<>(playlistDao.getAllByIds((int[]) query.object));
+                                    System.out.println("DONE PLAYLIST ID GET: " + selectPlaylists);
                                     break;
                                 case GET_MAX_PLAYLIST_ID:
                                     playlist_maxid = playlistDao.getMaxId();
@@ -84,7 +91,9 @@ public class DatabaseRepository {
                                     playlistDao.insert((Playlist) query.object);
                                     break;
                                 case DELETE_PLAYLIST:
+                                    System.out.println("BEGINNING DAO DELETE");
                                     playlistDao.delete((Playlist) query.object);
+                                    System.out.println("FINISHED DAO DELETE");
                                     break;
                             }
                             isModifying = false;
@@ -99,13 +108,26 @@ public class DatabaseRepository {
     }
 
     /**
-     * Only returns all playlists when the databaseHandler is finished querying for them
+     * Only returns all playlists when the message queue is finished querying for them
      * @return the full ArrayList containing all playlists in the database
      */
     public synchronized ArrayList<Playlist> getAllPlaylists(){
-        while (playlistArrayList == null) {
+        while (allPlaylists == null) {
         }
-        return playlistArrayList;
+        return allPlaylists;
+    }
+
+    /**
+     * Grabs playlists from the database by id when the message queue is finished querying for them
+     * @param playlistIds array of ids of the playlists to get
+     * @return an arraylist containing the playlists as they are stored in the database
+     */
+    public synchronized ArrayList<Playlist> getPlaylistByIds(int[] playlistIds){
+        queryGetPlaylistsById(playlistIds);
+        while (selectPlaylists == null){
+        }
+        System.out.println("RETURNING PLAYLISTS: " + selectPlaylists);
+        return selectPlaylists;
     }
 
     /**
@@ -122,13 +144,12 @@ public class DatabaseRepository {
     public synchronized void insertPlaylist(Playlist playlist){
         // insert playlist into db
         messageQueue.offer(new Query(INSERT_PLAYLIST, playlist));
-
     }
 
     public synchronized void deletePlaylist(Playlist playlist){
         // delete playlist from db
         messageQueue.offer(new Query(DELETE_PLAYLIST, playlist));
-
+        System.out.println("DELETE OFFERED");
     }
 
     /**
@@ -136,8 +157,18 @@ public class DatabaseRepository {
      * This method should not be used often, as it can take some time
      */
     private synchronized void queryGetAllPlaylists(){
-        playlistArrayList = null;
+        allPlaylists = null;
         messageQueue.offer(new Query(GET_ALL_PLAYLISTS, null));
+    }
+
+    /**
+     * Queues query message to the blocking queue to get playlists by their id
+     * This method should not be used often, as it can take some time
+     */
+    private synchronized void queryGetPlaylistsById(int[] playlistIds){
+        selectPlaylists = null;
+        System.out.println("PLAYLIST IDS OFFERED: " + playlistIds);
+        messageQueue.offer(new Query(GET_PLAYLISTS_ID, playlistIds));
     }
 
     /**

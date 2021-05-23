@@ -1095,32 +1095,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public static Song getCurrent_song(){
-        return current_song;
-    }
-    public static Playlist getCurrent_playlist(){
-        return current_playlist;
-    }
-    public static ArrayList<Playlist> getPlaylists(){
-        return playlistList;
-    }
-    public static Playlist getFullPlaylist(){
-        return fullPlaylist;
-    }
-    public static void setCurrent_song(Song song){
-        current_song = song;
-    }
-    public static void setCurrent_playlist(Playlist playlist){
-        current_playlist = playlist;
-    }
-
     /**
      * Adds (or extends) a playlist to the room database and to the playlist tab of the viewpager
      * @param playlist the playlist item to be added
      * @param messenger the messenger to notify after successfully adding the playlist
      * @param operation the operation being performed with the playlist
      */
-    public void addPlaylist(final Playlist playlist, final Messenger messenger, final int operation){
+    private void addPlaylist(final Playlist playlist, final Messenger messenger, final int operation){
         // insert playlist into room database
         databaseRepository.insertPlaylist(playlist);
 
@@ -1166,6 +1147,60 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    /**
+     * Removes playlists from the room database and updates playlist tab in viewpager
+     * @param playlistIds array of ids corresponding to the playlists to be removed
+     */
+    private void removePlaylist(int[] playlistIds){
+        final ArrayList<Playlist> playlists = databaseRepository.getPlaylistByIds(playlistIds);
+        for (Playlist playlist : playlists){
+            databaseRepository.deletePlaylist(playlist);
+        }
+
+        final MainActivity mainActivity = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                for (Playlist playlist : playlists){
+                    playlistAdapter.remove(playlist);
+                }
+
+                // reconstruct viewpager adapter with the new playlist adapter change
+                PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, mainActivity);
+                viewPager.setAdapter(pagerAdapter);
+
+                // adjust tab colors
+                SongListTab.toggleTabColor();
+                PlaylistTab.toggleTabColor();
+
+                // move to playlist tab
+                viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
+
+                System.out.println("DONE REMOVE");
+
+            }
+        });
+    }
+
+    public static Song getCurrent_song(){
+        return current_song;
+    }
+    public static Playlist getCurrent_playlist(){
+        return current_playlist;
+    }
+    public static ArrayList<Playlist> getPlaylists(){
+        return playlistList;
+    }
+    public static Playlist getFullPlaylist(){
+        return fullPlaylist;
+    }
+    public static void setCurrent_song(Song song){
+        current_song = song;
+    }
+    public static void setCurrent_playlist(Playlist playlist){
+        current_playlist = playlist;
     }
 
     public static Notification getNotification(){
@@ -1390,6 +1425,11 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case AddPlaylistActivity.EXTEND_PLAYLIST:
                     addPlaylist((Playlist) bundle.get("playlist"), (Messenger) bundle.get("messenger"), AddPlaylistActivity.EXTEND_PLAYLIST);
+                    break;
+                case PlaylistTab.REMOVE_PLAYLIST:
+                    System.out.println("BEGINNING REMOVE");
+                    int[] playlistIds = (int[]) bundle.get("ids");
+                    removePlaylist(playlistIds);
                     break;
             }
         }

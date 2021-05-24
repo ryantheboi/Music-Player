@@ -28,6 +28,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.core.graphics.drawable.DrawableCompat;
 
@@ -53,7 +54,7 @@ public class AddPlaylistActivity extends Activity {
 
     public static final int FINISH = 0;
     public static final int ADD_PLAYLIST = 97;
-    public static final int EXTEND_PLAYLIST = 96;
+    public static final int MODIFY_PLAYLIST = 96;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,7 +96,10 @@ public class AddPlaylistActivity extends Activity {
 
                 // extend was successful, notify MainActivity about change to existing playlist
                 if (isExtended) {
-                    sendPlaylistUpdateMessage(playlist, EXTEND_PLAYLIST);
+                    sendPlaylistUpdateMessage(playlist, MODIFY_PLAYLIST);
+                }
+                else{
+                    Toast.makeText(getApplicationContext(), "Song(s) already exist in playlist!", Toast.LENGTH_SHORT).show();
                 }
             }
         });

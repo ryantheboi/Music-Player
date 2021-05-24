@@ -167,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
         System.out.println("created");
 
         // initialize database repository to handle all retrievals and transactions
-        databaseRepository = new DatabaseRepository(this);
+        databaseRepository = new DatabaseRepository(this, this);
 
         // initialize all views
         setContentView(R.layout.activity_musiclist);
@@ -1096,33 +1096,31 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Adds (or extends) a playlist to the room database and to the playlist tab of the viewpager
-     * @param playlist the playlist item to be added
+     * Updates the viewpager with the changes made by the database repository
+     * @param object an object associated with the update operation (e.g. a playlist, or playlists)
      * @param messenger the messenger to notify after successfully adding the playlist
      * @param operation the operation being performed with the playlist
      */
-    private void addPlaylist(final Playlist playlist, final Messenger messenger, final int operation){
-        // insert playlist into room database
-        databaseRepository.insertPlaylist(playlist);
-
+    public void updateViewPager(Object object, final Messenger messenger, final int operation){
         final MainActivity mainActivity = this;
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                // update current playlist adapter with the newly created playlist
-                if (operation == AddPlaylistActivity.ADD_PLAYLIST){
-                    playlistAdapter.add(playlist);
-                }
-                else {
-                    // check if songs were removed from existing playlist
-                    Playlist original_playlist = (Playlist) playlistAdapter.getItem(playlistAdapter.getPosition(playlist));
-                    if (original_playlist.getSize() > playlist.getSize()){
-                        // modify the original playlist to adopt the changes
-                        original_playlist.adoptSongList(playlist);
-                    }
+        switch (operation) {
+            // update current playlist adapter with the newly created playlist
+            case DatabaseRepository.ASYNC_INSERT_PLAYLIST:
+                playlistAdapter.add((Playlist) object);
+
+                // move to playlist tab
+                viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
+                break;
+            case DatabaseRepository.ASYNC_MODIFY_PLAYLIST:
+                Playlist temp_playlist = (Playlist) object;
+                // check if songs were removed from existing playlist
+                Playlist original_playlist = (Playlist) playlistAdapter.getItem(playlistAdapter.getPosition(temp_playlist));
+                if (original_playlist.getSize() > temp_playlist.getSize()) {
+                    // modify the original playlist to adopt the changes
+                    original_playlist.adoptSongList(temp_playlist);
                 }
 
-                // reconstruct viewpager adapter with the new playlist adapter change
+                // reconstruct viewpager adapter to reflect changes to individual playlist
                 PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, mainActivity);
                 viewPager.setAdapter(pagerAdapter);
 
@@ -1132,56 +1130,29 @@ public class MainActivity extends AppCompatActivity {
 
                 // move to playlist tab
                 viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
+                break;
 
-                if (messenger != null) {
-                    // send message to end the addplaylistactivity, as the views are now updated
-                    Message msg = Message.obtain();
-                    Bundle bundle = new Bundle();
-                    bundle.putInt("msg", AddPlaylistActivity.FINISH);
-                    msg.setData(bundle);
-                    try {
-                        messenger.send(msg);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
-    }
-
-    /**
-     * Removes playlists from the room database and updates playlist tab in viewpager
-     * @param playlistIds array of ids corresponding to the playlists to be removed
-     */
-    private void removePlaylist(int[] playlistIds){
-        final ArrayList<Playlist> playlists = databaseRepository.getPlaylistByIds(playlistIds);
-        for (Playlist playlist : playlists){
-            databaseRepository.deletePlaylist(playlist);
-        }
-
-        final MainActivity mainActivity = this;
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
+            case DatabaseRepository.ASYNC_DELETE_PLAYLISTS_BY_ID:
+                ArrayList<Playlist> playlists = (ArrayList<Playlist>) object;
                 for (Playlist playlist : playlists){
                     playlistAdapter.remove(playlist);
                 }
-
-                // reconstruct viewpager adapter with the new playlist adapter change
-                PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, mainActivity);
-                viewPager.setAdapter(pagerAdapter);
-
-                // adjust tab colors
-                SongListTab.toggleTabColor();
-                PlaylistTab.toggleTabColor();
-
-                // move to playlist tab
-                viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
-
                 System.out.println("DONE REMOVE");
-
+                break;
             }
-        });
+
+            if (messenger != null) {
+                // send message to end the addplaylistactivity, as the views are now updated
+                Message msg = Message.obtain();
+                Bundle bundle = new Bundle();
+                bundle.putInt("msg", AddPlaylistActivity.FINISH);
+                msg.setData(bundle);
+                try {
+                    messenger.send(msg);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
     }
 
     public static Song getCurrent_song(){
@@ -1421,15 +1392,13 @@ public class MainActivity extends AppCompatActivity {
                     });
                     break;
                 case AddPlaylistActivity.ADD_PLAYLIST:
-                    addPlaylist((Playlist) bundle.get("playlist"), (Messenger) bundle.get("messenger"), AddPlaylistActivity.ADD_PLAYLIST);
+                    databaseRepository.asyncInsertPlaylist((Playlist) bundle.get("playlist"), (Messenger) bundle.get("messenger"));
                     break;
-                case AddPlaylistActivity.EXTEND_PLAYLIST:
-                    addPlaylist((Playlist) bundle.get("playlist"), (Messenger) bundle.get("messenger"), AddPlaylistActivity.EXTEND_PLAYLIST);
+                case AddPlaylistActivity.MODIFY_PLAYLIST:
+                    databaseRepository.asyncModifyPlaylist((Playlist) bundle.get("playlist"), (Messenger) bundle.get("messenger"));
                     break;
-                case PlaylistTab.REMOVE_PLAYLIST:
-                    System.out.println("BEGINNING REMOVE");
-                    int[] playlistIds = (int[]) bundle.get("ids");
-                    removePlaylist(playlistIds);
+                case PlaylistTab.REMOVE_PLAYLISTS:
+                    databaseRepository.asyncRemovePlaylistByIds((int[]) bundle.get("ids"));
                     break;
             }
         }

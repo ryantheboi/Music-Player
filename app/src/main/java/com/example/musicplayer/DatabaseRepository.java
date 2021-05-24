@@ -1,8 +1,10 @@
 package com.example.musicplayer;
 
 import android.content.Context;
-import androidx.room.Room;
+import android.os.Messenger;
 import java.util.ArrayList;
+
+import androidx.room.Room;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -11,19 +13,20 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class DatabaseRepository {
     private PlaylistDatabase playlistDatabase;
     private PlaylistDao playlistDao;
+    private MainActivity mainActivity;
     private boolean isModifying = false;
     private LinkedBlockingQueue<Query> messageQueue;
 
     // playlist objects
     private ArrayList<Playlist> allPlaylists;
-    private ArrayList<Playlist> selectPlaylists;
     private static int playlist_maxid = -1;
 
-    private final int GET_ALL_PLAYLISTS = 0;
-    private final int GET_PLAYLISTS_ID = 1;
-    private final int GET_MAX_PLAYLIST_ID = 2;
-    private final int INSERT_PLAYLIST = 3;
-    private final int DELETE_PLAYLIST = 4;
+    public static final int GET_ALL_PLAYLISTS = 0;
+    public static final int GET_MAX_PLAYLIST_ID = 1;
+    public static final int INSERT_PLAYLIST = 2;
+    public static final int ASYNC_INSERT_PLAYLIST = 3;
+    public static final int ASYNC_MODIFY_PLAYLIST = 4;
+    public static final int ASYNC_DELETE_PLAYLISTS_BY_ID = 5;
 
     /**
      * Holds the query message and the object involved (if exists)
@@ -31,14 +34,23 @@ public class DatabaseRepository {
     private class Query {
         private int message;
         private Object object;
+        private Object extra;
 
         private Query(int msg, Object obj){
             this.message = msg;
             this.object = obj;
         }
+
+        private Query(int msg, Object obj, Object extra){
+            this.message = msg;
+            this.object = obj;
+            this.extra = extra;
+        }
     }
 
-    public DatabaseRepository(Context context){
+    public DatabaseRepository(Context context, MainActivity activity){
+        this.mainActivity = activity;
+
         // init database and corresponding DAOs
         initDatabase(context);
 
@@ -72,17 +84,12 @@ public class DatabaseRepository {
                     if (!isModifying) {
                         isModifying = true;
                         try {
-                            Query query = messageQueue.take();
+                            final Query query = messageQueue.take();
 
                             int message = query.message;
                             switch (message) {
                                 case GET_ALL_PLAYLISTS:
                                     allPlaylists = new ArrayList<>(playlistDao.getAll());
-                                    break;
-                                case GET_PLAYLISTS_ID:
-                                    System.out.println("BEGINNING PLAYLIST ID GET");
-                                    selectPlaylists = new ArrayList<>(playlistDao.getAllByIds((int[]) query.object));
-                                    System.out.println("DONE PLAYLIST ID GET: " + selectPlaylists);
                                     break;
                                 case GET_MAX_PLAYLIST_ID:
                                     playlist_maxid = playlistDao.getMaxId();
@@ -90,10 +97,41 @@ public class DatabaseRepository {
                                 case INSERT_PLAYLIST:
                                     playlistDao.insert((Playlist) query.object);
                                     break;
-                                case DELETE_PLAYLIST:
-                                    System.out.println("BEGINNING DAO DELETE");
-                                    playlistDao.delete((Playlist) query.object);
-                                    System.out.println("FINISHED DAO DELETE");
+                                case ASYNC_INSERT_PLAYLIST:
+                                    playlistDao.insert((Playlist) query.object);
+
+                                    // operation complete, update viewpager in mainactivity
+                                    mainActivity.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            mainActivity.updateViewPager((Playlist) query.object, (Messenger) query.extra, ASYNC_INSERT_PLAYLIST);
+                                        }
+                                    });
+                                    break;
+                                case ASYNC_MODIFY_PLAYLIST:
+                                    playlistDao.insert((Playlist) query.object);
+
+                                    // operation complete, update viewpager in mainactivity
+                                    mainActivity.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            mainActivity.updateViewPager((Playlist) query.object, (Messenger) query.extra, ASYNC_MODIFY_PLAYLIST);
+                                        }
+                                    });
+                                    break;
+                                case ASYNC_DELETE_PLAYLISTS_BY_ID:
+                                    final ArrayList<Playlist> selectPlaylists = new ArrayList<>(playlistDao.getAllByIds((int[]) query.object));
+                                    for (Playlist playlist : selectPlaylists){
+                                        playlistDao.delete(playlist);
+                                    }
+
+                                    // operation complete, update viewpager in mainactivity
+                                    mainActivity.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            mainActivity.updateViewPager(selectPlaylists, null, ASYNC_DELETE_PLAYLISTS_BY_ID);
+                                        }
+                                    });
                                     break;
                             }
                             isModifying = false;
@@ -118,19 +156,6 @@ public class DatabaseRepository {
     }
 
     /**
-     * Grabs playlists from the database by id when the message queue is finished querying for them
-     * @param playlistIds array of ids of the playlists to get
-     * @return an arraylist containing the playlists as they are stored in the database
-     */
-    public synchronized ArrayList<Playlist> getPlaylistByIds(int[] playlistIds){
-        queryGetPlaylistsById(playlistIds);
-        while (selectPlaylists == null){
-        }
-        System.out.println("RETURNING PLAYLISTS: " + selectPlaylists);
-        return selectPlaylists;
-    }
-
-    /**
      * Generates a playlist id by adding 1 to the current highest playlist id
      * @return the next highest playlist id that is not in use
      */
@@ -141,15 +166,40 @@ public class DatabaseRepository {
         return playlist_maxid;
     }
 
+    /**
+     * Queues message to insert new playlist into database
+     * @param playlist the new playlist to insert into database
+     */
     public synchronized void insertPlaylist(Playlist playlist){
-        // insert playlist into db
         messageQueue.offer(new Query(INSERT_PLAYLIST, playlist));
     }
 
-    public synchronized void deletePlaylist(Playlist playlist){
-        // delete playlist from db
-        messageQueue.offer(new Query(DELETE_PLAYLIST, playlist));
-        System.out.println("DELETE OFFERED");
+    /**
+     * Queues message to insert new playlist into database,
+     * then updates main ui and notifies a messenger upon completion
+     * @param playlist the new playlist to insert into database
+     * @param messenger the messenger to notify about the change
+     */
+    public synchronized void asyncInsertPlaylist(Playlist playlist, Messenger messenger){
+        messageQueue.offer(new Query(ASYNC_INSERT_PLAYLIST, playlist, messenger));
+    }
+
+    /**
+     * Queues message to insert updated version of existing playlist into database,
+     * then updates main ui and notifies a messenger upon completion
+     * @param playlist the modified playlist to insert into database
+     * @param messenger the messenger to notify about the change
+     */
+    public synchronized void asyncModifyPlaylist(Playlist playlist, Messenger messenger){
+        messageQueue.offer(new Query(ASYNC_MODIFY_PLAYLIST, playlist, messenger));
+    }
+
+    /**
+     * Queues message to removes playlists from database and updates main ui when complete
+     * @param playlistIds array of ids of the playlists to get
+     */
+    public synchronized void asyncRemovePlaylistByIds(int[] playlistIds){
+        messageQueue.offer(new Query(ASYNC_DELETE_PLAYLISTS_BY_ID, playlistIds));
     }
 
     /**
@@ -159,16 +209,6 @@ public class DatabaseRepository {
     private synchronized void queryGetAllPlaylists(){
         allPlaylists = null;
         messageQueue.offer(new Query(GET_ALL_PLAYLISTS, null));
-    }
-
-    /**
-     * Queues query message to the blocking queue to get playlists by their id
-     * This method should not be used often, as it can take some time
-     */
-    private synchronized void queryGetPlaylistsById(int[] playlistIds){
-        selectPlaylists = null;
-        System.out.println("PLAYLIST IDS OFFERED: " + playlistIds);
-        messageQueue.offer(new Query(GET_PLAYLISTS_ID, playlistIds));
     }
 
     /**

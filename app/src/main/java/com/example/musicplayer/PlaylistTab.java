@@ -34,7 +34,7 @@ import java.util.ArrayList;
  */
 public class PlaylistTab extends Fragment {
 
-    public static final int REMOVE_PLAYLIST = 95;
+    public static final int REMOVE_PLAYLISTS = 95;
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -200,7 +200,7 @@ public class PlaylistTab extends Fragment {
                         // send message to update mainactivity
                         Message msg = Message.obtain();
                         Bundle bundle = new Bundle();
-                        bundle.putInt("update", REMOVE_PLAYLIST);
+                        bundle.putInt("update", REMOVE_PLAYLISTS);
                         bundle.putIntArray("ids", playlistIds);
                         msg.setData(bundle);
                         try {

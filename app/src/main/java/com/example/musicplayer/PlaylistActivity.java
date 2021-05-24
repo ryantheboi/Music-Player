@@ -222,7 +222,7 @@ public class PlaylistActivity extends Activity {
                         // send message to update mainactivity
                         Message msg = Message.obtain();
                         Bundle bundle = new Bundle();
-                        bundle.putInt("update", AddPlaylistActivity.EXTEND_PLAYLIST);
+                        bundle.putInt("update", AddPlaylistActivity.MODIFY_PLAYLIST);
                         bundle.putParcelable("playlist", m_playlist);
                         msg.setData(bundle);
                         try {

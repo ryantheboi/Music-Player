@@ -26,22 +26,25 @@ public class Playlist implements Parcelable {
 
     /**
      * Constructor used by database to create a playlist for every row
+     * Does not create a playlist if id is 0, because that is a temporary playlist (e.g. queues)
      */
     public Playlist(int id, String name, ArrayList<Song> songList) {
-        this.id = id;
-        this.name = name;
-        this.songList = new ArrayList<>(songList);
-        this.songHashMap = createHashMap(songList);
+        if (id > 0) {
+            this.id = id;
+            this.name = name;
+            this.songList = new ArrayList<>(songList);
+            this.songHashMap = createHashMap(songList);
+        }
     }
 
     /**
      * Overloaded Constructor which does not need id field parameter
      * id is manually generated when the playlist is expected to persist in database storage
-     * otherwise, id is -1 for temporary playlists (e.g. queues)
+     * otherwise, id is 0 for temporary playlists (e.g. queues)
      */
     @Ignore
     public Playlist(String name, ArrayList<Song> songList) {
-        this.id = -1;
+        this.id = 0;
         this.name = name;
         this.songList = new ArrayList<>(songList);
         this.songHashMap = createHashMap(songList);
@@ -191,6 +194,24 @@ public class Playlist implements Parcelable {
         this.songList.addAll(playlist.getSongList());
 
         // reconstruct hashmap with the updated song list
+        songHashMap = createHashMap(songList);
+    }
+
+    /**
+     * Rearranges the playlist such that the playlist begins from the provided song
+     * @param song the song to begin the playlist
+     */
+    public void rearrangePlaylist(Song song){
+        // get index of current song to split the current list of songs
+        int splitIdx = songList.indexOf(song);
+
+        ArrayList<Song> firstHalf = (ArrayList<Song>) songList.subList(0, splitIdx);
+        ArrayList<Song> secondHalf = (ArrayList<Song>) songList.subList(splitIdx, songList.size());
+
+        // reconstruct the new songslist and hash map
+        songList.clear();
+        songList.addAll(secondHalf);
+        songList.addAll(firstHalf);
         songHashMap = createHashMap(songList);
     }
 

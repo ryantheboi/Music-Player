@@ -19,6 +19,9 @@ public interface PlaylistDao {
     @Query("SELECT id FROM Playlists ORDER BY id DESC LIMIT 1")
     int getMaxId();
 
+    @Query("SELECT * FROM Playlists WHERE id = :id")
+    Playlist findById(int id);
+
     @Query("SELECT * FROM Playlists WHERE name LIKE :name")
     Playlist findByName(String name);
 

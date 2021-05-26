@@ -229,7 +229,9 @@ public class MainActivity extends AppCompatActivity {
             musicServiceIntent = new Intent(this, MusicPlayerService.class);
 
             // init listview functionality and playlist
-            initMusicList(); // starts music service for the first time
+            initMusicList();
+
+            initCurrentPlaylist(); // starts music service for the first time
 
             // init main sliding up panel
             initMainAnimation();
@@ -284,6 +286,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         System.out.println("paused");
+        // rearrange current playlist such that the playlist starts from the current song
+        current_playlist.rearrangePlaylist(current_song);
+
+        // save current playlist to database
+        databaseRepository.insertPlaylist(current_playlist);
         super.onPause();
     }
 
@@ -301,10 +308,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Initializes the listview with item click and multi choice listeners, and starts music service
-     * On item click, the song that was clicked will be played
-     * On multi choice, multiple songs can be selected to either create a queue or a new playlist
-     * The music service is started here in order to send the main activity's messenger
+     * Initializes the songs and playlists listview adapters
      */
     public void initMusicList() {
         // initialize full list of songs from device and playlists from database
@@ -316,18 +320,33 @@ public class MainActivity extends AppCompatActivity {
         // remove any songs that were not able to be found in the device
         cleanPlaylistDatabase();
 
-        // initialize current playlist and song
-        if (fullSongList.size() > 0){
-            current_playlist = fullPlaylist;
-            current_song = fullSongList.get(0);
+        songListadapter = new SongListAdapter(this, R.layout.adapter_song_layout, fullSongList, this);
+        playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this);
+    }
+
+    /**
+     * Retrieves the previously playing playlist from database, if it exists,
+     * otherwise set the current playlist to the full list of songs,
+     * and sets the current song to the first song in the playlist
+     */
+    public void initCurrentPlaylist(){
+        // initialize current playlist and song, from database if possible
+        current_playlist = databaseRepository.getCurrentPlaylist();
+        if (current_playlist != null){
+            System.out.println("CURRENT PLAYLIST " + current_playlist.getId() + ": "+  current_playlist.getName());
+            current_song = current_playlist.getSongList().get(0);
+        }
+
+        else{
+            if (fullSongList.size() > 0) {
+                current_playlist = fullPlaylist;
+                current_song = fullSongList.get(0);
+            }
         }
 
         // start music service for the first time
         musicServiceIntent.putExtra("musicListInit", mainActivityMessenger);
         startService(musicServiceIntent);
-
-        songListadapter = new SongListAdapter(this, R.layout.adapter_song_layout, fullSongList, this);
-        playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this);
     }
 
     public void initThemeButton() {

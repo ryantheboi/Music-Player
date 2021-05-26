@@ -19,14 +19,16 @@ public class DatabaseRepository {
 
     // playlist objects
     private ArrayList<Playlist> allPlaylists;
-    private static int playlist_maxid = -1;
+    private Playlist currentPlaylist;
+    private static int playlist_maxid = 0;
 
     public static final int GET_ALL_PLAYLISTS = 0;
-    public static final int GET_MAX_PLAYLIST_ID = 1;
-    public static final int INSERT_PLAYLIST = 2;
-    public static final int ASYNC_INSERT_PLAYLIST = 3;
-    public static final int ASYNC_MODIFY_PLAYLIST = 4;
-    public static final int ASYNC_DELETE_PLAYLISTS_BY_ID = 5;
+    public static final int GET_CURRENT_PLAYLIST = 1;
+    public static final int GET_MAX_PLAYLIST_ID = 2;
+    public static final int INSERT_PLAYLIST = 3;
+    public static final int ASYNC_INSERT_PLAYLIST = 4;
+    public static final int ASYNC_MODIFY_PLAYLIST = 5;
+    public static final int ASYNC_DELETE_PLAYLISTS_BY_ID = 6;
 
     /**
      * Holds the query message and the object involved (if exists)
@@ -60,6 +62,7 @@ public class DatabaseRepository {
         // begin queries that are expected to take time and store the results in memory
         queryGetAllPlaylists();
         queryGetMaxPlaylistId();
+        queryGetCurrentPlaylist();
     }
 
     public void initDatabase(Context context){
@@ -90,6 +93,10 @@ public class DatabaseRepository {
                             switch (message) {
                                 case GET_ALL_PLAYLISTS:
                                     allPlaylists = new ArrayList<>(playlistDao.getAll());
+                                    break;
+                                case GET_CURRENT_PLAYLIST:
+                                    // the current playlist always has an id of 0
+                                    currentPlaylist = playlistDao.findById(0);
                                     break;
                                 case GET_MAX_PLAYLIST_ID:
                                     playlist_maxid = playlistDao.getMaxId();
@@ -156,6 +163,16 @@ public class DatabaseRepository {
     }
 
     /**
+     * Only returns the current playlists when the message queue is finished querying for it
+     * @return the current playlist, with the id of 0, from the database
+     */
+    public synchronized Playlist getCurrentPlaylist(){
+        while (currentPlaylist == null) {
+        }
+        return currentPlaylist;
+    }
+
+    /**
      * Generates a playlist id by adding 1 to the current highest playlist id
      * @return the next highest playlist id that is not in use
      */
@@ -209,6 +226,14 @@ public class DatabaseRepository {
     private synchronized void queryGetAllPlaylists(){
         allPlaylists = null;
         messageQueue.offer(new Query(GET_ALL_PLAYLISTS, null));
+    }
+
+    /**
+     * Queues query message to the blocking queue to get the current playlist
+     */
+    private synchronized void queryGetCurrentPlaylist(){
+        currentPlaylist = null;
+        messageQueue.offer(new Query(GET_CURRENT_PLAYLIST, null));
     }
 
     /**

@@ -11,8 +11,9 @@ import java.util.concurrent.LinkedBlockingQueue;
  * The single source of truth for all database retrievals and updates
  */
 public class DatabaseRepository {
-    private PlaylistDatabase playlistDatabase;
+    private MusicPlayerDatabase musicPlayerDatabase;
     private PlaylistDao playlistDao;
+    private MetadataDao metadataDao;
     private MainActivity mainActivity;
     private boolean isModifying = false;
     private LinkedBlockingQueue<Query> messageQueue;
@@ -58,12 +59,13 @@ public class DatabaseRepository {
     }
 
     public void initDatabase(Context context){
-        playlistDatabase = Room.databaseBuilder(context,
-                PlaylistDatabase.class, "playlist-database").build();
+        musicPlayerDatabase = Room.databaseBuilder(context,
+                MusicPlayerDatabase.class, "musicplayer-database").build();
 
-        playlistDao = playlistDatabase.getPlaylistDao();
+        playlistDao = musicPlayerDatabase.getPlaylistDao();
+        metadataDao = musicPlayerDatabase.getMetadataDao();
 
-        String currentDBPath = context.getDatabasePath("playlist-database").getAbsolutePath();
+        String currentDBPath = context.getDatabasePath("musicplayer-database").getAbsolutePath();
     }
 
     /**

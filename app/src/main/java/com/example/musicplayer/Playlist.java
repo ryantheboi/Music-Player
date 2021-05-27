@@ -12,6 +12,7 @@ import androidx.room.PrimaryKey;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 @Entity(tableName = "Playlists")
 public class Playlist implements Parcelable {
@@ -26,15 +27,12 @@ public class Playlist implements Parcelable {
 
     /**
      * Constructor used by database to create a playlist for every row
-     * Does not create a playlist if id is 0, because that is a temporary playlist (e.g. queues)
      */
     public Playlist(int id, String name, ArrayList<Song> songList) {
-        if (id > 0) {
-            this.id = id;
-            this.name = name;
-            this.songList = new ArrayList<>(songList);
-            this.songHashMap = createHashMap(songList);
-        }
+        this.id = id;
+        this.name = name;
+        this.songList = new ArrayList<>(songList);
+        this.songHashMap = createHashMap(songList);
     }
 
     /**
@@ -190,7 +188,7 @@ public class Playlist implements Parcelable {
      * @param playlist the playlist whose songlist shall be adopted
      */
     public void adoptSongList(Playlist playlist){
-        this.songList.clear();
+        this.songList = new ArrayList<>();
         this.songList.addAll(playlist.getSongList());
 
         // reconstruct hashmap with the updated song list
@@ -205,11 +203,11 @@ public class Playlist implements Parcelable {
         // get index of current song to split the current list of songs
         int splitIdx = songList.indexOf(song);
 
-        ArrayList<Song> firstHalf = (ArrayList<Song>) songList.subList(0, splitIdx);
-        ArrayList<Song> secondHalf = (ArrayList<Song>) songList.subList(splitIdx, songList.size());
+        List<Song> firstHalf = songList.subList(0, splitIdx);
+        List<Song> secondHalf = songList.subList(splitIdx, songList.size());
 
         // reconstruct the new songslist and hash map
-        songList.clear();
+        songList = new ArrayList<>();
         songList.addAll(secondHalf);
         songList.addAll(firstHalf);
         songHashMap = createHashMap(songList);

@@ -18,17 +18,14 @@ public class DatabaseRepository {
     private LinkedBlockingQueue<Query> messageQueue;
 
     // playlist objects
-    private ArrayList<Playlist> allPlaylists;
-    private Playlist currentPlaylist;
     private static int playlist_maxid = 0;
 
-    public static final int GET_ALL_PLAYLISTS = 0;
-    public static final int GET_CURRENT_PLAYLIST = 1;
-    public static final int GET_MAX_PLAYLIST_ID = 2;
-    public static final int INSERT_PLAYLIST = 3;
-    public static final int ASYNC_INSERT_PLAYLIST = 4;
-    public static final int ASYNC_MODIFY_PLAYLIST = 5;
-    public static final int ASYNC_DELETE_PLAYLISTS_BY_ID = 6;
+    public static final int ASYNC_INIT_ALL_PLAYLISTS = 0;
+    public static final int ASYNC_GET_CURRENT_PLAYLIST = 1;
+    public static final int ASYNC_INSERT_PLAYLIST = 2;
+    public static final int ASYNC_MODIFY_PLAYLIST = 3;
+    public static final int ASYNC_DELETE_PLAYLISTS_BY_ID = 4;
+    public static final int INSERT_PLAYLIST = 5;
 
     /**
      * Holds the query message and the object involved (if exists)
@@ -58,11 +55,6 @@ public class DatabaseRepository {
 
         // init message queue and begin thread to pull from the queue
         startMessageQueueThread();
-
-        // begin queries that are expected to take time and store the results in memory
-        queryGetAllPlaylists();
-        queryGetMaxPlaylistId();
-        queryGetCurrentPlaylist();
     }
 
     public void initDatabase(Context context){
@@ -91,18 +83,34 @@ public class DatabaseRepository {
 
                             int message = query.message;
                             switch (message) {
-                                case GET_ALL_PLAYLISTS:
-                                    allPlaylists = new ArrayList<>(playlistDao.getAll());
-                                    break;
-                                case GET_CURRENT_PLAYLIST:
-                                    // the current playlist always has an id of 0
-                                    currentPlaylist = playlistDao.findById(0);
-                                    break;
-                                case GET_MAX_PLAYLIST_ID:
-                                    playlist_maxid = playlistDao.getMaxId();
-                                    break;
                                 case INSERT_PLAYLIST:
                                     playlistDao.insert((Playlist) query.object);
+                                    break;
+                                case ASYNC_INIT_ALL_PLAYLISTS:
+                                    final ArrayList<Playlist> allPlaylists = new ArrayList<>(playlistDao.getAll());
+
+                                    // store the current highest id value in memory
+                                    playlist_maxid = playlistDao.getMaxId();
+
+                                    // operation complete, update viewpager in mainactivity
+                                    mainActivity.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            mainActivity.updateMainActivity(allPlaylists, null, ASYNC_INIT_ALL_PLAYLISTS);
+                                        }
+                                    });
+                                    break;
+                                case ASYNC_GET_CURRENT_PLAYLIST:
+                                    // the current playlist always has an id of 0
+                                    final Playlist currentPlaylist = playlistDao.findById(0);
+
+                                    // operation complete, update viewpager in mainactivity
+                                    mainActivity.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            mainActivity.updateMainActivity(currentPlaylist, null, ASYNC_GET_CURRENT_PLAYLIST);
+                                        }
+                                    });
                                     break;
                                 case ASYNC_INSERT_PLAYLIST:
                                     playlistDao.insert((Playlist) query.object);
@@ -111,7 +119,7 @@ public class DatabaseRepository {
                                     mainActivity.runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            mainActivity.updateViewPager((Playlist) query.object, (Messenger) query.extra, ASYNC_INSERT_PLAYLIST);
+                                            mainActivity.updateMainActivity((Playlist) query.object, (Messenger) query.extra, ASYNC_INSERT_PLAYLIST);
                                         }
                                     });
                                     break;
@@ -122,7 +130,7 @@ public class DatabaseRepository {
                                     mainActivity.runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            mainActivity.updateViewPager((Playlist) query.object, (Messenger) query.extra, ASYNC_MODIFY_PLAYLIST);
+                                            mainActivity.updateMainActivity((Playlist) query.object, (Messenger) query.extra, ASYNC_MODIFY_PLAYLIST);
                                         }
                                     });
                                     break;
@@ -136,7 +144,7 @@ public class DatabaseRepository {
                                     mainActivity.runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            mainActivity.updateViewPager(selectPlaylists, null, ASYNC_DELETE_PLAYLISTS_BY_ID);
+                                            mainActivity.updateMainActivity(selectPlaylists, null, ASYNC_DELETE_PLAYLISTS_BY_ID);
                                         }
                                     });
                                     break;
@@ -153,23 +161,19 @@ public class DatabaseRepository {
     }
 
     /**
-     * Only returns all playlists when the message queue is finished querying for them
-     * @return the full ArrayList containing all playlists in the database
+     * Queues message to get all playlists and the max playlist id stored in the database,
+     * then updates main activity with all playlists upon completion
      */
-    public synchronized ArrayList<Playlist> getAllPlaylists(){
-        while (allPlaylists == null) {
-        }
-        return allPlaylists;
+    public synchronized void asyncInitAllPlaylists(){
+        messageQueue.offer(new Query(ASYNC_INIT_ALL_PLAYLISTS, null));
     }
 
     /**
-     * Only returns the current playlists when the message queue is finished querying for it
-     * @return the current playlist, with the id of 0, from the database
+     * Queues message to get the current playlist (id 0) stored in the database,
+     * then updates main activity upon completion
      */
-    public synchronized Playlist getCurrentPlaylist(){
-        while (currentPlaylist == null) {
-        }
-        return currentPlaylist;
+    public synchronized void asyncGetCurrentPlaylist(){
+        messageQueue.offer(new Query(ASYNC_GET_CURRENT_PLAYLIST, null));
     }
 
     /**
@@ -177,8 +181,6 @@ public class DatabaseRepository {
      * @return the next highest playlist id that is not in use
      */
     public synchronized static int generatePlaylistId(){
-        while (playlist_maxid == -1) {
-        }
         playlist_maxid += 1;
         return playlist_maxid;
     }
@@ -217,31 +219,5 @@ public class DatabaseRepository {
      */
     public synchronized void asyncRemovePlaylistByIds(int[] playlistIds){
         messageQueue.offer(new Query(ASYNC_DELETE_PLAYLISTS_BY_ID, playlistIds));
-    }
-
-    /**
-     * Queues query message to the blocking queue to get all playlists
-     * This method should not be used often, as it can take some time
-     */
-    private synchronized void queryGetAllPlaylists(){
-        allPlaylists = null;
-        messageQueue.offer(new Query(GET_ALL_PLAYLISTS, null));
-    }
-
-    /**
-     * Queues query message to the blocking queue to get the current playlist
-     */
-    private synchronized void queryGetCurrentPlaylist(){
-        currentPlaylist = null;
-        messageQueue.offer(new Query(GET_CURRENT_PLAYLIST, null));
-    }
-
-    /**
-     * Queues query message to the blocking queue to get the next (highest) available playlist id
-     * This method should not be used often, as it can take some time
-     */
-    private synchronized void queryGetMaxPlaylistId(){
-        playlist_maxid = -1;
-        messageQueue.offer(new Query(GET_MAX_PLAYLIST_ID, null));
     }
 }

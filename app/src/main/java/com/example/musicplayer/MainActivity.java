@@ -231,25 +231,10 @@ public class MainActivity extends AppCompatActivity {
             // init listview functionality and playlist
             initMusicList();
 
-            initCurrentPlaylist(); // starts music service for the first time
-
-            // init main sliding up panel
-            initMainAnimation();
-
-            initMainDisplay();
-
-            initMainButtons();
-
-            initSeekbar();
-
-            initInfoButton();
-
-            initSlidingUpPanel();
-
             initNotification();
-
-            initViewPager();
-
+            initMainAnimation();
+            initMainButtons();
+            initInfoButton();
             initActionBar();
         }
     }
@@ -308,45 +293,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Initializes the songs and playlists listview adapters
+     * Initializes all songs from the device and all playlists from the database
      */
     public void initMusicList() {
-        // initialize full list of songs from device and playlists from database
+        // gets all songs from device
         fullSongList = new ArrayList<>();
         getMusic(); // populates fullSongList
         fullPlaylist = new Playlist("FULL_PLAYLIST", fullSongList);
-        playlistList = databaseRepository.getAllPlaylists();
 
-        // remove any songs that were not able to be found in the device
-        cleanPlaylistDatabase();
-
-        songListadapter = new SongListAdapter(this, R.layout.adapter_song_layout, fullSongList, this);
-        playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this);
-    }
-
-    /**
-     * Retrieves the previously playing playlist from database, if it exists,
-     * otherwise set the current playlist to the full list of songs,
-     * and sets the current song to the first song in the playlist
-     */
-    public void initCurrentPlaylist(){
-        // initialize current playlist and song, from database if possible
-        current_playlist = databaseRepository.getCurrentPlaylist();
-        if (current_playlist != null){
-            System.out.println("CURRENT PLAYLIST " + current_playlist.getId() + ": "+  current_playlist.getName());
-            current_song = current_playlist.getSongList().get(0);
-        }
-
-        else{
-            if (fullSongList.size() > 0) {
-                current_playlist = fullPlaylist;
-                current_song = fullSongList.get(0);
-            }
-        }
-
-        // start music service for the first time
-        musicServiceIntent.putExtra("musicListInit", mainActivityMessenger);
-        startService(musicServiceIntent);
+        // asynchronously gets all playlists from database, then updates main activity
+        databaseRepository.asyncInitAllPlaylists();
     }
 
     public void initThemeButton() {
@@ -1115,21 +1071,57 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Updates the viewpager with the changes made by the database repository
+     * Updates the main activity with the changes made by the database repository
      * @param object an object associated with the update operation (e.g. a playlist, or playlists)
      * @param messenger the messenger to notify after successfully adding the playlist
      * @param operation the operation being performed with the playlist
      */
-    public void updateViewPager(Object object, final Messenger messenger, final int operation){
+    public void updateMainActivity(Object object, final Messenger messenger, final int operation){
         final MainActivity mainActivity = this;
         switch (operation) {
-            // update current playlist adapter with the newly created playlist
+            case DatabaseRepository.ASYNC_INIT_ALL_PLAYLISTS:
+                // remove any songs that were not able to be found in the device
+                playlistList = (ArrayList<Playlist>) object;
+                cleanPlaylistDatabase();
+                songListadapter = new SongListAdapter(this, R.layout.adapter_song_layout, fullSongList, this);
+                playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this);
+
+                // initialize current playlist and song, from database if possible
+                databaseRepository.asyncGetCurrentPlaylist();
+                break;
+
+            case DatabaseRepository.ASYNC_GET_CURRENT_PLAYLIST:
+                current_playlist = (Playlist) object;
+                if (current_playlist != null){
+                    current_song = current_playlist.getSongList().get(0);
+                }
+
+                // if a playlist wasn't retrieved from the database
+                if (current_playlist == null) {
+                    if (fullSongList.size() > 0) {
+                        current_playlist = fullPlaylist;
+                        current_song = fullSongList.get(0);
+                    }
+                }
+                // start music service for the first time
+                musicServiceIntent.putExtra("musicListInit", mainActivityMessenger);
+                startService(musicServiceIntent);
+
+                // init main ui
+                initMainDisplay();
+                initSeekbar();
+                initSlidingUpPanel();
+                initViewPager();
+                break;
+
             case DatabaseRepository.ASYNC_INSERT_PLAYLIST:
+                // update current playlist adapter with the newly created playlist
                 playlistAdapter.add((Playlist) object);
 
                 // move to playlist tab
                 viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
                 break;
+
             case DatabaseRepository.ASYNC_MODIFY_PLAYLIST:
                 Playlist temp_playlist = (Playlist) object;
                 // check if songs were removed from existing playlist
@@ -1156,7 +1148,6 @@ public class MainActivity extends AppCompatActivity {
                 for (Playlist playlist : playlists){
                     playlistAdapter.remove(playlist);
                 }
-                System.out.println("DONE REMOVE");
                 break;
             }
 

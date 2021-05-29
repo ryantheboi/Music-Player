@@ -23,10 +23,12 @@ public class DatabaseRepository {
 
     public static final int ASYNC_INIT_ALL_PLAYLISTS = 0;
     public static final int ASYNC_GET_CURRENT_PLAYLIST = 1;
-    public static final int ASYNC_INSERT_PLAYLIST = 2;
-    public static final int ASYNC_MODIFY_PLAYLIST = 3;
-    public static final int ASYNC_DELETE_PLAYLISTS_BY_ID = 4;
-    public static final int INSERT_PLAYLIST = 5;
+    public static final int ASYNC_GET_METADATA = 2;
+    public static final int ASYNC_INSERT_PLAYLIST = 3;
+    public static final int ASYNC_MODIFY_PLAYLIST = 4;
+    public static final int ASYNC_DELETE_PLAYLISTS_BY_ID = 5;
+    public static final int INSERT_PLAYLIST = 6;
+    public static final int INSERT_METADATA = 7;
 
     /**
      * Holds the query message and the object involved (if exists)
@@ -85,9 +87,6 @@ public class DatabaseRepository {
 
                             int message = query.message;
                             switch (message) {
-                                case INSERT_PLAYLIST:
-                                    playlistDao.insert((Playlist) query.object);
-                                    break;
                                 case ASYNC_INIT_ALL_PLAYLISTS:
                                     final ArrayList<Playlist> allPlaylists = new ArrayList<>(playlistDao.getAll());
 
@@ -150,6 +149,28 @@ public class DatabaseRepository {
                                         }
                                     });
                                     break;
+                                case ASYNC_GET_METADATA:
+                                    // there is only one row of metadata for now, with id 0
+                                    final Metadata metadata = metadataDao.findById(0);
+
+                                    if (metadata != null) {
+                                        // operation complete, update viewpager in mainactivity
+                                        mainActivity.runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                mainActivity.updateMainActivity(metadata, null, ASYNC_GET_METADATA);
+                                            }
+                                        });
+                                    }
+                                case INSERT_PLAYLIST:
+                                    Playlist p = (Playlist) query.object;
+                                    if (p != null) {
+                                        playlistDao.insert((Playlist) query.object);
+                                    }
+                                    break;
+                                case INSERT_METADATA:
+                                    metadataDao.insert((Metadata) query.object);
+                                    break;
                             }
                             isModifying = false;
                         }catch (InterruptedException e){
@@ -179,20 +200,20 @@ public class DatabaseRepository {
     }
 
     /**
+     * Queues message to get the metadata stored in the database,
+     * then updates main activity upon completion
+     */
+    public synchronized void asyncGetMetadata(){
+        messageQueue.offer(new Query(ASYNC_GET_METADATA, null));
+    }
+
+    /**
      * Generates a playlist id by adding 1 to the current highest playlist id
      * @return the next highest playlist id that is not in use
      */
     public synchronized static int generatePlaylistId(){
         playlist_maxid += 1;
         return playlist_maxid;
-    }
-
-    /**
-     * Queues message to insert new playlist into database
-     * @param playlist the new playlist to insert into database
-     */
-    public synchronized void insertPlaylist(Playlist playlist){
-        messageQueue.offer(new Query(INSERT_PLAYLIST, playlist));
     }
 
     /**
@@ -221,5 +242,21 @@ public class DatabaseRepository {
      */
     public synchronized void asyncRemovePlaylistByIds(int[] playlistIds){
         messageQueue.offer(new Query(ASYNC_DELETE_PLAYLISTS_BY_ID, playlistIds));
+    }
+
+    /**
+     * Queues message to insert new playlist into database
+     * @param playlist the new playlist to insert into database
+     */
+    public synchronized void insertPlaylist(Playlist playlist){
+        messageQueue.offer(new Query(INSERT_PLAYLIST, playlist));
+    }
+
+    /**
+     * Queues message to insert metadata into database
+     * @param metadata the metadata to insert into database
+     */
+    public synchronized void insertMetadata(Metadata metadata){
+        messageQueue.offer(new Query(INSERT_METADATA, metadata));
     }
 }

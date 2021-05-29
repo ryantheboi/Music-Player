@@ -271,11 +271,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         System.out.println("paused");
-        // rearrange current playlist such that the playlist starts from the current song
-        current_playlist.rearrangePlaylist(current_song);
 
-        // save current playlist to database
-        databaseRepository.insertPlaylist(current_playlist);
+        // store current metadata values in database
+        int theme_resourceid = ThemeColors.getThemeResourceId();
+        int songtab_scrollindex = SongListTab.getScrollIndex();
+        int songtab_scrolloffset = SongListTab.getScrollOffset();
+        databaseRepository.insertMetadata(new Metadata(0, theme_resourceid, songtab_scrollindex, songtab_scrolloffset));
         super.onPause();
     }
 
@@ -1086,10 +1087,9 @@ public class MainActivity extends AppCompatActivity {
                 songListadapter = new SongListAdapter(this, R.layout.adapter_song_layout, fullSongList, this);
                 playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this);
 
-                // initialize current playlist and song, from database if possible
+                // initialize current playlist and song from database, if possible
                 databaseRepository.asyncGetCurrentPlaylist();
                 break;
-
             case DatabaseRepository.ASYNC_GET_CURRENT_PLAYLIST:
                 current_playlist = (Playlist) object;
                 if (current_playlist != null){
@@ -1112,8 +1112,10 @@ public class MainActivity extends AppCompatActivity {
                 initSeekbar();
                 initSlidingUpPanel();
                 initViewPager();
-                break;
 
+                // retrieve metadata values from database
+                databaseRepository.asyncGetMetadata();
+                break;
             case DatabaseRepository.ASYNC_INSERT_PLAYLIST:
                 // update current playlist adapter with the newly created playlist
                 playlistAdapter.add((Playlist) object);
@@ -1121,7 +1123,6 @@ public class MainActivity extends AppCompatActivity {
                 // move to playlist tab
                 viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
                 break;
-
             case DatabaseRepository.ASYNC_MODIFY_PLAYLIST:
                 Playlist temp_playlist = (Playlist) object;
                 // check if songs were removed from existing playlist
@@ -1142,12 +1143,22 @@ public class MainActivity extends AppCompatActivity {
                 // move to playlist tab
                 viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
                 break;
-
             case DatabaseRepository.ASYNC_DELETE_PLAYLISTS_BY_ID:
                 ArrayList<Playlist> playlists = (ArrayList<Playlist>) object;
                 for (Playlist playlist : playlists){
                     playlistAdapter.remove(playlist);
                 }
+                break;
+            case DatabaseRepository.ASYNC_GET_METADATA:
+                Metadata metadata = (Metadata) object;
+                // set the current theme and generate theme values
+                setTheme(metadata.getThemeResourceId());
+                ThemeColors.generateThemeValues(this, metadata.getThemeResourceId());
+
+                // after generating theme values, update the main ui
+                updateTheme(metadata.getThemeResourceId());
+                theme_btn.setImageResource(ThemeColors.getThemeBtnResourceId());
+                SongListTab.setScrollSelection(metadata.getSongtab_scrollindex(), metadata.getSongtab_scrolloffset());
                 break;
             }
 
@@ -1375,6 +1386,10 @@ public class MainActivity extends AppCompatActivity {
                             updateSlidingMenuColors();
                         }
                     });
+
+                    // save the current song and playlist to database
+                    current_playlist.rearrangePlaylist(current_song);
+                    databaseRepository.insertPlaylist(current_playlist);
                     break;
                 case ChooseThemeActivity.THEME_SELECTED:
                     final int theme_resid = ThemeColors.getThemeResourceId();

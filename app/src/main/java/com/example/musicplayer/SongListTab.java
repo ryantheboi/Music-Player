@@ -239,4 +239,34 @@ public class SongListTab extends Fragment {
         songListAdapter.setItemsTitleTextColor(mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
         songListAdapter.setItemsAlbumArtistTextColor(mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
     }
+
+    /**
+     * Gets the top visible list item, which may be partially scrolled out of view.
+     * Must be used in conjunction with an offset to calculate the exact scroll position.
+     * @return the position within the adapter's data set for the first item displayed on screen
+     */
+    public static int getScrollIndex(){
+        return listView.getFirstVisiblePosition();
+    }
+
+    /**
+     * Calculates the relative offset from the top of the listview
+     * @return the relative offset from the top of the ListView, if there is a top, otherwise 0
+     */
+    public static int getScrollOffset(){
+        View top_item = listView.getChildAt(0);
+        int offset = (top_item == null) ? 0 : (top_item.getTop() - listView.getPaddingTop());
+        return offset;
+    }
+
+    /**
+     * Sets the listview's position, given an item's index and offset from the top
+     * @param index the top visible list item
+     * @param offset the top item's relative offset from the top of the listview
+     */
+    public static void setScrollSelection(int index, int offset){
+        listView.setSelectionFromTop(index, offset);
+    }
+
+
 }

@@ -49,22 +49,34 @@ public class MusicPlayerService
     public static final int UPDATE_SEEKBAR_PROGRESS = 3;
     public static final int UPDATE_SONG = 4;
 
-    public static final int PREPARE_INIT = 0;
-    public static final int PREPARE_SONG = 1;
-    public static final int PREPARE_PLAY = 2;
-    public static final int PREPARE_PREV = 3;
-    public static final int PREPARE_NEXT = 4;
-    public static final int PREPARE_DURATION = 5;
-    public static final int PREPARE_SEEK = 6;
-    public static final int PREPARE_SEEKBAR_PROGRESS = 7;
-    public static final int PREPARE_NOTIFICATION = 8;
+    public static final int PREPARE_INIT_PAUSED = 0;
+    public static final int PREPARE_INIT_PLAYING = 1;
+    public static final int PREPARE_SONG = 2;
+    public static final int PREPARE_PLAY = 3;
+    public static final int PREPARE_PREV = 4;
+    public static final int PREPARE_NEXT = 5;
+    public static final int PREPARE_DURATION = 6;
+    public static final int PREPARE_SEEK = 7;
+    public static final int PREPARE_SEEKBAR_PROGRESS = 8;
+    public static final int PREPARE_NOTIFICATION = 9;
 
 
 
     @Override
     @TargetApi(26)
     public void onCreate() {
-        mediaPlayer = MediaPlayer.create(this, R.raw.aft);
+        Song current_song = MainActivity.getCurrent_song();
+        if (current_song != Song.EMPTY_SONG) {
+            // prepare mediaplayer for the current song
+            int songID = current_song.getID();
+            Uri audioURI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+            Uri songURI = ContentUris.withAppendedId(audioURI, songID);
+            mediaPlayer = MediaPlayer.create(this, songURI);
+        }
+        else{
+            mediaPlayer = MediaPlayer.create(this, R.raw.aft);
+        }
+
         mediaPlayer.setOnCompletionListener(this);
         mediaPlayer.setOnErrorListener(this);
 
@@ -124,14 +136,17 @@ public class MusicPlayerService
         // begin responding to the messenger based on message received
         Bundle b = intent.getExtras();
         if (b != null) {
-            Bundle bundle_extra;
             for (String key : b.keySet()) {
-                //System.out.println(key);
                 switch (key){
-                    case "musicListInit":
-                        mainActivity_messenger = intent.getParcelableExtra("musicListInit");
-                        playerHandler.removeMessages(PREPARE_INIT);
-                        playerHandler.obtainMessage(PREPARE_INIT).sendToTarget();
+                    case "musicListInitPaused":
+                        mainActivity_messenger = intent.getParcelableExtra("musicListInitPaused");
+                        playerHandler.removeMessages(PREPARE_INIT_PAUSED);
+                        playerHandler.obtainMessage(PREPARE_INIT_PAUSED).sendToTarget();
+                        break;
+                    case "musicListInitPlaying":
+                        mainActivity_messenger = intent.getParcelableExtra("musicListInitPlaying");
+                        playerHandler.removeMessages(PREPARE_INIT_PLAYING);
+                        playerHandler.obtainMessage(PREPARE_INIT_PLAYING).sendToTarget();
                         break;
                     case "pauseplay":
                         // update the pauseplay button icon via messenger and toggle music
@@ -268,12 +283,14 @@ public class MusicPlayerService
          * sends an int message to the main thread
          * @param messenger the messenger to send update to
          * @param message the update code
+         * @param updateDatabase true if this will push an update to the database, false otherwise
          */
-        private void sendUpdateMessage(Messenger messenger, int message) {
+        private void sendUpdateMessage(Messenger messenger, int message, boolean updateDatabase) {
             Message msg = Message.obtain();
             Bundle bundle = new Bundle();
 
             bundle.putInt("update", message);
+            bundle.putBoolean("updateDatabase", updateDatabase);
             msg.setData(bundle);
             try {
                 messenger.send(msg);
@@ -328,7 +345,7 @@ public class MusicPlayerService
                 return;
             }
             switch (msg.what) {
-                case PREPARE_INIT:
+                case PREPARE_INIT_PAUSED:
                     try {
                         // update main ui with current song
                         Song current_song = MainActivity.getCurrent_song();
@@ -347,7 +364,19 @@ public class MusicPlayerService
                             mp.setOnErrorListener(mService);
                             mp.setWakeMode(mService, PowerManager.PARTIAL_WAKE_LOCK);
                             mediaPlayer = mp;
-                            sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY);
+                            sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY, false);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case PREPARE_INIT_PLAYING:
+                    try {
+                        // update main ui with current song, which is still playing
+                        Song current_song = MainActivity.getCurrent_song();
+                        if (current_song != Song.EMPTY_SONG) {
+                            sendSongUpdateMessage(mainActivity_messenger, current_song);
+                            sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE, false);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -375,7 +404,7 @@ public class MusicPlayerService
                         mp.setWakeMode(mService, PowerManager.PARTIAL_WAKE_LOCK);
                         mediaPlayer = mp;
                         audioFocusToggleMedia();
-                        sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE);
+                        sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE, true);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -383,12 +412,12 @@ public class MusicPlayerService
                 case PREPARE_PLAY:
                     if (playing) {
                         // disable playback in background
-                        sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY);
+                        sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY, true);
                         mService.stopForeground(false);
                     }
                     else{
                         // enable playback in background
-                        sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE);
+                        sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE, true);
                         mService.startForeground(1, notification);
                     }
                     audioFocusToggleMedia();
@@ -414,10 +443,10 @@ public class MusicPlayerService
                             mediaPlayer = mp;
 
                             if (playing) {
-                                sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE);
+                                sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE, true);
                                 audioFocusToggleMedia();
                             } else {
-                                sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY);
+                                sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY, true);
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -445,10 +474,10 @@ public class MusicPlayerService
                             mediaPlayer = mp;
 
                             if (playing) {
-                                sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE);
+                                sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE, true);
                                 audioFocusToggleMedia();
                             } else {
-                                sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY);
+                                sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY, true);
                             }
                         } catch (Exception e) {
                             e.printStackTrace();

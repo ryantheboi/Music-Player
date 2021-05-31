@@ -11,18 +11,24 @@ public class Metadata {
     @PrimaryKey
     private int id;
 
-    // the theme last selected by the user
+    // values to determine the mediaplayer's status
+    private boolean isPlaying;
+    private int seekPosition;
+
+    // theme last selected by the user
     private int themeResourceId;
 
-    // the values to determine the exact songtab position where the user last was
+    // values to determine the exact songtab position where the user last was
     private int songtab_scrollindex;
     private int songtab_scrolloffset;
 
     /**
      * Constructor used by database to create a metadata object
      */
-    public Metadata(int id, int themeResourceId, int songtab_scrollindex, int songtab_scrolloffset) {
+    public Metadata(int id, boolean isPlaying, int seekPosition, int themeResourceId, int songtab_scrollindex, int songtab_scrolloffset) {
         this.id = id;
+        this.isPlaying = isPlaying;
+        this.seekPosition = seekPosition;
         this.themeResourceId = themeResourceId;
         this.songtab_scrollindex = songtab_scrollindex;
         this.songtab_scrolloffset = songtab_scrolloffset;
@@ -30,6 +36,14 @@ public class Metadata {
 
     public int getId() {
         return id;
+    }
+
+    public boolean getIsPlaying() {
+        return isPlaying;
+    }
+
+    public int getSeekPosition(){
+        return seekPosition;
     }
 
     public int getThemeResourceId() {

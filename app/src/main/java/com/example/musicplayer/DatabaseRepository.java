@@ -29,6 +29,10 @@ public class DatabaseRepository {
     public static final int ASYNC_DELETE_PLAYLISTS_BY_ID = 5;
     public static final int INSERT_PLAYLIST = 6;
     public static final int INSERT_METADATA = 7;
+    public static final int UPDATE_METADATA_THEME = 8;
+    public static final int UPDATE_METADATA_SONGTAB = 9;
+    public static final int UPDATE_METADATA_ISPLAYING = 10;
+    public static final int UPDATE_METADATA_SEEK = 11;
 
     /**
      * Holds the query message and the object involved (if exists)
@@ -153,15 +157,14 @@ public class DatabaseRepository {
                                     // there is only one row of metadata for now, with id 0
                                     final Metadata metadata = metadataDao.findById(0);
 
-                                    if (metadata != null) {
-                                        // operation complete, update viewpager in mainactivity
-                                        mainActivity.runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                mainActivity.updateMainActivity(metadata, null, ASYNC_GET_METADATA);
-                                            }
-                                        });
-                                    }
+                                    // operation complete, update viewpager in mainactivity
+                                    mainActivity.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            mainActivity.updateMainActivity(metadata, null, ASYNC_GET_METADATA);
+                                        }
+                                    });
+                                    break;
                                 case INSERT_PLAYLIST:
                                     Playlist p = (Playlist) query.object;
                                     if (p != null) {
@@ -170,6 +173,18 @@ public class DatabaseRepository {
                                     break;
                                 case INSERT_METADATA:
                                     metadataDao.insert((Metadata) query.object);
+                                    break;
+                                case UPDATE_METADATA_THEME:
+                                    metadataDao.updateTheme(0, (int) query.object);
+                                    break;
+                                case UPDATE_METADATA_SONGTAB:
+                                    metadataDao.updateSongTab(0, (int) query.object, (int) query.extra);
+                                    break;
+                                case UPDATE_METADATA_ISPLAYING:
+                                    metadataDao.updateIsPlaying(0, (boolean) query.object);
+                                    break;
+                                case UPDATE_METADATA_SEEK:
+                                    metadataDao.updateSeekPosition(0, (int) query.object);
                                     break;
                             }
                             isModifying = false;
@@ -181,6 +196,15 @@ public class DatabaseRepository {
             }
         });
         messageQueueThread.start();
+    }
+
+    /**
+     * Generates a playlist id by adding 1 to the current highest playlist id
+     * @return the next highest playlist id that is not in use
+     */
+    public synchronized static int generatePlaylistId(){
+        playlist_maxid += 1;
+        return playlist_maxid;
     }
 
     /**
@@ -205,15 +229,6 @@ public class DatabaseRepository {
      */
     public synchronized void asyncGetMetadata(){
         messageQueue.offer(new Query(ASYNC_GET_METADATA, null));
-    }
-
-    /**
-     * Generates a playlist id by adding 1 to the current highest playlist id
-     * @return the next highest playlist id that is not in use
-     */
-    public synchronized static int generatePlaylistId(){
-        playlist_maxid += 1;
-        return playlist_maxid;
     }
 
     /**
@@ -258,5 +273,38 @@ public class DatabaseRepository {
      */
     public synchronized void insertMetadata(Metadata metadata){
         messageQueue.offer(new Query(INSERT_METADATA, metadata));
+    }
+
+    /**
+     * Queues message to update the theme value in the metadata
+     * @param themeResourceId the resource id corresponding to a theme
+     */
+    public synchronized void updateMetadataTheme(int themeResourceId){
+        messageQueue.offer(new Query(UPDATE_METADATA_THEME, themeResourceId));
+    }
+
+    /**
+     * Queues message to update the songtab listview position values in the metadata
+     * @param scrollindex the position within the adapter's data set for the first item displayed on screen
+     * @param scrolloffset the relative offset from the top of the ListView, if there is a top, otherwise 0
+     */
+    public synchronized void updateMetadataSongtab(int scrollindex, int scrolloffset){
+        messageQueue.offer(new Query(UPDATE_METADATA_SONGTAB, scrollindex, scrolloffset));
+    }
+
+    /**
+     * Queues message to update the isPlaying value in the metadata
+     * @param isPlaying true if the mediaplayer is playing, false otherwise
+     */
+    public synchronized void updateMetadataIsPlaying(boolean isPlaying){
+        messageQueue.offer(new Query(UPDATE_METADATA_ISPLAYING, isPlaying));
+    }
+
+    /**
+     * Queues message to update the seekPosition value in the metadata
+     * @param seekPosition the value, in milliseconds, of a seekbar's position
+     */
+    public synchronized void updateMetadataSeek(int seekPosition){
+        messageQueue.offer(new Query(UPDATE_METADATA_SEEK, seekPosition));
     }
 }

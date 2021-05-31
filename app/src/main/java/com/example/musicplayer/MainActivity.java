@@ -264,7 +264,6 @@ public class MainActivity extends AppCompatActivity {
         FrameLayout menuitem_searchfilter_layout = (FrameLayout) menu.findItem(R.id.menuitem_searchfilter).getActionView();
         searchFilter_btn = menuitem_searchfilter_layout.findViewById(R.id.icon);
         searchFilter_btn_ripple = (RippleDrawable) searchFilter_btn.getBackground();
-        initFilterSearch();
         return true;
     }
 
@@ -272,11 +271,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         System.out.println("paused");
 
-        // store current metadata values in database
+        // update current metadata values in database
         int theme_resourceid = ThemeColors.getThemeResourceId();
         int songtab_scrollindex = SongListTab.getScrollIndex();
         int songtab_scrolloffset = SongListTab.getScrollOffset();
-        databaseRepository.insertMetadata(new Metadata(0, theme_resourceid, songtab_scrollindex, songtab_scrolloffset));
+        databaseRepository.updateMetadataTheme(theme_resourceid);
+        databaseRepository.updateMetadataSongtab(songtab_scrollindex, songtab_scrolloffset);
         super.onPause();
     }
 
@@ -482,6 +482,20 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         }
+    }
+
+    /**
+     * Method used to initialize all UI components that are related to the device's music
+     */
+    public void initMusicUI(){
+        // init main ui
+        initMainDisplay();
+        initSeekbar();
+        initSlidingUpPanel();
+        initViewPager();
+
+        // should be initialized last to set the touch listener for all views
+        initFilterSearch();
     }
 
     @Override
@@ -721,6 +735,9 @@ public class MainActivity extends AppCompatActivity {
                 if (fromUser) {
                     seekBarSeekIntent.putExtra("seekbarSeek", progress);
                     startService(seekBarSeekIntent);
+
+                    // update the seekPosition value in the local metadata
+                    databaseRepository.updateMetadataSeek(progress);
                 }
             }
 
@@ -1087,7 +1104,7 @@ public class MainActivity extends AppCompatActivity {
                 songListadapter = new SongListAdapter(this, R.layout.adapter_song_layout, fullSongList, this);
                 playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this);
 
-                // initialize current playlist and song from database, if possible
+                // initialize current playlist from database, if possible
                 databaseRepository.asyncGetCurrentPlaylist();
                 break;
             case DatabaseRepository.ASYNC_GET_CURRENT_PLAYLIST:
@@ -1103,15 +1120,6 @@ public class MainActivity extends AppCompatActivity {
                         current_song = fullSongList.get(0);
                     }
                 }
-                // start music service for the first time
-                musicServiceIntent.putExtra("musicListInit", mainActivityMessenger);
-                startService(musicServiceIntent);
-
-                // init main ui
-                initMainDisplay();
-                initSeekbar();
-                initSlidingUpPanel();
-                initViewPager();
 
                 // retrieve metadata values from database
                 databaseRepository.asyncGetMetadata();
@@ -1150,15 +1158,51 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             case DatabaseRepository.ASYNC_GET_METADATA:
-                Metadata metadata = (Metadata) object;
-                // set the current theme and generate theme values
-                setTheme(metadata.getThemeResourceId());
-                ThemeColors.generateThemeValues(this, metadata.getThemeResourceId());
+                if (object != null) {
+                    Metadata metadata = (Metadata) object;
+                    boolean isPlaying = metadata.getIsPlaying();
+                    int seekPosition = metadata.getSeekPosition();
+                    int themeResourceId = metadata.getThemeResourceId();
+                    int songtab_scrollindex = metadata.getSongtab_scrollindex();
+                    int songtab_scrolloffset = metadata.getSongtab_scrolloffset();
 
-                // after generating theme values, update the main ui
-                updateTheme(metadata.getThemeResourceId());
-                theme_btn.setImageResource(ThemeColors.getThemeBtnResourceId());
-                SongListTab.setScrollSelection(metadata.getSongtab_scrollindex(), metadata.getSongtab_scrolloffset());
+                    // music player is playing, start music service but keep playing
+                    if (isPlaying) {
+                        musicServiceIntent.putExtra("musicListInitPlaying", mainActivityMessenger);
+                        startService(musicServiceIntent);
+
+                        initMusicUI();
+                    }
+                    // music player is not playing, start music service for the first time
+                    else {
+                        musicServiceIntent.putExtra("musicListInitPaused", mainActivityMessenger);
+                        startService(musicServiceIntent);
+
+                        initMusicUI();
+
+                        // inform the music service about the seekbar's position from the metadata
+                        seekBarSeekIntent.putExtra("seekbarSeek", seekPosition);
+                        startService(seekBarSeekIntent);
+                        seekBar.setProgress(seekPosition);
+                    }
+
+                    // set the current theme and generate theme values
+                    setTheme(themeResourceId);
+                    ThemeColors.generateThemeValues(this, themeResourceId);
+
+                    // after generating theme values, update the main ui
+                    updateTheme(themeResourceId);
+                    theme_btn.setImageResource(ThemeColors.getThemeBtnResourceId());
+                    SongListTab.setScrollSelection(songtab_scrollindex, songtab_scrolloffset);
+                }
+
+                else{
+                    // start music service for the first time
+                    musicServiceIntent.putExtra("musicListInitPaused", mainActivityMessenger);
+                    startService(musicServiceIntent);
+
+                    initMusicUI();
+                }
                 break;
             }
 
@@ -1270,6 +1314,12 @@ public class MainActivity extends AppCompatActivity {
                     notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_play24dp, "play", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);
+
+                    // update the isPlaying and seekPosition values in the metadata
+                    if ((boolean)bundle.get("updateDatabase")) {
+                        databaseRepository.updateMetadataIsPlaying(false);
+                        databaseRepository.updateMetadataSeek(seekBar.getProgress());
+                    }
                     break;
                 case MusicPlayerService.UPDATE_PAUSE:
                     runOnUiThread(new Runnable() {
@@ -1292,6 +1342,11 @@ public class MainActivity extends AppCompatActivity {
                     notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_pause24dp, "pause", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);
+
+                    // update the isPlaying status in the metadata
+                    if ((boolean)bundle.get("updateDatabase")) {
+                        databaseRepository.updateMetadataIsPlaying(true);
+                    }
                     break;
                 case MusicPlayerService.UPDATE_SEEKBAR_DURATION:
                     // init the seekbar & textview max duration and begin thread to track progress

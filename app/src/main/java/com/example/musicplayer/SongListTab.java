@@ -199,7 +199,6 @@ public class SongListTab extends Fragment {
             public boolean onActionItemClicked(android.view.ActionMode mode, MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.menuitem_createqueue:
-                        Toast.makeText(mainActivity, "Creating Queue of " + userSelection.size() + " songs", Toast.LENGTH_SHORT).show();
                         // construct new current playlist, given the user selections
                         MainActivity.setCurrent_playlist(new Playlist("USER_SELECTION", userSelection));
                         MainActivity.setCurrent_song(userSelection.get(0));
@@ -211,11 +210,10 @@ public class SongListTab extends Fragment {
                         mode.finish(); // Action picked, so close the CAB
                         return true;
                     case R.id.menuitem_createplaylist:
-                        Toast.makeText(mainActivity, "Creating Playlist of " + userSelection.size() + " songs", Toast.LENGTH_SHORT).show();
-
                         // construct named playlist and send it to addPlaylist activity
                         Playlist playlist = new Playlist(getString(R.string.Favorites), userSelection);
                         addPlaylistIntent.putExtra("addPlaylist", playlist);
+                        addPlaylistIntent.putExtra("messenger", mainActivityMessenger);
                         startActivity(addPlaylistIntent);
 
                         mode.finish(); // Action picked, so close the CAB
@@ -241,4 +239,34 @@ public class SongListTab extends Fragment {
         songListAdapter.setItemsTitleTextColor(mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
         songListAdapter.setItemsAlbumArtistTextColor(mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
     }
+
+    /**
+     * Gets the top visible list item, which may be partially scrolled out of view.
+     * Must be used in conjunction with an offset to calculate the exact scroll position.
+     * @return the position within the adapter's data set for the first item displayed on screen
+     */
+    public static int getScrollIndex(){
+        return listView.getFirstVisiblePosition();
+    }
+
+    /**
+     * Calculates the relative offset from the top of the listview
+     * @return the relative offset from the top of the ListView, if there is a top, otherwise 0
+     */
+    public static int getScrollOffset(){
+        View top_item = listView.getChildAt(0);
+        int offset = (top_item == null) ? 0 : (top_item.getTop() - listView.getPaddingTop());
+        return offset;
+    }
+
+    /**
+     * Sets the listview's position, given an item's index and offset from the top
+     * @param index the top visible list item
+     * @param offset the top item's relative offset from the top of the listview
+     */
+    public static void setScrollSelection(int index, int offset){
+        listView.setSelectionFromTop(index, offset);
+    }
+
+
 }

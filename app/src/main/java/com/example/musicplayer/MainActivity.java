@@ -68,6 +68,7 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import static android.os.Build.VERSION_CODES.Q;
 import static com.example.musicplayer.Notifications.CHANNEL_ID_1;
@@ -154,6 +155,9 @@ public class MainActivity extends AppCompatActivity {
     private MessageHandler messageHandler;
     private MessageHandler seekbarHandler;
 
+    // database
+    private DatabaseRepository databaseRepository;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -161,6 +165,9 @@ public class MainActivity extends AppCompatActivity {
         ThemeColors.generateThemeValues(this, R.style.ThemeOverlay_AppCompat_MusicLight);
 
         System.out.println("created");
+
+        // initialize database repository to handle all retrievals and transactions
+        databaseRepository = new DatabaseRepository(this, this);
 
         // initialize all views
         setContentView(R.layout.activity_musiclist);
@@ -222,25 +229,12 @@ public class MainActivity extends AppCompatActivity {
             musicServiceIntent = new Intent(this, MusicPlayerService.class);
 
             // init listview functionality and playlist
-            initMusicList(); // starts music service for the first time
-
-            // init main sliding up panel
-            initMainAnimation();
-
-            initMainDisplay();
-
-            initMainButtons();
-
-            initSeekbar();
-
-            initInfoButton();
-
-            initSlidingUpPanel();
+            initMusicList();
 
             initNotification();
-
-            initViewPager();
-
+            initMainAnimation();
+            initMainButtons();
+            initInfoButton();
             initActionBar();
         }
     }
@@ -270,13 +264,19 @@ public class MainActivity extends AppCompatActivity {
         FrameLayout menuitem_searchfilter_layout = (FrameLayout) menu.findItem(R.id.menuitem_searchfilter).getActionView();
         searchFilter_btn = menuitem_searchfilter_layout.findViewById(R.id.icon);
         searchFilter_btn_ripple = (RippleDrawable) searchFilter_btn.getBackground();
-        initFilterSearch();
         return true;
     }
 
     @Override
     protected void onPause() {
         System.out.println("paused");
+
+        // update current metadata values in database
+        int theme_resourceid = ThemeColors.getThemeResourceId();
+        int songtab_scrollindex = SongListTab.getScrollIndex();
+        int songtab_scrolloffset = SongListTab.getScrollOffset();
+        databaseRepository.updateMetadataTheme(theme_resourceid);
+        databaseRepository.updateMetadataSongtab(songtab_scrollindex, songtab_scrolloffset);
         super.onPause();
     }
 
@@ -294,29 +294,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Initializes the listview with item click and multi choice listeners, and starts music service
-     * On item click, the song that was clicked will be played
-     * On multi choice, multiple songs can be selected to either create a queue or a new playlist
-     * The music service is started here in order to send the main activity's messenger
+     * Initializes all songs from the device and all playlists from the database
      */
     public void initMusicList() {
-        playlistList = new ArrayList<>();
+        // gets all songs from device
         fullSongList = new ArrayList<>();
         getMusic(); // populates fullSongList
         fullPlaylist = new Playlist("FULL_PLAYLIST", fullSongList);
 
-        // initialize current playlist and song
-        if (fullSongList.size() > 0){
-            current_playlist = fullPlaylist;
-            current_song = fullSongList.get(0);
-        }
-
-        // start music service for the first time
-        musicServiceIntent.putExtra("musicListInit", mainActivityMessenger);
-        startService(musicServiceIntent);
-
-        songListadapter = new SongListAdapter(this, R.layout.adapter_song_layout, fullSongList, this);
-        playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this);
+        // asynchronously gets all playlists from database, then updates main activity
+        databaseRepository.asyncInitAllPlaylists();
     }
 
     public void initThemeButton() {
@@ -495,6 +482,20 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         }
+    }
+
+    /**
+     * Method used to initialize all UI components that are related to the device's music
+     */
+    public void initMusicUI(){
+        // init main ui
+        initMainDisplay();
+        initSeekbar();
+        initSlidingUpPanel();
+        initViewPager();
+
+        // should be initialized last to set the touch listener for all views
+        initFilterSearch();
     }
 
     @Override
@@ -734,6 +735,9 @@ public class MainActivity extends AppCompatActivity {
                 if (fromUser) {
                     seekBarSeekIntent.putExtra("seekbarSeek", progress);
                     startService(seekBarSeekIntent);
+
+                    // update the seekPosition value in the local metadata
+                    databaseRepository.updateMetadataSeek(progress);
                 }
             }
 
@@ -1007,6 +1011,33 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * Cleans playlist database of any songs that can no longer be found in the full list of songs
+     */
+    private void cleanPlaylistDatabase(){
+        HashMap<Song, SongNode> fullSongHashMap = new HashMap<>(fullPlaylist.getSongHashMap());
+        for (Playlist playlist : playlistList){
+            // accumulate list of removed songs for this playlist (if any)
+            ArrayList<Song> playlist_songs = playlist.getSongList();
+            ArrayList<Song> playlist_removed_songs = new ArrayList<>();
+            for (Song song : playlist_songs){
+                if (!fullSongHashMap.containsKey(song)){
+                    playlist_removed_songs.add(song);
+                }
+            }
+
+            // recreate the playlist excluding its removed songs (if any) and replace in database
+            if (playlist_removed_songs.size() > 0){
+                for (Song removed_song : playlist_removed_songs){
+                    // removes song from the playlist reference
+                    playlist_songs.remove(removed_song);
+                }
+                Playlist updated_playlist = new Playlist(playlist.getId(), playlist.getName(), playlist_songs);
+                databaseRepository.insertPlaylist(updated_playlist);
+            }
+        }
+    }
+
+    /**
      * helper function to convert time in milliseconds to HH:MM:SS format
      */
     public static String convertTime(int timeInMS){
@@ -1057,6 +1088,138 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Updates the main activity with the changes made by the database repository
+     * @param object an object associated with the update operation (e.g. a playlist, or playlists)
+     * @param messenger the messenger to notify after successfully adding the playlist
+     * @param operation the operation being performed with the playlist
+     */
+    public void updateMainActivity(Object object, final Messenger messenger, final int operation){
+        final MainActivity mainActivity = this;
+        switch (operation) {
+            case DatabaseRepository.ASYNC_INIT_ALL_PLAYLISTS:
+                // remove any songs that were not able to be found in the device
+                playlistList = (ArrayList<Playlist>) object;
+                cleanPlaylistDatabase();
+                songListadapter = new SongListAdapter(this, R.layout.adapter_song_layout, fullSongList, this);
+                playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this);
+
+                // initialize current playlist from database, if possible
+                databaseRepository.asyncGetCurrentPlaylist();
+                break;
+            case DatabaseRepository.ASYNC_GET_CURRENT_PLAYLIST:
+                current_playlist = (Playlist) object;
+                if (current_playlist != null){
+                    current_song = current_playlist.getSongList().get(0);
+                }
+
+                // if a playlist wasn't retrieved from the database
+                if (current_playlist == null) {
+                    if (fullSongList.size() > 0) {
+                        current_playlist = fullPlaylist;
+                        current_song = fullSongList.get(0);
+                    }
+                }
+
+                // retrieve metadata values from database
+                databaseRepository.asyncGetMetadata();
+                break;
+            case DatabaseRepository.ASYNC_INSERT_PLAYLIST:
+                // update current playlist adapter with the newly created playlist
+                playlistAdapter.add((Playlist) object);
+
+                // move to playlist tab
+                viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
+                break;
+            case DatabaseRepository.ASYNC_MODIFY_PLAYLIST:
+                Playlist temp_playlist = (Playlist) object;
+                // check if songs were removed from existing playlist
+                Playlist original_playlist = (Playlist) playlistAdapter.getItem(playlistAdapter.getPosition(temp_playlist));
+                if (original_playlist.getSize() > temp_playlist.getSize()) {
+                    // modify the original playlist to adopt the changes
+                    original_playlist.adoptSongList(temp_playlist);
+                }
+
+                // reconstruct viewpager adapter to reflect changes to individual playlist
+                PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, mainActivity);
+                viewPager.setAdapter(pagerAdapter);
+
+                // adjust tab colors
+                SongListTab.toggleTabColor();
+                PlaylistTab.toggleTabColor();
+
+                // move to playlist tab
+                viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
+                break;
+            case DatabaseRepository.ASYNC_DELETE_PLAYLISTS_BY_ID:
+                ArrayList<Playlist> playlists = (ArrayList<Playlist>) object;
+                for (Playlist playlist : playlists){
+                    playlistAdapter.remove(playlist);
+                }
+                break;
+            case DatabaseRepository.ASYNC_GET_METADATA:
+                if (object != null) {
+                    Metadata metadata = (Metadata) object;
+                    boolean isPlaying = metadata.getIsPlaying();
+                    int seekPosition = metadata.getSeekPosition();
+                    int themeResourceId = metadata.getThemeResourceId();
+                    int songtab_scrollindex = metadata.getSongtab_scrollindex();
+                    int songtab_scrolloffset = metadata.getSongtab_scrolloffset();
+
+                    // music player is playing, start music service but keep playing
+                    if (isPlaying) {
+                        musicServiceIntent.putExtra("musicListInitPlaying", mainActivityMessenger);
+                        startService(musicServiceIntent);
+
+                        initMusicUI();
+                    }
+                    // music player is not playing, start music service for the first time
+                    else {
+                        musicServiceIntent.putExtra("musicListInitPaused", mainActivityMessenger);
+                        startService(musicServiceIntent);
+
+                        initMusicUI();
+
+                        // inform the music service about the seekbar's position from the metadata
+                        seekBarSeekIntent.putExtra("seekbarSeek", seekPosition);
+                        startService(seekBarSeekIntent);
+                        seekBar.setProgress(seekPosition);
+                    }
+
+                    // set the current theme and generate theme values
+                    setTheme(themeResourceId);
+                    ThemeColors.generateThemeValues(this, themeResourceId);
+
+                    // after generating theme values, update the main ui
+                    updateTheme(themeResourceId);
+                    theme_btn.setImageResource(ThemeColors.getThemeBtnResourceId());
+                    SongListTab.setScrollSelection(songtab_scrollindex, songtab_scrolloffset);
+                }
+
+                else{
+                    // start music service for the first time
+                    musicServiceIntent.putExtra("musicListInitPaused", mainActivityMessenger);
+                    startService(musicServiceIntent);
+
+                    initMusicUI();
+                }
+                break;
+            }
+
+            if (messenger != null) {
+                // send message to end the addplaylistactivity, as the views are now updated
+                Message msg = Message.obtain();
+                Bundle bundle = new Bundle();
+                bundle.putInt("msg", AddPlaylistActivity.FINISH);
+                msg.setData(bundle);
+                try {
+                    messenger.send(msg);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+    }
+
     public static Song getCurrent_song(){
         return current_song;
     }
@@ -1074,26 +1237,6 @@ public class MainActivity extends AppCompatActivity {
     }
     public static void setCurrent_playlist(Playlist playlist){
         current_playlist = playlist;
-    }
-
-    /**
-     * adds a new playlist to the playlist tab of the viewpager
-     * @param playlist the playlist item to be added
-     */
-    public void addPlaylist(Playlist playlist){
-        // add playlist item to the adapter
-        playlistAdapter.add(playlist);
-
-        // reconstruct viewpager adapter with the new playlist adapter change
-        PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, this);
-        viewPager.setAdapter(pagerAdapter);
-
-        // adjust tab colors
-        SongListTab.toggleTabColor();
-        PlaylistTab.toggleTabColor();
-
-        // move to playlist tab
-        viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
     }
 
     public static Notification getNotification(){
@@ -1171,6 +1314,12 @@ public class MainActivity extends AppCompatActivity {
                     notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_play24dp, "play", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);
+
+                    // update the isPlaying and seekPosition values in the metadata
+                    if ((boolean)bundle.get("updateDatabase")) {
+                        databaseRepository.updateMetadataIsPlaying(false);
+                        databaseRepository.updateMetadataSeek(seekBar.getProgress());
+                    }
                     break;
                 case MusicPlayerService.UPDATE_PAUSE:
                     runOnUiThread(new Runnable() {
@@ -1193,6 +1342,11 @@ public class MainActivity extends AppCompatActivity {
                     notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_pause24dp, "pause", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
                     notificationChannel1 = notificationBuilder.build();
                     notificationManager.notify(1, notificationChannel1);
+
+                    // update the isPlaying status in the metadata
+                    if ((boolean)bundle.get("updateDatabase")) {
+                        databaseRepository.updateMetadataIsPlaying(true);
+                    }
                     break;
                 case MusicPlayerService.UPDATE_SEEKBAR_DURATION:
                     // init the seekbar & textview max duration and begin thread to track progress
@@ -1287,6 +1441,10 @@ public class MainActivity extends AppCompatActivity {
                             updateSlidingMenuColors();
                         }
                     });
+
+                    // save the current song and playlist to database
+                    current_playlist.rearrangePlaylist(current_song);
+                    databaseRepository.insertPlaylist(current_playlist);
                     break;
                 case ChooseThemeActivity.THEME_SELECTED:
                     final int theme_resid = ThemeColors.getThemeResourceId();
@@ -1312,6 +1470,15 @@ public class MainActivity extends AppCompatActivity {
                             theme_btn.startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_themebtn_reverse_animation));
                         }
                     });
+                    break;
+                case AddPlaylistActivity.ADD_PLAYLIST:
+                    databaseRepository.asyncInsertPlaylist((Playlist) bundle.get("playlist"), (Messenger) bundle.get("messenger"));
+                    break;
+                case AddPlaylistActivity.MODIFY_PLAYLIST:
+                    databaseRepository.asyncModifyPlaylist((Playlist) bundle.get("playlist"), (Messenger) bundle.get("messenger"));
+                    break;
+                case PlaylistTab.REMOVE_PLAYLISTS:
+                    databaseRepository.asyncRemovePlaylistByIds((int[]) bundle.get("ids"));
                     break;
             }
         }

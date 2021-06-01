@@ -5,27 +5,54 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
+import androidx.room.Entity;
+import androidx.room.Ignore;
+import androidx.room.PrimaryKey;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
+@Entity(tableName = "Playlists")
 public class Playlist implements Parcelable {
-    private static int total_playlists = 0;
+    @PrimaryKey
     private int id;
+
     private String name;
     private ArrayList<Song> songList;
+
+    @Ignore
     private HashMap<Song, SongNode> songHashMap;
 
-    public Playlist(String name, ArrayList<Song> songList) {
-        this.id = total_playlists;
+    /**
+     * Constructor used by database to create a playlist for every row
+     */
+    public Playlist(int id, String name, ArrayList<Song> songList) {
+        this.id = id;
         this.name = name;
         this.songList = new ArrayList<>(songList);
         this.songHashMap = createHashMap(songList);
-        total_playlists += 1;
     }
 
-    public int getID() {
+    /**
+     * Overloaded Constructor which does not need id field parameter
+     * id is manually generated when the playlist is expected to persist in database storage
+     * otherwise, id is 0 for temporary playlists (e.g. queues)
+     */
+    @Ignore
+    public Playlist(String name, ArrayList<Song> songList) {
+        this.id = 0;
+        this.name = name;
+        this.songList = new ArrayList<>(songList);
+        this.songHashMap = createHashMap(songList);
+    }
+
+    public int getId() {
         return id;
+    }
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -37,6 +64,10 @@ public class Playlist implements Parcelable {
 
     public ArrayList<Song> getSongList() {
         return songList;
+    }
+
+    public HashMap<Song, SongNode> getSongHashMap(){
+        return songHashMap;
     }
 
     public String getSizeString() {
@@ -109,21 +140,76 @@ public class Playlist implements Parcelable {
     /**
      * Adds every new song in the given playlist to this playlist's collection of songs
      * Reconstructs the underlying hashmap with the updated collection of songs
-     * @param playlist
+     * @param playlist the playlist to append to this playlist
+     * @return true if extend succeeded, false otherwise
      */
-    public void extend(Playlist playlist){
+    public boolean extend(Playlist playlist){
+        // create songHashMap if it doesn't already exist (because it's not included in parcel)
+        if (songHashMap == null) {
+            songHashMap = createHashMap(songList);
+        }
+
         // loop through list of songs to check if a song exists before adding
         ArrayList<Song> playlist_songs = playlist.getSongList();
+        int playlist_songs_size = playlist_songs.size();
+        int dupe_counter = 0;
         for (Song song : playlist_songs){
             if (!songHashMap.containsKey(song)){
                 songList.add(song);
             }
             else{
-                System.out.println(song.getTitle() + " already exists");
+                dupe_counter += 1;
             }
         }
 
+        // all songs that were to be added are duplicates, extend unnecessary
+        if (dupe_counter == playlist_songs_size) {
+            return false;
+        }
+
         // reconstruct hashmap with the updated song list
+        songHashMap = createHashMap(songList);
+        return true;
+    }
+
+    /**
+     * Removes the collection of songs from this playlist
+     * @param songs the songs to remove from this playlist
+     */
+    public void removeAll(Collection<Song> songs){
+        songList.removeAll(songs);
+
+        // reconstruct hashmap with the updated song list
+        songHashMap = createHashMap(songList);
+    }
+
+    /**
+     * Replaces this songlist with the songlist from another playlist
+     * @param playlist the playlist whose songlist shall be adopted
+     */
+    public void adoptSongList(Playlist playlist){
+        this.songList = new ArrayList<>();
+        this.songList.addAll(playlist.getSongList());
+
+        // reconstruct hashmap with the updated song list
+        songHashMap = createHashMap(songList);
+    }
+
+    /**
+     * Rearranges the playlist such that the playlist begins from the provided song
+     * @param song the song to begin the playlist
+     */
+    public void rearrangePlaylist(Song song){
+        // get index of current song to split the current list of songs
+        int splitIdx = songList.indexOf(song);
+
+        List<Song> firstHalf = songList.subList(0, splitIdx);
+        List<Song> secondHalf = songList.subList(splitIdx, songList.size());
+
+        // reconstruct the new songslist and hash map
+        songList = new ArrayList<>();
+        songList.addAll(secondHalf);
+        songList.addAll(firstHalf);
         songHashMap = createHashMap(songList);
     }
 

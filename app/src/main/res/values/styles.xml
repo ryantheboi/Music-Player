@@ -127,7 +127,7 @@
         <item name="tabTextColor">@color/itemnightselectorblue</item>
         <item name="subtitleTextColor">@color/itemdefaultselectorblue</item>
         <item name="titleTextColor">@color/generalTextLight</item>
-        <item name="colorAccent">@color/itemnightselectorblue</item>
+        <item name="colorAccent">@color/generalTextLight</item>
     </style>
 
     <style name="ThemeOverlay.AppCompat.MusicLight" parent="ToolbarAppTheme">
@@ -137,7 +137,7 @@
         <item name="tabTextColor">@color/itemlightselectorblue</item>
         <item name="subtitleTextColor">@color/itemdefaultselectorblue</item>
         <item name="titleTextColor">@color/generalTextDark</item>
-        <item name="colorAccent">@color/itemlightselectorblue</item>
+        <item name="colorAccent">@color/generalTextDark</item>
     </style>
 
     <style name="ThemeOverlay.AppCompat.MusicRam" parent="ToolbarAppTheme">
@@ -147,7 +147,7 @@
         <item name="tabTextColor">@color/itemramselector</item>
         <item name="subtitleTextColor">@color/itemramselectorlite</item>
         <item name="titleTextColor">@color/ramPink600</item>
-        <item name="colorAccent">@color/itemramselector</item>
+        <item name="colorAccent">@color/ramPink600</item>
     </style>
 
     <style name="ThemeOverlay.AppCompat.MusicRem" parent="ToolbarAppTheme">
@@ -157,7 +157,7 @@
         <item name="tabTextColor">@color/itemremselector</item>
         <item name="subtitleTextColor">@color/itemremselectorlite</item>
         <item name="titleTextColor">@color/remBlue600</item>
-        <item name="colorAccent">@color/itemremselector</item>
+        <item name="colorAccent">@color/remBlue600</item>
     </style>
 
     <style name="ThemeOverlay.AppCompat.MusicSubaru" parent="ToolbarAppTheme">
@@ -177,6 +177,6 @@
         <item name="tabTextColor">@color/itemsucroseselector</item>
         <item name="subtitleTextColor">@color/itemsucroseselectorlite</item>
         <item name="titleTextColor">@color/sucroseCaramel500</item>
-        <item name="colorAccent">@color/itemsucroseselector</item>
+        <item name="colorAccent">@color/sucroseCaramel500</item>
     </style>
 </resources>

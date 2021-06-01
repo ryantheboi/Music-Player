@@ -131,12 +131,12 @@ public class SongListTab extends Fragment {
                 if (userSelection.size() == 1) {
                     String titleString = userSelection.get(0).getTitle();
                     SpannableString titleSpannableString =  new SpannableString(titleString);
-                    titleSpannableString.setSpan(new ForegroundColorSpan(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR)), 0, titleString.length(), 0);
+                    titleSpannableString.setSpan(new ForegroundColorSpan(ThemeColors.getColor(ThemeColors.COLOR_ACCENT)), 0, titleString.length(), 0);
                     mode.setTitle(titleSpannableString);
                 } else {
                     String titleString = userSelection.size() + " songs selected";
                     SpannableString titleSpannableString =  new SpannableString(titleString);
-                    titleSpannableString.setSpan(new ForegroundColorSpan(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR)), 0, titleString.length(), 0);
+                    titleSpannableString.setSpan(new ForegroundColorSpan(ThemeColors.getColor(ThemeColors.COLOR_ACCENT)), 0, titleString.length(), 0);
                     mode.setTitle(titleSpannableString);
                 }
             }
@@ -154,10 +154,10 @@ public class SongListTab extends Fragment {
 
                     Drawable unwrappedDrawable = menuitem_iv.getDrawable();
                     Drawable wrappedDrawable = DrawableCompat.wrap(unwrappedDrawable);
-                    DrawableCompat.setTint(wrappedDrawable, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
+                    DrawableCompat.setTint(wrappedDrawable, getResources().getColor(ThemeColors.getDrawableVectorColorIdAlt()));
 
                     RippleDrawable rippleDrawable = (RippleDrawable) menuitem_iv.getBackground();
-                    rippleDrawable.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
+                    rippleDrawable.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorIdAlt())));
 
                     // set this click listener to manually call the action mode's click listener
                     menuitem_iv.setOnClickListener(new View.OnClickListener() {
@@ -187,8 +187,8 @@ public class SongListTab extends Fragment {
                         if (v != null)
                         {
                             ((View)v.getParent()).setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
-                            ((RippleDrawable)v.getBackground()).setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
-                            v.setColorFilter(getResources().getColor(ThemeColors.getDrawableVectorColorId()));
+                            ((RippleDrawable)v.getBackground()).setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorIdAlt())));
+                            v.setColorFilter(getResources().getColor(ThemeColors.getDrawableVectorColorIdAlt()));
                         }
                     }
                 });

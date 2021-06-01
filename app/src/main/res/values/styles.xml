@@ -83,6 +83,19 @@
         <item name="android:colorControlHighlight">@color/remBlue400</item>
     </style>
 
+    <style name="AlertDialogSubaru" parent="Theme.AppCompat.Dialog.Alert">
+        <!-- Used for the buttons -->
+        <item name="colorAccent">@color/itemsubaruselectortab</item>
+        <!-- Used for the title and text -->
+        <item name="android:textColorPrimary">@color/subaruOrange500</item>
+        <!-- Used for the disabled buttons -->
+        <item name="android:textColorSecondary">@color/subaruOrange100</item>
+        <!-- Used for the background -->
+        <item name="android:background">@color/subaruCharcoal100</item>
+        <!-- Used for dialog button background ripple -->
+        <item name="android:colorControlHighlight">@color/subaruOrange100</item>
+    </style>
+
     <style name="AlertDialogSucrose" parent="Theme.AppCompat.Dialog.Alert">
         <!-- Used for the buttons -->
         <item name="colorAccent">@color/itemsucroseselector</item>
@@ -145,6 +158,16 @@
         <item name="subtitleTextColor">@color/itemremselectorlite</item>
         <item name="titleTextColor">@color/remBlue600</item>
         <item name="colorAccent">@color/itemremselector</item>
+    </style>
+
+    <style name="ThemeOverlay.AppCompat.MusicSubaru" parent="ToolbarAppTheme">
+        <item name="colorPrimary">@color/subaruCharcoal100</item>
+        <item name="colorSecondary">@color/subaruCharcoal200</item>
+        <item name="itemTextColor">@color/itemsubaruselector</item>
+        <item name="tabTextColor">@color/itemsubaruselectortab</item>
+        <item name="subtitleTextColor">@color/itemsubaruselectorlite</item>
+        <item name="titleTextColor">@color/subaruOrange500</item>
+        <item name="colorAccent">@color/subaruUnseen200</item>
     </style>
 
     <style name="ThemeOverlay.AppCompat.MusicSucrose" parent="ToolbarAppTheme">

@@ -39,6 +39,18 @@
     <color name="remBlue700">#2669FF</color>
     <color name="remBlue800">#0653FF</color>
 
+    <!-- Subaru theme -->
+    <color name="subaruCharcoal100">#4F4E54</color>
+    <color name="subaruCharcoal200">#48474D</color>
+    <color name="subaruCharcoal400">#3C3C40</color>
+    <color name="subaruCharcoal600">#353539</color>
+    <color name="subaruUnseen100">#DE5CFE</color>
+    <color name="subaruUnseen200">#CC1BF8</color>
+    <color name="subaruWhite100">#F8F8F8</color>
+    <color name="subaruOrange100">#FDBE61</color>
+    <color name="subaruOrange300">#FFB548</color>
+    <color name="subaruOrange500">#FFAB2F</color>
+
     <!-- Sucrose theme -->
     <color name="sucroseMint100">#F0FECD</color>
     <color name="sucroseMint200">#EDFFBD</color>

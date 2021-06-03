@@ -115,6 +115,8 @@ public class ThemeColors {
                 return R.style.AlertDialogRem;
             case R.style.ThemeOverlay_AppCompat_MusicSubaru:
                 return R.style.AlertDialogSubaru;
+            case R.style.ThemeOverlay_AppCompat_MusicPuck:
+                return R.style.AlertDialogPuck;
             case R.style.ThemeOverlay_AppCompat_MusicSucrose:
                 return R.style.AlertDialogSucrose;
             default:
@@ -138,6 +140,8 @@ public class ThemeColors {
                 return R.color.remBlue700;
             case R.style.ThemeOverlay_AppCompat_MusicSubaru:
                 return R.color.subaruOrange500;
+            case R.style.ThemeOverlay_AppCompat_MusicPuck:
+                return R.color.puckGold200;
             case R.style.ThemeOverlay_AppCompat_MusicSucrose:
                 return R.color.sucroseCaramel300;
             default:
@@ -147,6 +151,7 @@ public class ThemeColors {
 
     /**
      * Gets the resource id of the current theme's alternate color tint for drawable vectors to use
+     * Alternate colors are currently used for action mode
      * @return the alternate color resource id appropriate for drawable vectors in the current theme
      *          if there is no alternate color, returns the default color
      */
@@ -154,6 +159,22 @@ public class ThemeColors {
         switch(themeResourceId){
             case R.style.ThemeOverlay_AppCompat_MusicSubaru:
                 return R.color.subaruUnseen200;
+            case R.style.ThemeOverlay_AppCompat_MusicPuck:
+                return R.color.puckIce200;
+            default:
+                return getDrawableVectorColorId();
+        }
+    }
+
+    /**
+     * Gets the resource id of the current theme's color tint for main drawable vectors to use
+     * Main drawable vectors include buttons on the main display, the add playlist button, etc.
+     * @return the color resource id appropriate for main drawable vectors in the current theme
+     */
+    public static int getMainDrawableVectorColorId(){
+        switch(themeResourceId){
+            case R.style.ThemeOverlay_AppCompat_MusicPuck:
+                return R.color.puckFurAlt100;
             default:
                 return getDrawableVectorColorId();
         }
@@ -171,6 +192,8 @@ public class ThemeColors {
                 return R.color.remBlue400;
             case R.style.ThemeOverlay_AppCompat_MusicSubaru:
                 return R.color.subaruOrange100;
+            case R.style.ThemeOverlay_AppCompat_MusicPuck:
+                return R.color.puckGold100;
             case R.style.ThemeOverlay_AppCompat_MusicSucrose:
                 return R.color.sucroseCaramel100;
             default:
@@ -180,6 +203,7 @@ public class ThemeColors {
 
     /**
      * Gets the resource id of the current theme's alternate color tint for ripples to use
+     * Alternate colors are currently used for action mode
      * @return the alternate color resource id appropriate for RippleDrawables in the current theme
      *          if there is no alternate color, returns the default color
      */
@@ -187,6 +211,22 @@ public class ThemeColors {
         switch(themeResourceId){
             case R.style.ThemeOverlay_AppCompat_MusicSubaru:
                 return R.color.subaruUnseen100;
+            case R.style.ThemeOverlay_AppCompat_MusicPuck:
+                return R.color.puckIce100;
+            default:
+                return getRippleDrawableColorId();
+        }
+    }
+
+    /**
+     * Gets the resource id of the current theme's color tint for main ripples to use
+     * Main RippleDrawables include ripples on the main display buttons, etc.
+     * @return the color resource id appropriate for main RippleDrawables in the current theme
+     */
+    public static int getMainRippleDrawableColorId(){
+        switch(themeResourceId){
+            case R.style.ThemeOverlay_AppCompat_MusicPuck:
+                return R.color.puckFurAlt300;
             default:
                 return getRippleDrawableColorId();
         }
@@ -208,6 +248,8 @@ public class ThemeColors {
                 return R.drawable.rem;
             case R.style.ThemeOverlay_AppCompat_MusicSubaru:
                 return R.drawable.subaru;
+            case R.style.ThemeOverlay_AppCompat_MusicPuck:
+                return R.drawable.puck;
             case R.style.ThemeOverlay_AppCompat_MusicSucrose:
                 return R.drawable.sucrose;
             default:

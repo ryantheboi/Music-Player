@@ -42,14 +42,23 @@
     <!-- Subaru theme -->
     <color name="subaruCharcoal100">#4F4E54</color>
     <color name="subaruCharcoal200">#48474D</color>
-    <color name="subaruCharcoal400">#3C3C40</color>
-    <color name="subaruCharcoal600">#353539</color>
     <color name="subaruUnseen100">#DE5CFE</color>
     <color name="subaruUnseen200">#CC1BF8</color>
     <color name="subaruWhite100">#F8F8F8</color>
     <color name="subaruOrange100">#FDBE61</color>
-    <color name="subaruOrange300">#FFB548</color>
     <color name="subaruOrange500">#FFAB2F</color>
+
+    <!-- Puck theme -->
+    <color name="puckFur100">#BFC0B5</color>
+    <color name="puckFur200">#A8A99F</color>
+    <color name="puckIce100">#ACF8FF</color>
+    <color name="puckIce200">#96F6FF</color>
+    <color name="puckFurAlt100">#F2F2F2</color>
+    <color name="puckFurAlt200">#DADADA</color>
+    <color name="puckFurAlt300">#CDCDCD</color>
+    <color name="puckGold100">#FFE8A2</color>
+    <color name="puckGold200">#FEDA6C</color>
+    <color name="puckTurquoise100">#71F5E4</color>
 
     <!-- Sucrose theme -->
     <color name="sucroseMint100">#F0FECD</color>

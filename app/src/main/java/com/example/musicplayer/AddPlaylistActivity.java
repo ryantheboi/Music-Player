@@ -267,10 +267,10 @@ public class AddPlaylistActivity extends Activity {
     private void setBackBtnColor(){
         Drawable unwrappedBackBtn = back_btn.getDrawable();
         Drawable wrappedBackBtn = DrawableCompat.wrap(unwrappedBackBtn);
-        DrawableCompat.setTint(wrappedBackBtn, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
+        DrawableCompat.setTint(wrappedBackBtn, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
 
         RippleDrawable back_btn_ripple = (RippleDrawable) back_btn.getBackground();
-        back_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
+        back_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
     }
 
     /**
@@ -280,7 +280,7 @@ public class AddPlaylistActivity extends Activity {
     private void setAddPlaylistImageViewColor(){
         Drawable unwrappedImageView = addPlaylist_imageView.getDrawable();
         Drawable wrappedImageView = DrawableCompat.wrap(unwrappedImageView);
-        DrawableCompat.setTint(wrappedImageView, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
+        DrawableCompat.setTint(wrappedImageView, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
     }
 
     private void sendPlaylistUpdateMessage(Playlist playlist, int operation){

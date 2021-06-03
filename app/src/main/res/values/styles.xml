@@ -96,6 +96,19 @@
         <item name="android:colorControlHighlight">@color/subaruOrange100</item>
     </style>
 
+    <style name="AlertDialogPuck" parent="Theme.AppCompat.Dialog.Alert">
+        <!-- Used for the buttons -->
+        <item name="colorAccent">@color/itempuckselectortab</item>
+        <!-- Used for the title and text -->
+        <item name="android:textColorPrimary">@color/puckFurAlt100</item>
+        <!-- Used for the disabled buttons -->
+        <item name="android:textColorSecondary">@color/puckFurAlt200</item>
+        <!-- Used for the background -->
+        <item name="android:background">@color/puckFur100</item>
+        <!-- Used for dialog button background ripple -->
+        <item name="android:colorControlHighlight">@color/puckTurquoise100</item>
+    </style>
+
     <style name="AlertDialogSucrose" parent="Theme.AppCompat.Dialog.Alert">
         <!-- Used for the buttons -->
         <item name="colorAccent">@color/itemsucroseselector</item>
@@ -168,6 +181,16 @@
         <item name="subtitleTextColor">@color/itemsubaruselectorlite</item>
         <item name="titleTextColor">@color/subaruOrange500</item>
         <item name="colorAccent">@color/subaruUnseen200</item>
+    </style>
+
+    <style name="ThemeOverlay.AppCompat.MusicPuck" parent="ToolbarAppTheme">
+        <item name="colorPrimary">@color/puckFur200</item>
+        <item name="colorSecondary">@color/puckFur100</item>
+        <item name="itemTextColor">@color/itempuckselector</item>
+        <item name="tabTextColor">@color/itempuckselectortab</item>
+        <item name="subtitleTextColor">@color/itempuckselectorlite</item>
+        <item name="titleTextColor">@color/puckFurAlt100</item>
+        <item name="colorAccent">@color/puckIce200</item>
     </style>
 
     <style name="ThemeOverlay.AppCompat.MusicSucrose" parent="ToolbarAppTheme">

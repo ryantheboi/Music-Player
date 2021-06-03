@@ -932,15 +932,15 @@ public class MainActivity extends AppCompatActivity {
         Drawable wrappedDrawableNext = DrawableCompat.wrap(unwrappedDrawableNext);
         Drawable wrappedDrawablePrev = DrawableCompat.wrap(unwrappedDrawablePrev);
         DrawableCompat.setTint(wrappedDrawableInfo, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
-        DrawableCompat.setTint(wrappedDrawablePauseplay, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
-        DrawableCompat.setTint(wrappedDrawableNext, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
-        DrawableCompat.setTint(wrappedDrawablePrev, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
+        DrawableCompat.setTint(wrappedDrawablePauseplay, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
+        DrawableCompat.setTint(wrappedDrawableNext, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
+        DrawableCompat.setTint(wrappedDrawablePrev, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
 
         // update ripple colors
         info_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
-        pauseplay_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
-        next_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
-        prev_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
+        pauseplay_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
+        next_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
+        prev_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
     }
 
     /**
@@ -1308,7 +1308,7 @@ public class MainActivity extends AppCompatActivity {
                             // change main pauseplay button color
                             Drawable unwrappedMainDrawablePauseplay = pauseplay_btn.getDrawable();
                             Drawable wrappedMainDrawablePauseplay = DrawableCompat.wrap(unwrappedMainDrawablePauseplay);
-                            DrawableCompat.setTint(wrappedMainDrawablePauseplay, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
+                            DrawableCompat.setTint(wrappedMainDrawablePauseplay, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
                         }
                     });
                     notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_play24dp, "play", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
@@ -1336,7 +1336,7 @@ public class MainActivity extends AppCompatActivity {
                             // change main pauseplay button color
                             Drawable unwrappedMainDrawablePauseplay = pauseplay_btn.getDrawable();
                             Drawable wrappedMainDrawablePauseplay = DrawableCompat.wrap(unwrappedMainDrawablePauseplay);
-                            DrawableCompat.setTint(wrappedMainDrawablePauseplay, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
+                            DrawableCompat.setTint(wrappedMainDrawablePauseplay, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
                         }
                     });
                     notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_pause24dp, "pause", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));

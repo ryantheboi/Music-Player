@@ -1,6 +1,7 @@
 package com.example.musicplayer;
 
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 /**
@@ -21,6 +22,9 @@ public class Metadata {
     // values to determine the exact songtab position where the user last was
     private int songtab_scrollindex;
     private int songtab_scrolloffset;
+
+    @Ignore
+    public static Metadata DEFAULT_METADATA = new Metadata(0, false, 0, R.style.ThemeOverlay_AppCompat_MusicLight, 0, 0);
 
     /**
      * Constructor used by database to create a metadata object

@@ -1197,6 +1197,9 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 else{
+                    // insert metadata row into the database for the first time
+                    databaseRepository.insertMetadata(Metadata.DEFAULT_METADATA);
+
                     // start music service for the first time
                     musicServiceIntent.putExtra("musicListInitPaused", mainActivityMessenger);
                     startService(musicServiceIntent);

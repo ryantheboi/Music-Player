@@ -230,7 +230,6 @@ public class PlaylistTab extends Fragment {
 
     public static void toggleTabColor(){
         m_listView.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
-        m_playlistAdapter.setItemsFrameColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
         m_playlistAdapter.setItemsTitleTextColor(m_mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
         m_playlistAdapter.setItemsSizeTextColor(m_mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
     }

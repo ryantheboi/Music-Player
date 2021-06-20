@@ -235,7 +235,6 @@ public class SongListTab extends Fragment {
 
     public static void toggleTabColor(){
         listView.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
-        songListAdapter.setItemsFrameColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
         songListAdapter.setItemsTitleTextColor(mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
         songListAdapter.setItemsAlbumArtistTextColor(mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
     }

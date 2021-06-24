@@ -101,6 +101,14 @@
                 android:scaleType="fitCenter"
                 android:src="@drawable/sucrose" />
 
+            <ImageButton
+                android:id="@+id/btn_bronya"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="#00000000"
+                android:scaleType="fitCenter"
+                android:src="@drawable/bronya" />
+
         </LinearLayout>
     </HorizontalScrollView>
 

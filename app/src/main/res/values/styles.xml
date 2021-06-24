@@ -122,6 +122,19 @@
         <item name="android:colorControlHighlight">@color/sucroseMint400</item>
     </style>
 
+    <style name="AlertDialogBronya" parent="Theme.AppCompat.Dialog.Alert">
+        <!-- Used for the buttons -->
+        <item name="colorAccent">@color/itembronyaselector</item>
+        <!-- Used for the title and text -->
+        <item name="android:textColorPrimary">@color/bronyaBlue200</item>
+        <!-- Used for the disabled buttons -->
+        <item name="android:textColorSecondary">@color/bronyaLemon300</item>
+        <!-- Used for the background -->
+        <item name="android:background">@color/bronyaDark100</item>
+        <!-- Used for dialog button background ripple -->
+        <item name="android:colorControlHighlight">@color/bronyaMagenta100</item>
+    </style>
+
     <style name="EditTextHint" parent="TextAppearance.AppCompat">
         <item name="android:textColorHint">@color/generalGrey</item>
         <item name="android:textSize">18sp</item>
@@ -201,5 +214,15 @@
         <item name="subtitleTextColor">@color/itemsucroseselectorlite</item>
         <item name="titleTextColor">@color/sucroseCaramel500</item>
         <item name="colorAccent">@color/sucroseCaramel500</item>
+    </style>
+
+    <style name="ThemeOverlay.AppCompat.MusicBronya" parent="ToolbarAppTheme">
+        <item name="colorPrimary">@color/bronyaDark200</item>
+        <item name="colorSecondary">@color/bronyaDark100</item>
+        <item name="itemTextColor">@color/itembronyaselector</item>
+        <item name="tabTextColor">@color/itembronyaselectortab</item>
+        <item name="subtitleTextColor">@color/itembronyaselectorlite</item>
+        <item name="titleTextColor">@color/bronyaBlue200</item>
+        <item name="colorAccent">@color/bronyaLemon300</item>
     </style>
 </resources>

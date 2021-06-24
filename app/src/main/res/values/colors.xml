@@ -70,4 +70,15 @@
     <color name="sucroseCaramel300">#AD581A</color>
     <color name="sucroseCaramel500">#AD520F</color>
 
+    <!-- Bronya theme -->
+    <color name="bronyaDark100">#28272D</color>
+    <color name="bronyaDark200">#212025</color>
+    <color name="bronyaLight100">#F0F5F6</color>
+    <color name="bronyaBlue100">#89EDFC</color>
+    <color name="bronyaBlue200">#49B1F5</color>
+    <color name="bronyaLemon100">#FFE578</color>
+    <color name="bronyaLemon300">#FED836</color>
+    <color name="bronyaMagenta100">#FF79BC</color>
+    <color name="bronyaMagenta300">#F43293</color>
+
 </resources>

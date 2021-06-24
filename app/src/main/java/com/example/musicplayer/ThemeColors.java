@@ -119,6 +119,8 @@ public class ThemeColors {
                 return R.style.AlertDialogPuck;
             case R.style.ThemeOverlay_AppCompat_MusicSucrose:
                 return R.style.AlertDialogSucrose;
+            case R.style.ThemeOverlay_AppCompat_MusicBronya:
+                return R.style.AlertDialogBronya;
             default:
                 return R.style.AlertDialogLight;
         }
@@ -144,6 +146,8 @@ public class ThemeColors {
                 return R.color.puckGold200;
             case R.style.ThemeOverlay_AppCompat_MusicSucrose:
                 return R.color.sucroseCaramel300;
+            case R.style.ThemeOverlay_AppCompat_MusicBronya:
+                return R.color.bronyaLemon300;
             default:
                 return R.color.generalGrey;
         }
@@ -175,6 +179,8 @@ public class ThemeColors {
         switch(themeResourceId){
             case R.style.ThemeOverlay_AppCompat_MusicPuck:
                 return R.color.puckFurAlt100;
+            case R.style.ThemeOverlay_AppCompat_MusicBronya:
+                return R.color.bronyaMagenta300;
             default:
                 return getDrawableVectorColorId();
         }
@@ -196,6 +202,8 @@ public class ThemeColors {
                 return R.color.puckGold100;
             case R.style.ThemeOverlay_AppCompat_MusicSucrose:
                 return R.color.sucroseCaramel100;
+            case R.style.ThemeOverlay_AppCompat_MusicBronya:
+                return R.color.bronyaLemon100;
             default:
                 return R.color.generalGrey;
         }
@@ -227,6 +235,8 @@ public class ThemeColors {
         switch(themeResourceId){
             case R.style.ThemeOverlay_AppCompat_MusicPuck:
                 return R.color.puckFurAlt300;
+            case R.style.ThemeOverlay_AppCompat_MusicBronya:
+                return R.color.bronyaMagenta100;
             default:
                 return getRippleDrawableColorId();
         }
@@ -252,6 +262,8 @@ public class ThemeColors {
                 return R.drawable.puck;
             case R.style.ThemeOverlay_AppCompat_MusicSucrose:
                 return R.drawable.sucrose;
+            case R.style.ThemeOverlay_AppCompat_MusicBronya:
+                return R.drawable.bronya;
             default:
                 return R.drawable.light;
         }

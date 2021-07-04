@@ -33,7 +33,7 @@
 
     <style name="AlertDialogNight" parent="Theme.AppCompat.Dialog.Alert">
         <!-- Used for the buttons -->
-        <item name="colorAccent">@color/itemnightselectorblue</item>
+        <item name="colorAccent">@color/selector_night</item>
         <!-- Used for the title and text -->
         <item name="android:textColorPrimary">@color/generalTextLight</item>
         <!-- Used for the disabled buttons -->
@@ -46,7 +46,7 @@
 
     <style name="AlertDialogLight" parent="Theme.AppCompat.Dialog.Alert">
         <!-- Used for the buttons -->
-        <item name="colorAccent">@color/itemlightselectorblue</item>
+        <item name="colorAccent">@color/selector_default_lite</item>
         <!-- Used for the title and text -->
         <item name="android:textColorPrimary">@color/generalTextDark</item>
         <!-- Used for the disabled buttons -->
@@ -59,7 +59,7 @@
 
     <style name="AlertDialogRam" parent="Theme.AppCompat.Dialog.Alert">
         <!-- Used for the buttons -->
-        <item name="colorAccent">@color/itemramselector</item>
+        <item name="colorAccent">@color/selector_ram</item>
         <!-- Used for the title and text -->
         <item name="android:textColorPrimary">@color/ramPink700</item>
         <!-- Used for the disabled buttons -->
@@ -72,7 +72,7 @@
 
     <style name="AlertDialogRem" parent="Theme.AppCompat.Dialog.Alert">
         <!-- Used for the buttons -->
-        <item name="colorAccent">@color/itemremselector</item>
+        <item name="colorAccent">@color/selector_rem</item>
         <!-- Used for the title and text -->
         <item name="android:textColorPrimary">@color/remBlue700</item>
         <!-- Used for the disabled buttons -->
@@ -85,7 +85,7 @@
 
     <style name="AlertDialogSubaru" parent="Theme.AppCompat.Dialog.Alert">
         <!-- Used for the buttons -->
-        <item name="colorAccent">@color/itemsubaruselectortab</item>
+        <item name="colorAccent">@color/selector_subaru_tab</item>
         <!-- Used for the title and text -->
         <item name="android:textColorPrimary">@color/subaruOrange500</item>
         <!-- Used for the disabled buttons -->
@@ -98,7 +98,7 @@
 
     <style name="AlertDialogPuck" parent="Theme.AppCompat.Dialog.Alert">
         <!-- Used for the buttons -->
-        <item name="colorAccent">@color/itempuckselectortab</item>
+        <item name="colorAccent">@color/selector_puck_tab</item>
         <!-- Used for the title and text -->
         <item name="android:textColorPrimary">@color/puckFurAlt100</item>
         <!-- Used for the disabled buttons -->
@@ -111,7 +111,7 @@
 
     <style name="AlertDialogSucrose" parent="Theme.AppCompat.Dialog.Alert">
         <!-- Used for the buttons -->
-        <item name="colorAccent">@color/itemsucroseselector</item>
+        <item name="colorAccent">@color/selector_sucrose</item>
         <!-- Used for the title and text -->
         <item name="android:textColorPrimary">@color/sucroseCaramel500</item>
         <!-- Used for the disabled buttons -->
@@ -124,7 +124,7 @@
 
     <style name="AlertDialogBronya" parent="Theme.AppCompat.Dialog.Alert">
         <!-- Used for the buttons -->
-        <item name="colorAccent">@color/itembronyaselector</item>
+        <item name="colorAccent">@color/selector_bronya</item>
         <!-- Used for the title and text -->
         <item name="android:textColorPrimary">@color/bronyaBlue200</item>
         <!-- Used for the disabled buttons -->
@@ -149,9 +149,9 @@
     <style name="ThemeOverlay.AppCompat.MusicNight" parent="ToolbarAppTheme">
         <item name="colorPrimary">@color/nightDark200</item>
         <item name="colorSecondary">@color/nightDark100</item>
-        <item name="itemTextColor">@color/itemnightselectorblue</item>
-        <item name="tabTextColor">@color/itemnightselectorblue</item>
-        <item name="subtitleTextColor">@color/itemdefaultselectorblue</item>
+        <item name="itemTextColor">@color/selector_night</item>
+        <item name="tabTextColor">@color/selector_night</item>
+        <item name="subtitleTextColor">@color/selector_default</item>
         <item name="titleTextColor">@color/generalTextLight</item>
         <item name="colorAccent">@color/generalTextLight</item>
     </style>
@@ -159,9 +159,9 @@
     <style name="ThemeOverlay.AppCompat.MusicLight" parent="ToolbarAppTheme">
         <item name="colorPrimary">@color/lightWhite100</item>
         <item name="colorSecondary">@color/lightWhite200</item>
-        <item name="itemTextColor">@color/itemlightselectorblue</item>
-        <item name="tabTextColor">@color/itemlightselectorblue</item>
-        <item name="subtitleTextColor">@color/itemdefaultselectorblue</item>
+        <item name="itemTextColor">@color/selector_default_lite</item>
+        <item name="tabTextColor">@color/selector_default_lite</item>
+        <item name="subtitleTextColor">@color/selector_default</item>
         <item name="titleTextColor">@color/generalTextDark</item>
         <item name="colorAccent">@color/generalTextDark</item>
     </style>
@@ -169,9 +169,9 @@
     <style name="ThemeOverlay.AppCompat.MusicRam" parent="ToolbarAppTheme">
         <item name="colorPrimary">@color/ramPink100</item>
         <item name="colorSecondary">@color/ramPink200</item>
-        <item name="itemTextColor">@color/itemramselector</item>
-        <item name="tabTextColor">@color/itemramselector</item>
-        <item name="subtitleTextColor">@color/itemramselectorlite</item>
+        <item name="itemTextColor">@color/selector_ram</item>
+        <item name="tabTextColor">@color/selector_ram</item>
+        <item name="subtitleTextColor">@color/selector_ram_lite</item>
         <item name="titleTextColor">@color/ramPink600</item>
         <item name="colorAccent">@color/ramPink600</item>
     </style>
@@ -179,9 +179,9 @@
     <style name="ThemeOverlay.AppCompat.MusicRem" parent="ToolbarAppTheme">
         <item name="colorPrimary">@color/remBlue100</item>
         <item name="colorSecondary">@color/remBlue200</item>
-        <item name="itemTextColor">@color/itemremselector</item>
-        <item name="tabTextColor">@color/itemremselector</item>
-        <item name="subtitleTextColor">@color/itemremselectorlite</item>
+        <item name="itemTextColor">@color/selector_rem</item>
+        <item name="tabTextColor">@color/selector_rem</item>
+        <item name="subtitleTextColor">@color/selector_rem_lite</item>
         <item name="titleTextColor">@color/remBlue600</item>
         <item name="colorAccent">@color/remBlue600</item>
     </style>
@@ -189,9 +189,9 @@
     <style name="ThemeOverlay.AppCompat.MusicSubaru" parent="ToolbarAppTheme">
         <item name="colorPrimary">@color/subaruCharcoal100</item>
         <item name="colorSecondary">@color/subaruCharcoal200</item>
-        <item name="itemTextColor">@color/itemsubaruselector</item>
-        <item name="tabTextColor">@color/itemsubaruselectortab</item>
-        <item name="subtitleTextColor">@color/itemsubaruselectorlite</item>
+        <item name="itemTextColor">@color/selector_subaru</item>
+        <item name="tabTextColor">@color/selector_subaru_tab</item>
+        <item name="subtitleTextColor">@color/selector_subaru_lite</item>
         <item name="titleTextColor">@color/subaruOrange500</item>
         <item name="colorAccent">@color/subaruUnseen200</item>
     </style>
@@ -199,9 +199,9 @@
     <style name="ThemeOverlay.AppCompat.MusicPuck" parent="ToolbarAppTheme">
         <item name="colorPrimary">@color/puckFur200</item>
         <item name="colorSecondary">@color/puckFur100</item>
-        <item name="itemTextColor">@color/itempuckselector</item>
-        <item name="tabTextColor">@color/itempuckselectortab</item>
-        <item name="subtitleTextColor">@color/itempuckselectorlite</item>
+        <item name="itemTextColor">@color/selector_puck</item>
+        <item name="tabTextColor">@color/selector_puck_tab</item>
+        <item name="subtitleTextColor">@color/selector_puck_lite</item>
         <item name="titleTextColor">@color/puckFurAlt100</item>
         <item name="colorAccent">@color/puckIce200</item>
     </style>
@@ -209,9 +209,9 @@
     <style name="ThemeOverlay.AppCompat.MusicSucrose" parent="ToolbarAppTheme">
         <item name="colorPrimary">@color/sucroseMint100</item>
         <item name="colorSecondary">@color/sucroseMint200</item>
-        <item name="itemTextColor">@color/itemsucroseselector</item>
-        <item name="tabTextColor">@color/itemsucroseselector</item>
-        <item name="subtitleTextColor">@color/itemsucroseselectorlite</item>
+        <item name="itemTextColor">@color/selector_sucrose</item>
+        <item name="tabTextColor">@color/selector_sucrose</item>
+        <item name="subtitleTextColor">@color/selector_sucrose_lite</item>
         <item name="titleTextColor">@color/sucroseCaramel500</item>
         <item name="colorAccent">@color/sucroseCaramel500</item>
     </style>
@@ -219,9 +219,9 @@
     <style name="ThemeOverlay.AppCompat.MusicBronya" parent="ToolbarAppTheme">
         <item name="colorPrimary">@color/bronyaDark200</item>
         <item name="colorSecondary">@color/bronyaDark100</item>
-        <item name="itemTextColor">@color/itembronyaselector</item>
-        <item name="tabTextColor">@color/itembronyaselectortab</item>
-        <item name="subtitleTextColor">@color/itembronyaselectorlite</item>
+        <item name="itemTextColor">@color/selector_bronya</item>
+        <item name="tabTextColor">@color/selector_bronya_tab</item>
+        <item name="subtitleTextColor">@color/selector_bronya_lite</item>
         <item name="titleTextColor">@color/bronyaBlue200</item>
         <item name="colorAccent">@color/bronyaLemon300</item>
     </style>

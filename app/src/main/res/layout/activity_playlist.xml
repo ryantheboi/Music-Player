@@ -34,7 +34,7 @@
         android:layout_below="@+id/textview_playlist_name"
         android:text="@string/Size"
         android:textSize="15sp"
-        android:textColor="@color/itemdefaultselectorblue"/>
+        android:textColor="@color/selector_default"/>
     <ListView
         android:id="@+id/listview_playlist_songs"
         android:layout_below="@+id/toolbar_playlist"

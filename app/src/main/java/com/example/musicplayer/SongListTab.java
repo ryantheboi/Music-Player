@@ -38,6 +38,7 @@ public class SongListTab extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static ListView listView;
+    private static ImageView background;
     private static SongListAdapter songListAdapter;
     private static Messenger mainActivityMessenger;
     private static MainActivity mainActivity;
@@ -84,6 +85,7 @@ public class SongListTab extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View fragmentView = inflater.inflate(R.layout.fragment_tab_songs, container, false);
+        background = fragmentView.findViewById(R.id.background_layer);
         listView = fragmentView.findViewById(R.id.fragment_listview_songs);
         listView.setAdapter(songListAdapter);
 
@@ -234,7 +236,7 @@ public class SongListTab extends Fragment {
     }
 
     public static void toggleTabColor(){
-        listView.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        background.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
         songListAdapter.setItemsTitleTextColor(mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
         songListAdapter.setItemsAlbumArtistTextColor(mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
     }

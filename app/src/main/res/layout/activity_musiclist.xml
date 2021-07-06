@@ -64,12 +64,12 @@
 
             </com.google.android.material.appbar.AppBarLayout>
 
-            <androidx.viewpager.widget.ViewPager
+            <com.example.musicplayer.DynamicViewPager
                 android:id="@+id/viewPager"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior">
-            </androidx.viewpager.widget.ViewPager>
+            </com.example.musicplayer.DynamicViewPager>
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
         <RelativeLayout

@@ -2,12 +2,19 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorPrimary">
+    android:background="@android:color/transparent">
+
+    <ImageView
+        android:id="@+id/background_layer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0.5"/>
 
     <ListView
         android:id="@+id/fragment_listview_playlists"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:dividerHeight="18dp"
-        android:divider="@drawable/list_divider"/>
+        android:divider="@drawable/list_divider"
+        android:background="@android:color/transparent"/>
 </RelativeLayout>

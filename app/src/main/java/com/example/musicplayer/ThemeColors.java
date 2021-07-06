@@ -269,6 +269,20 @@ public class ThemeColors {
         }
     }
 
+    /**
+     * Gets the background asset image resid associated with a theme
+     * If the theme does not have a background image, return 0
+     * @return the drawable resource id to represent the background for the current theme
+     */
+    public static int getThemeBackgroundAssetResourceId(){
+        switch(themeResourceId){
+            case R.style.ThemeOverlay_AppCompat_MusicBronya:
+                return R.drawable.haxxor;
+            default:
+                return 0;
+        }
+    }
+
     public static int getThemeResourceId(){
         return themeResourceId;
     }

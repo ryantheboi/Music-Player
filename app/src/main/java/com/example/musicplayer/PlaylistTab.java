@@ -40,6 +40,7 @@ public class PlaylistTab extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static ListView m_listView;
+    private static ImageView background;
     private static PlaylistAdapter m_playlistAdapter;
     private static MainActivity m_mainActivity;
     private static Messenger m_mainMessenger;
@@ -85,6 +86,7 @@ public class PlaylistTab extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View fragmentView = inflater.inflate(R.layout.fragment_tab_playlists, container, false);
+        background = fragmentView.findViewById(R.id.background_layer);
         m_listView = fragmentView.findViewById(R.id.fragment_listview_playlists);
         m_listView.setAdapter(m_playlistAdapter);
 
@@ -229,7 +231,7 @@ public class PlaylistTab extends Fragment {
     }
 
     public static void toggleTabColor(){
-        m_listView.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        background.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
         m_playlistAdapter.setItemsTitleTextColor(m_mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
         m_playlistAdapter.setItemsSizeTextColor(m_mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
     }

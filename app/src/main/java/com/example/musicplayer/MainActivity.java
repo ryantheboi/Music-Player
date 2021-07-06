@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageView searchFilter_btn;
     private RippleDrawable searchFilter_btn_ripple;
     private TabLayout tabLayout;
-    private ViewPager viewPager;
+    private DynamicViewPager viewPager;
     private Toolbar toolbar;
     private TextView toolbar_title;
     private ActionBar actionBar;
@@ -823,6 +823,10 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.addTab(tabLayout.newTab().setText("Playlists"));
 
         pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, this);
+
+        // set dynamic viewpager
+        viewPager.setMaxPages(pagerAdapter.getCount());
+        viewPager.setBackgroundAsset(ThemeColors.getThemeBackgroundAssetResourceId());
         viewPager.setAdapter(pagerAdapter);
 
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener(){
@@ -895,6 +899,7 @@ public class MainActivity extends AppCompatActivity {
         PlaylistTab.toggleTabColor();
         updateSeekBarColors();
         updateTabLayoutColors();
+        updateViewPager();
         updateSearchFilterColors();
         updateMainColors();
         updateSlidingMenuColors();
@@ -983,6 +988,10 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
         tabLayout.setTabTextColors(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.TAB_TEXT_COLOR)));
         tabLayout.setSelectedTabIndicatorColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+    }
+
+    private void updateViewPager(){
+        viewPager.setBackgroundAsset(ThemeColors.getThemeBackgroundAssetResourceId());
     }
 
     @TargetApi(21)

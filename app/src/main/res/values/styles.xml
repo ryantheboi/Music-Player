@@ -135,6 +135,19 @@
         <item name="android:colorControlHighlight">@color/bronyaMagenta100</item>
     </style>
 
+    <style name="AlertDialogNoelle" parent="Theme.AppCompat.Dialog.Alert">
+        <!-- Used for the buttons -->
+        <item name="colorAccent">@color/selector_noelle</item>
+        <!-- Used for the title and text -->
+        <item name="android:textColorPrimary">@color/noelleRose200</item>
+        <!-- Used for the disabled buttons -->
+        <item name="android:textColorSecondary">@color/noelleDark100</item>
+        <!-- Used for the background -->
+        <item name="android:background">@color/noelleGeo100</item>
+        <!-- Used for dialog button background ripple -->
+        <item name="android:colorControlHighlight">@color/noelleRose100</item>
+    </style>
+
     <style name="EditTextHint" parent="TextAppearance.AppCompat">
         <item name="android:textColorHint">@color/generalGrey</item>
         <item name="android:textSize">18sp</item>
@@ -224,5 +237,15 @@
         <item name="subtitleTextColor">@color/selector_bronya_lite</item>
         <item name="titleTextColor">@color/bronyaBlue200</item>
         <item name="colorAccent">@color/bronyaLemon300</item>
+    </style>
+
+    <style name="ThemeOverlay.AppCompat.MusicNoelle" parent="ToolbarAppTheme">
+        <item name="colorPrimary">@color/noelleGeo100</item>
+        <item name="colorSecondary">@color/noelleGeo300</item>
+        <item name="itemTextColor">@color/selector_noelle</item>
+        <item name="tabTextColor">@color/selector_noelle_tab</item>
+        <item name="subtitleTextColor">@color/selector_noelle_lite</item>
+        <item name="titleTextColor">@color/noelleRose100</item>
+        <item name="colorAccent">@color/noelleRose100</item>
     </style>
 </resources>

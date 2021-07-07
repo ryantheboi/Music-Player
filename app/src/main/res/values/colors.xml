@@ -81,4 +81,14 @@
     <color name="bronyaMagenta100">#FF79BC</color>
     <color name="bronyaMagenta300">#F43293</color>
 
+    <!-- Noelle theme -->
+    <color name="noelleGeo100">#FFE692</color>
+    <color name="noelleGeo300">#FFE17C</color>
+    <color name="noelleRose100">#EC2F7A</color>
+    <color name="noelleRose200">#EE2273</color>
+    <color name="noelleDark100">#312F39</color>
+    <color name="noelleSilver100">#E1DEE6</color>
+    <color name="noelleSilver200">#D5D2DA</color>
+
+
 </resources>

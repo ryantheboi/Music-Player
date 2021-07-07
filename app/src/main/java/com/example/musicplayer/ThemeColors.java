@@ -121,6 +121,8 @@ public class ThemeColors {
                 return R.style.AlertDialogSucrose;
             case R.style.ThemeOverlay_AppCompat_MusicBronya:
                 return R.style.AlertDialogBronya;
+            case R.style.ThemeOverlay_AppCompat_MusicNoelle:
+                return R.style.AlertDialogNoelle;
             default:
                 return R.style.AlertDialogLight;
         }
@@ -148,6 +150,8 @@ public class ThemeColors {
                 return R.color.sucroseCaramel300;
             case R.style.ThemeOverlay_AppCompat_MusicBronya:
                 return R.color.bronyaLemon300;
+            case R.style.ThemeOverlay_AppCompat_MusicNoelle:
+                return R.color.noelleSilver200;
             default:
                 return R.color.generalGrey;
         }
@@ -165,6 +169,8 @@ public class ThemeColors {
                 return R.color.subaruUnseen200;
             case R.style.ThemeOverlay_AppCompat_MusicPuck:
                 return R.color.puckIce200;
+            case R.style.ThemeOverlay_AppCompat_MusicNoelle:
+                return R.color.noelleRose200;
             default:
                 return getDrawableVectorColorId();
         }
@@ -181,6 +187,8 @@ public class ThemeColors {
                 return R.color.puckFurAlt100;
             case R.style.ThemeOverlay_AppCompat_MusicBronya:
                 return R.color.bronyaMagenta300;
+            case R.style.ThemeOverlay_AppCompat_MusicNoelle:
+                return R.color.noelleRose200;
             default:
                 return getDrawableVectorColorId();
         }
@@ -204,6 +212,8 @@ public class ThemeColors {
                 return R.color.sucroseCaramel100;
             case R.style.ThemeOverlay_AppCompat_MusicBronya:
                 return R.color.bronyaLemon100;
+            case R.style.ThemeOverlay_AppCompat_MusicNoelle:
+                return R.color.noelleSilver100;
             default:
                 return R.color.generalGrey;
         }
@@ -221,6 +231,8 @@ public class ThemeColors {
                 return R.color.subaruUnseen100;
             case R.style.ThemeOverlay_AppCompat_MusicPuck:
                 return R.color.puckIce100;
+            case R.style.ThemeOverlay_AppCompat_MusicNoelle:
+                return R.color.noelleRose100;
             default:
                 return getRippleDrawableColorId();
         }
@@ -237,6 +249,8 @@ public class ThemeColors {
                 return R.color.puckFurAlt300;
             case R.style.ThemeOverlay_AppCompat_MusicBronya:
                 return R.color.bronyaMagenta100;
+            case R.style.ThemeOverlay_AppCompat_MusicNoelle:
+                return R.color.noelleRose100;
             default:
                 return getRippleDrawableColorId();
         }
@@ -264,6 +278,8 @@ public class ThemeColors {
                 return R.drawable.sucrose;
             case R.style.ThemeOverlay_AppCompat_MusicBronya:
                 return R.drawable.bronya;
+            case R.style.ThemeOverlay_AppCompat_MusicNoelle:
+                return R.drawable.noelle;
             default:
                 return R.drawable.light;
         }
@@ -278,6 +294,8 @@ public class ThemeColors {
         switch(themeResourceId){
             case R.style.ThemeOverlay_AppCompat_MusicBronya:
                 return R.drawable.haxxor;
+            case R.style.ThemeOverlay_AppCompat_MusicNoelle:
+                return R.drawable.noelleprotector;
             default:
                 return 0;
         }

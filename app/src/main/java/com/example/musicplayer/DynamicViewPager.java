@@ -58,19 +58,13 @@ public class DynamicViewPager extends ViewPager {
         super.onPageScrolled(position, offset, offsetPixels);
         currentPosition = position;
         currentOffset = offset;
+        setCanvasSrcDst();
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         if (!insufficientMemory && parallaxEnabled) {
-            if (currentPosition == -1)
-                currentPosition = getCurrentItem();
-            // perhaps better performance when currentPosition is getScrollX
-            src.set((int) (overlapLevel * (currentPosition + currentOffset)), 0,
-                    (int) (overlapLevel * (currentPosition + currentOffset) + (getWidth() * zoomLevel)), imageHeight);
-
-            dst.set((getScrollX()), 0, (getScrollX() + canvas.getWidth()), canvas.getHeight());
             canvas.drawBitmap(savedBitmap, src, dst, null);
         }
     }
@@ -82,6 +76,13 @@ public class DynamicViewPager extends ViewPager {
             savedBitmap = null;
         }
         super.onDetachedFromWindow();
+    }
+
+    private void setCanvasSrcDst(){
+        src.set((int) (overlapLevel * (currentPosition + currentOffset)), 0,
+                (int) (overlapLevel * (currentPosition + currentOffset) + (getWidth() * zoomLevel)), imageHeight);
+
+        dst.set((getScrollX()), 0, (getScrollX() + getWidth()), getHeight());
     }
 
     private int sizeOf(Bitmap data) {
@@ -183,7 +184,12 @@ public class DynamicViewPager extends ViewPager {
             backgroundId = resId;
             setNewBackground();
         }
-        // invokes onDraw() to update the background
+
+        // set canvas src and dst, then invoke onDraw() to update the background
+        if (currentPosition == -1) {
+            currentPosition = getCurrentItem();
+        }
+        setCanvasSrcDst();
         this.invalidate();
     }
 
@@ -197,7 +203,6 @@ public class DynamicViewPager extends ViewPager {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         return this.pagingEnabled && super.onTouchEvent(event);
-
     }
 
     @Override

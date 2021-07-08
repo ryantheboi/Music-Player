@@ -89,42 +89,50 @@ public class ThemeColors {
      * @return the gradient rgb color that fits the theme
      */
     public static int getGradientColor(){
-        switch (themeResourceId){
-            case R.style.ThemeOverlay_AppCompat_MusicLight:
-                return getVibrantColor();
-            case R.style.ThemeOverlay_AppCompat_MusicNight:
-                return getDarkVibrantColor();
-            default:
-                return themeValues.get(COLOR_PRIMARY);
+        if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicLight) {
+            return getVibrantColor();
         }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicNight) {
+            return getDarkVibrantColor();
+        }
+        else{
+                return themeValues.get(COLOR_PRIMARY);
+            }
     }
 
     /**
      * Gets the alert dialog style that matches the current theme
      * @return the style resource id that represents the alert dialog style for the current theme
      */
-    public static int getAlertDialogStyleResourceId(){
-        switch(themeResourceId){
-            case R.style.ThemeOverlay_AppCompat_MusicLight:
-                return R.style.AlertDialogLight;
-            case R.style.ThemeOverlay_AppCompat_MusicNight:
-                return R.style.AlertDialogNight;
-            case R.style.ThemeOverlay_AppCompat_MusicRam:
-                return R.style.AlertDialogRam;
-            case R.style.ThemeOverlay_AppCompat_MusicRem:
-                return R.style.AlertDialogRem;
-            case R.style.ThemeOverlay_AppCompat_MusicSubaru:
-                return R.style.AlertDialogSubaru;
-            case R.style.ThemeOverlay_AppCompat_MusicPuck:
-                return R.style.AlertDialogPuck;
-            case R.style.ThemeOverlay_AppCompat_MusicSucrose:
-                return R.style.AlertDialogSucrose;
-            case R.style.ThemeOverlay_AppCompat_MusicBronya:
-                return R.style.AlertDialogBronya;
-            case R.style.ThemeOverlay_AppCompat_MusicNoelle:
-                return R.style.AlertDialogNoelle;
-            default:
-                return R.style.AlertDialogLight;
+    public static int getAlertDialogStyleResourceId() {
+        if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicLight) {
+            return R.style.AlertDialogLight;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicNight) {
+            return R.style.AlertDialogNight;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicRam) {
+            return R.style.AlertDialogRam;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicRem) {
+            return R.style.AlertDialogRem;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicSubaru) {
+            return R.style.AlertDialogSubaru;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicPuck) {
+            return R.style.AlertDialogPuck;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicSucrose) {
+            return R.style.AlertDialogSucrose;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicBronya) {
+            return R.style.AlertDialogBronya;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicNoelle) {
+            return R.style.AlertDialogNoelle;
+        } else {
+            return R.style.AlertDialogLight;
         }
     }
 
@@ -132,28 +140,35 @@ public class ThemeColors {
      * Gets the resource id of the current theme's color tint for drawable vectors to use
      * @return the color resource id appropriate for drawable vectors in the current theme
      */
-    public static int getDrawableVectorColorId(){
-        switch(themeResourceId){
-            case R.style.ThemeOverlay_AppCompat_MusicLight:
-                return R.color.nightDark100;
-            case R.style.ThemeOverlay_AppCompat_MusicNight:
-                return R.color.lightWhite200;
-            case R.style.ThemeOverlay_AppCompat_MusicRam:
-                return R.color.ramPink700;
-            case R.style.ThemeOverlay_AppCompat_MusicRem:
-                return R.color.remBlue700;
-            case R.style.ThemeOverlay_AppCompat_MusicSubaru:
-                return R.color.subaruOrange500;
-            case R.style.ThemeOverlay_AppCompat_MusicPuck:
-                return R.color.puckGold200;
-            case R.style.ThemeOverlay_AppCompat_MusicSucrose:
-                return R.color.sucroseCaramel300;
-            case R.style.ThemeOverlay_AppCompat_MusicBronya:
-                return R.color.bronyaLemon300;
-            case R.style.ThemeOverlay_AppCompat_MusicNoelle:
-                return R.color.noelleSilver200;
-            default:
-                return R.color.generalGrey;
+    public static int getDrawableVectorColorId() {
+        if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicLight) {
+            return R.color.nightDark100;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicNight) {
+            return R.color.lightWhite200;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicRam) {
+            return R.color.ramPink700;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicRem) {
+            return R.color.remBlue700;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicSubaru) {
+            return R.color.subaruOrange500;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicPuck) {
+            return R.color.puckGold200;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicSucrose) {
+            return R.color.sucroseCaramel300;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicBronya) {
+            return R.color.bronyaLemon300;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicNoelle) {
+            return R.color.noelleSilver200;
+        } else {
+            return R.color.generalGrey;
         }
     }
 
@@ -163,16 +178,17 @@ public class ThemeColors {
      * @return the alternate color resource id appropriate for drawable vectors in the current theme
      *          if there is no alternate color, returns the default color
      */
-    public static int getDrawableVectorColorIdAlt(){
-        switch(themeResourceId){
-            case R.style.ThemeOverlay_AppCompat_MusicSubaru:
-                return R.color.subaruUnseen200;
-            case R.style.ThemeOverlay_AppCompat_MusicPuck:
-                return R.color.puckIce200;
-            case R.style.ThemeOverlay_AppCompat_MusicNoelle:
-                return R.color.noelleRose200;
-            default:
-                return getDrawableVectorColorId();
+    public static int getDrawableVectorColorIdAlt() {
+        if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicSubaru) {
+            return R.color.subaruUnseen200;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicPuck) {
+            return R.color.puckIce200;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicNoelle) {
+            return R.color.noelleRose200;
+        } else {
+            return getDrawableVectorColorId();
         }
     }
 
@@ -181,16 +197,17 @@ public class ThemeColors {
      * Main drawable vectors include buttons on the main display, the add playlist button, etc.
      * @return the color resource id appropriate for main drawable vectors in the current theme
      */
-    public static int getMainDrawableVectorColorId(){
-        switch(themeResourceId){
-            case R.style.ThemeOverlay_AppCompat_MusicPuck:
-                return R.color.puckFurAlt100;
-            case R.style.ThemeOverlay_AppCompat_MusicBronya:
-                return R.color.bronyaMagenta300;
-            case R.style.ThemeOverlay_AppCompat_MusicNoelle:
-                return R.color.noelleRose200;
-            default:
-                return getDrawableVectorColorId();
+    public static int getMainDrawableVectorColorId() {
+        if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicPuck) {
+            return R.color.puckFurAlt100;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicBronya) {
+            return R.color.bronyaMagenta300;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicNoelle) {
+            return R.color.noelleRose200;
+        } else {
+            return getDrawableVectorColorId();
         }
     }
 
@@ -198,24 +215,29 @@ public class ThemeColors {
      * Gets the resource id of the current theme's color tint for ripples to use
      * @return the color resource id appropriate for RippleDrawables in the current theme
      */
-    public static int getRippleDrawableColorId(){
-        switch(themeResourceId){
-            case R.style.ThemeOverlay_AppCompat_MusicRam:
-                return R.color.ramPink400;
-            case R.style.ThemeOverlay_AppCompat_MusicRem:
-                return R.color.remBlue400;
-            case R.style.ThemeOverlay_AppCompat_MusicSubaru:
-                return R.color.subaruOrange100;
-            case R.style.ThemeOverlay_AppCompat_MusicPuck:
-                return R.color.puckGold100;
-            case R.style.ThemeOverlay_AppCompat_MusicSucrose:
-                return R.color.sucroseCaramel100;
-            case R.style.ThemeOverlay_AppCompat_MusicBronya:
-                return R.color.bronyaLemon100;
-            case R.style.ThemeOverlay_AppCompat_MusicNoelle:
-                return R.color.noelleSilver100;
-            default:
-                return R.color.generalGrey;
+    public static int getRippleDrawableColorId() {
+        if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicRam) {
+            return R.color.ramPink400;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicRem) {
+            return R.color.remBlue400;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicSubaru) {
+            return R.color.subaruOrange100;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicPuck) {
+            return R.color.puckGold100;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicSucrose) {
+            return R.color.sucroseCaramel100;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicBronya) {
+            return R.color.bronyaLemon100;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicNoelle) {
+            return R.color.noelleSilver100;
+        } else {
+            return R.color.generalGrey;
         }
     }
 
@@ -225,16 +247,17 @@ public class ThemeColors {
      * @return the alternate color resource id appropriate for RippleDrawables in the current theme
      *          if there is no alternate color, returns the default color
      */
-    public static int getRippleDrawableColorIdAlt(){
-        switch(themeResourceId){
-            case R.style.ThemeOverlay_AppCompat_MusicSubaru:
-                return R.color.subaruUnseen100;
-            case R.style.ThemeOverlay_AppCompat_MusicPuck:
-                return R.color.puckIce100;
-            case R.style.ThemeOverlay_AppCompat_MusicNoelle:
-                return R.color.noelleRose100;
-            default:
-                return getRippleDrawableColorId();
+    public static int getRippleDrawableColorIdAlt() {
+        if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicSubaru) {
+            return R.color.subaruUnseen100;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicPuck) {
+            return R.color.puckIce100;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicNoelle) {
+            return R.color.noelleRose100;
+        } else {
+            return getRippleDrawableColorId();
         }
     }
 
@@ -243,16 +266,17 @@ public class ThemeColors {
      * Main RippleDrawables include ripples on the main display buttons, etc.
      * @return the color resource id appropriate for main RippleDrawables in the current theme
      */
-    public static int getMainRippleDrawableColorId(){
-        switch(themeResourceId){
-            case R.style.ThemeOverlay_AppCompat_MusicPuck:
-                return R.color.puckFurAlt300;
-            case R.style.ThemeOverlay_AppCompat_MusicBronya:
-                return R.color.bronyaMagenta100;
-            case R.style.ThemeOverlay_AppCompat_MusicNoelle:
-                return R.color.noelleRose100;
-            default:
-                return getRippleDrawableColorId();
+    public static int getMainRippleDrawableColorId() {
+        if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicPuck) {
+            return R.color.puckFurAlt300;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicBronya) {
+            return R.color.bronyaMagenta100;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicNoelle) {
+            return R.color.noelleRose100;
+        } else {
+            return getRippleDrawableColorId();
         }
     }
 
@@ -260,28 +284,45 @@ public class ThemeColors {
      * Gets the main activity's theme button image resid corresponding to the current theme
      * @return the drawable resource id that represents the current theme
      */
-    public static int getThemeBtnResourceId(){
-        switch(themeResourceId){
-            case R.style.ThemeOverlay_AppCompat_MusicLight:
-                return R.drawable.light;
-            case R.style.ThemeOverlay_AppCompat_MusicNight:
-                return R.drawable.night;
-            case R.style.ThemeOverlay_AppCompat_MusicRam:
-                return R.drawable.ram;
-            case R.style.ThemeOverlay_AppCompat_MusicRem:
-                return R.drawable.rem;
-            case R.style.ThemeOverlay_AppCompat_MusicSubaru:
-                return R.drawable.subaru;
-            case R.style.ThemeOverlay_AppCompat_MusicPuck:
-                return R.drawable.puck;
-            case R.style.ThemeOverlay_AppCompat_MusicSucrose:
-                return R.drawable.sucrose;
-            case R.style.ThemeOverlay_AppCompat_MusicBronya:
-                return R.drawable.bronya;
-            case R.style.ThemeOverlay_AppCompat_MusicNoelle:
-                return R.drawable.noelle;
-            default:
-                return R.drawable.light;
+    public static int getThemeBtnResourceId() {
+        if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicLight) {
+            System.out.println("LIGHT");
+            return R.drawable.light;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicNight) {
+            System.out.println("NIGHT");
+            return R.drawable.night;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicRam) {
+            System.out.println("RAM");
+            return R.drawable.ram;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicRem) {
+            System.out.println("REM");
+            return R.drawable.rem;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicSubaru) {
+            System.out.println("SUBARU");
+            return R.drawable.subaru;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicPuck) {
+            System.out.println("PUCK");
+            return R.drawable.puck;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicSucrose) {
+            System.out.println("SUCROSE");
+            return R.drawable.sucrose;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicBronya) {
+            System.out.println("BRONYA");
+            return R.drawable.bronya;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicNoelle) {
+            System.out.println("NOELLE");
+            return R.drawable.noelle;
+        } else {
+            System.out.println("DEFAULT");
+            return R.drawable.light;
         }
     }
 
@@ -290,14 +331,14 @@ public class ThemeColors {
      * If the theme does not have a background image, return 0
      * @return the drawable resource id to represent the background for the current theme
      */
-    public static int getThemeBackgroundAssetResourceId(){
-        switch(themeResourceId){
-            case R.style.ThemeOverlay_AppCompat_MusicBronya:
-                return R.drawable.haxxor;
-            case R.style.ThemeOverlay_AppCompat_MusicNoelle:
-                return R.drawable.noelleprotector;
-            default:
-                return 0;
+    public static int getThemeBackgroundAssetResourceId() {
+        if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicBronya) {
+            return R.drawable.haxxor;
+        }
+        else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicNoelle) {
+            return R.drawable.noelleprotector;
+        } else {
+            return 0;
         }
     }
 

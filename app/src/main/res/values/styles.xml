@@ -137,7 +137,7 @@
 
     <style name="AlertDialogNoelle" parent="Theme.AppCompat.Dialog.Alert">
         <!-- Used for the buttons -->
-        <item name="colorAccent">@color/selector_noelle</item>
+        <item name="colorAccent">@color/selector_noelle_tab</item>
         <!-- Used for the title and text -->
         <item name="android:textColorPrimary">@color/noelleRose200</item>
         <!-- Used for the disabled buttons -->

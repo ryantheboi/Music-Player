@@ -68,6 +68,7 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 
 import static android.os.Build.VERSION_CODES.Q;
@@ -296,10 +297,18 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Initializes all songs from the device and all playlists from the database
      */
+    @TargetApi(24)
     public void initMusicList() {
-        // gets all songs from device
+        // gets all songs from device and sorts them
         fullSongList = new ArrayList<>();
         getMusic(); // populates fullSongList
+        fullSongList.sort(new Comparator<Song>() {
+            @Override
+            public int compare(Song o1, Song o2) {
+                return o1.getTitle().compareTo(o2.getTitle());
+            }
+        });
+
         fullPlaylist = new Playlist("FULL_PLAYLIST", fullSongList);
 
         // asynchronously gets all playlists from database, then updates main activity

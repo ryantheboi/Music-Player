@@ -87,6 +87,7 @@ public class SongListTab extends Fragment {
         background = fragmentView.findViewById(R.id.background_layer);
         listView = fragmentView.findViewById(R.id.fragment_listview_songs);
         listView.setAdapter(songListAdapter);
+        listView.setFastScrollEnabled(true);
 
         // init decorView (Action Mode toolbar)
         final ViewGroup decorView = (ViewGroup) getActivity().getWindow().getDecorView();

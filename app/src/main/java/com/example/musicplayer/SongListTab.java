@@ -144,8 +144,13 @@ public class SongListTab extends Fragment {
             }
 
             @Override
-            @TargetApi(26)
+            @TargetApi(21)
             public boolean onCreateActionMode(final android.view.ActionMode mode, final Menu menu) {
+                // finish any action modes from other fragments before creating a new one
+                if (MainActivity.isActionMode){
+                    MainActivity.actionMode.finish();
+                }
+
                 mode.getMenuInflater().inflate(R.menu.songs_menu, menu);
 
                 // update the tint and ripple color of every item in the menu

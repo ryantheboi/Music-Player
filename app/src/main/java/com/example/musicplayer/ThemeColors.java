@@ -286,42 +286,32 @@ public class ThemeColors {
      */
     public static int getThemeBtnResourceId() {
         if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicLight) {
-            System.out.println("LIGHT");
             return R.drawable.light;
         }
         else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicNight) {
-            System.out.println("NIGHT");
             return R.drawable.night;
         }
         else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicRam) {
-            System.out.println("RAM");
             return R.drawable.ram;
         }
         else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicRem) {
-            System.out.println("REM");
             return R.drawable.rem;
         }
         else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicSubaru) {
-            System.out.println("SUBARU");
             return R.drawable.subaru;
         }
         else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicPuck) {
-            System.out.println("PUCK");
             return R.drawable.puck;
         }
         else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicSucrose) {
-            System.out.println("SUCROSE");
             return R.drawable.sucrose;
         }
         else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicBronya) {
-            System.out.println("BRONYA");
             return R.drawable.bronya;
         }
         else if (themeResourceId == R.style.ThemeOverlay_AppCompat_MusicNoelle) {
-            System.out.println("NOELLE");
             return R.drawable.noelle;
         } else {
-            System.out.println("DEFAULT");
             return R.drawable.light;
         }
     }

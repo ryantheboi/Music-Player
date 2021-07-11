@@ -1159,7 +1159,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 // reconstruct viewpager adapter to reflect changes to individual playlist
-                PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, mainActivity);
+                pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, mainActivity);
                 viewPager.setAdapter(pagerAdapter);
 
                 // adjust tab colors

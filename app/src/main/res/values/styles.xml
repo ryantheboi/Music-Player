@@ -27,6 +27,7 @@
         <item name="windowNoTitle">true</item>
         <item name="android:navigationBarColor">@color/nightDark200</item>
         <item name="android:statusBarColor">@color/nightDark200</item>
+        <item name="android:fastScrollPreviewBackgroundRight">@drawable/ic_fastscroll_bubble</item>
     </style>
 
     <style name="ToolbarActionMode" parent="@style/Widget.AppCompat.ActionMode">
@@ -189,6 +190,7 @@
         <item name="subtitleTextColor">@color/selector_ram_lite</item>
         <item name="titleTextColor">@color/ramPink600</item>
         <item name="colorAccent">@color/ramPink600</item>
+        <item name="android:fastScrollTextColor">@color/ramPink100</item>
     </style>
 
     <style name="ThemeOverlay.AppCompat.MusicRem" parent="ToolbarAppTheme">
@@ -199,6 +201,7 @@
         <item name="subtitleTextColor">@color/selector_rem_lite</item>
         <item name="titleTextColor">@color/remBlue600</item>
         <item name="colorAccent">@color/remBlue600</item>
+        <item name="android:fastScrollTextColor">@color/remBlue100</item>
     </style>
 
     <style name="ThemeOverlay.AppCompat.MusicSubaru" parent="ToolbarAppTheme">
@@ -209,6 +212,7 @@
         <item name="subtitleTextColor">@color/selector_subaru_lite</item>
         <item name="titleTextColor">@color/subaruOrange500</item>
         <item name="colorAccent">@color/subaruUnseen200</item>
+        <item name="android:fastScrollTextColor">@color/subaruUnseen200</item>
     </style>
 
     <style name="ThemeOverlay.AppCompat.MusicPuck" parent="ToolbarAppTheme">
@@ -219,6 +223,7 @@
         <item name="subtitleTextColor">@color/selector_puck_lite</item>
         <item name="titleTextColor">@color/puckFurAlt100</item>
         <item name="colorAccent">@color/puckIce200</item>
+        <item name="android:fastScrollTextColor">@color/puckIce100</item>
     </style>
 
     <style name="ThemeOverlay.AppCompat.MusicSucrose" parent="ToolbarAppTheme">
@@ -229,6 +234,7 @@
         <item name="subtitleTextColor">@color/selector_sucrose_lite</item>
         <item name="titleTextColor">@color/sucroseCaramel500</item>
         <item name="colorAccent">@color/sucroseCaramel500</item>
+        <item name="android:fastScrollTextColor">@color/sucroseMint200</item>
     </style>
 
     <style name="ThemeOverlay.AppCompat.MusicBronya" parent="ToolbarAppTheme">
@@ -239,6 +245,7 @@
         <item name="subtitleTextColor">@color/selector_bronya_lite</item>
         <item name="titleTextColor">@color/bronyaBlue200</item>
         <item name="colorAccent">@color/bronyaLemon300</item>
+        <item name="android:fastScrollTextColor">@color/bronyaMagenta100</item>
     </style>
 
     <style name="ThemeOverlay.AppCompat.MusicNoelle" parent="ToolbarAppTheme">
@@ -249,5 +256,6 @@
         <item name="subtitleTextColor">@color/selector_noelle_lite</item>
         <item name="titleTextColor">@color/noelleRose100</item>
         <item name="colorAccent">@color/noelleRose100</item>
+        <item name="android:fastScrollTextColor">@color/noelleGeo100</item>
     </style>
 </resources>

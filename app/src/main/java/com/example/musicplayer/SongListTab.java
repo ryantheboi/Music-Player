@@ -237,6 +237,7 @@ public class SongListTab extends Fragment {
 
     public static void toggleTabColor(){
         background.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        listView.setFastScrollStyle(ThemeColors.getThemeResourceId());
         songListAdapter.setItemsTitleTextColor(mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
         songListAdapter.setItemsAlbumArtistTextColor(mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
     }
@@ -268,6 +269,5 @@ public class SongListTab extends Fragment {
     public static void setScrollSelection(int index, int offset){
         listView.setSelectionFromTop(index, offset);
     }
-
 
 }

@@ -2,6 +2,8 @@ package com.example.musicplayer;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
@@ -198,7 +200,7 @@ public class PlaylistActivity extends Activity {
             }
 
             @Override
-            public boolean onActionItemClicked(android.view.ActionMode mode, MenuItem item) {
+            public boolean onActionItemClicked(final android.view.ActionMode mode, MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.menuitem_createqueue:
                         // construct new current playlist, given the user selections
@@ -221,26 +223,55 @@ public class PlaylistActivity extends Activity {
                         return true;
 
                     case R.id.menuitem_removesong:
-                        // remove selected song(s) from this playlist
-                        m_playlist.removeAll(m_userSelection);
-
-                        // send message to update mainactivity
-                        Message msg = Message.obtain();
-                        Bundle bundle = new Bundle();
-                        bundle.putInt("update", AddPlaylistActivity.MODIFY_PLAYLIST);
-                        bundle.putParcelable("playlist", m_playlist);
-                        msg.setData(bundle);
-                        try {
-                            m_mainMessenger.send(msg);
-                        } catch (RemoteException e) {
-                            e.printStackTrace();
+                        // construct alert dialog for removing playlist
+                        AlertDialog.Builder removeSong_dialogBuilder = new AlertDialog.Builder(PlaylistActivity.this, ThemeColors.getAlertDialogStyleResourceId());
+                        if (m_userSelection.size() == 1) {
+                            Song song = m_userSelection.get(0);
+                            removeSong_dialogBuilder.setTitle("Remove Song " + song.getTitle() + "?");
+                        }
+                        else{
+                            removeSong_dialogBuilder.setTitle("Remove " + m_userSelection.size() + " songs?");
                         }
 
-                        // update playlist size textview with new songs count
-                        String playlist_size = m_playlist.getSize() + " Songs";
-                        m_playlist_size_tv.setText(playlist_size);
+                        // ok button
+                        removeSong_dialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
 
-                        mode.finish(); // Action picked, so close the CAB
+                                // remove selected song(s) from this playlist
+                                m_playlist.removeAll(m_userSelection);
+
+                                // send message to update mainactivity
+                                Message msg = Message.obtain();
+                                Bundle bundle = new Bundle();
+                                bundle.putInt("update", AddPlaylistActivity.MODIFY_PLAYLIST);
+                                bundle.putParcelable("playlist", m_playlist);
+                                msg.setData(bundle);
+                                try {
+                                    m_mainMessenger.send(msg);
+                                } catch (RemoteException e) {
+                                    e.printStackTrace();
+                                }
+
+                                // update playlist size textview with new songs count
+                                String playlist_size = m_playlist.getSize() + " Songs";
+                                m_playlist_size_tv.setText(playlist_size);
+
+                                mode.finish(); // Action picked, so close the CAB
+                            }
+                        });
+
+                        // cancel button
+                        removeSong_dialogBuilder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                            }
+                        });
+
+                        // show dialog
+                        removeSong_dialogBuilder.show();
                         return true;
                     default:
                         return false;

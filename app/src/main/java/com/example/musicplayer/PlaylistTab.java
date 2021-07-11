@@ -1,6 +1,8 @@
 package com.example.musicplayer;
 
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
@@ -194,29 +196,59 @@ public class PlaylistTab extends Fragment {
             }
 
             @Override
-            public boolean onActionItemClicked(android.view.ActionMode mode, MenuItem item) {
+            public boolean onActionItemClicked(final android.view.ActionMode mode, MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.menuitem_removeplaylist:
-                        // construct id array from the user selected playlists and send to main
-                        int numPlaylists = m_userSelection.size();
-                        int[] playlistIds = new int[numPlaylists];
-                        for (int i = 0; i < numPlaylists; i++){
-                            playlistIds[i] = m_userSelection.get(i).getId();
+                        // construct alert dialog for removing playlist
+                        AlertDialog.Builder removePlaylist_dialogBuilder = new AlertDialog.Builder(m_mainActivity, ThemeColors.getAlertDialogStyleResourceId());
+
+                        if (m_userSelection.size() == 1) {
+                            Playlist playlist = m_userSelection.get(0);
+                            removePlaylist_dialogBuilder.setTitle("Remove Playlist " + playlist.getName() + " (" + playlist.getSize() + " songs)?");
+                        }
+                        else{
+                            removePlaylist_dialogBuilder.setTitle("Remove " + m_userSelection.size() + " playlists?");
                         }
 
-                        // send message to update mainactivity
-                        Message msg = Message.obtain();
-                        Bundle bundle = new Bundle();
-                        bundle.putInt("update", REMOVE_PLAYLISTS);
-                        bundle.putIntArray("ids", playlistIds);
-                        msg.setData(bundle);
-                        try {
-                            m_mainMessenger.send(msg);
-                        } catch (RemoteException e) {
-                            e.printStackTrace();
-                        }
+                        // ok button
+                        removePlaylist_dialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
 
-                        mode.finish(); // Action picked, so close the CAB
+                                // construct id array from the user selected playlists and send to main
+                                int numPlaylists = m_userSelection.size();
+                                int[] playlistIds = new int[numPlaylists];
+                                for (int i = 0; i < numPlaylists; i++){
+                                    playlistIds[i] = m_userSelection.get(i).getId();
+                                }
+
+                                // send message to update mainactivity
+                                Message msg = Message.obtain();
+                                Bundle bundle = new Bundle();
+                                bundle.putInt("update", REMOVE_PLAYLISTS);
+                                bundle.putIntArray("ids", playlistIds);
+                                msg.setData(bundle);
+                                try {
+                                    m_mainMessenger.send(msg);
+                                } catch (RemoteException e) {
+                                    e.printStackTrace();
+                                }
+
+                                mode.finish(); // Action picked, so close the CAB
+                            }
+                        });
+
+                        // cancel button
+                        removePlaylist_dialogBuilder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                            }
+                        });
+
+                        // show dialog
+                        removePlaylist_dialogBuilder.show();
                         return true;
                     default:
                         return false;

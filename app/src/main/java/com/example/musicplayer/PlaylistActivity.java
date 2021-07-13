@@ -50,7 +50,7 @@ public class PlaylistActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_playlist);
-        m_playlist_layout = findViewById(R.id.activity_playlist);
+        m_playlist_layout = findViewById(R.id.layout_playlist);
 
         // obtain the intent that started this activity (should contain an extra with a Playlist)
         Intent intent = this.getIntent();

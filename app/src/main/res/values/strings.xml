@@ -21,6 +21,7 @@
     <string name="ChooseTheme">Choose Theme</string>
     <string name="RemoveSong">Remove Song</string>
     <string name="RemovePlaylist">Remove Playlist</string>
+    <string name="RenamePlaylist">Rename Playlist</string>
 
 
 </resources>

@@ -1151,23 +1151,29 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case DatabaseRepository.ASYNC_MODIFY_PLAYLIST:
                 Playlist temp_playlist = (Playlist) object;
-                // check if songs were removed from existing playlist
                 Playlist original_playlist = (Playlist) playlistAdapter.getItem(playlistAdapter.getPosition(temp_playlist));
+
+                // check if songs were removed from existing playlist
                 if (original_playlist.getSize() > temp_playlist.getSize()) {
                     // modify the original playlist to adopt the changes
                     original_playlist.adoptSongList(temp_playlist);
+
+                    // reconstruct viewpager adapter to reflect changes to individual playlist
+                    pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, mainActivity);
+                    viewPager.setAdapter(pagerAdapter);
+
+                    // adjust tab colors
+                    SongListTab.toggleTabColor();
+                    PlaylistTab.toggleTabColor();
+
+                    // move to playlist tab
+                    viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
                 }
 
-                // reconstruct viewpager adapter to reflect changes to individual playlist
-                pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, mainActivity);
-                viewPager.setAdapter(pagerAdapter);
-
-                // adjust tab colors
-                SongListTab.toggleTabColor();
-                PlaylistTab.toggleTabColor();
-
-                // move to playlist tab
-                viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
+                // playlist was simply renamed, or extended, notify playlist adapter
+                else{
+                    playlistAdapter.notifyDataSetChanged();
+                }
                 break;
             case DatabaseRepository.ASYNC_DELETE_PLAYLISTS_BY_ID:
                 ArrayList<Playlist> playlists = (ArrayList<Playlist>) object;

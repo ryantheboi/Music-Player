@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout android:id="@+id/activity_playlist"
+<RelativeLayout android:id="@+id/layout_playlist"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/lightWhite100"

@@ -185,7 +185,7 @@ public class AddPlaylistActivity extends Activity {
 
     private void initViews() {
         // init layout and inflated view
-        addPlaylist_layout = findViewById(R.id.activity_playlist);
+        addPlaylist_layout = findViewById(R.id.layout_playlists);
         addPlaylist_view = LayoutInflater.from(this).inflate(R.layout.input_dialog_addplaylist, addPlaylist_layout, false);
 
         // init textviews

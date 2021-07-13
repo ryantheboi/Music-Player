@@ -42,6 +42,7 @@ public class SongListTab extends Fragment {
     private static Messenger mainActivityMessenger;
     private static MainActivity mainActivity;
     private static ArrayList<Song> userSelection;
+    private ViewGroup decorView;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -85,18 +86,33 @@ public class SongListTab extends Fragment {
         // Inflate the layout for this fragment
         View fragmentView = inflater.inflate(R.layout.fragment_tab_songs, container, false);
         background = fragmentView.findViewById(R.id.background_layer);
-        listView = fragmentView.findViewById(R.id.fragment_listview_songs);
-        listView.setAdapter(songListAdapter);
-        listView.setFastScrollEnabled(true);
 
         // init decorView (Action Mode toolbar)
-        final ViewGroup decorView = (ViewGroup) getActivity().getWindow().getDecorView();
+        decorView = (ViewGroup) getActivity().getWindow().getDecorView();
 
-        // init intents
+        // init listview
+        listView = fragmentView.findViewById(R.id.fragment_listview_songs);
+        listView.setAdapter(songListAdapter);
+        listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
+        listView.setFastScrollEnabled(true); // support index scrolling
+        listView.setNestedScrollingEnabled(true); // support scrolling with the coordinator layout
+
+        // init functionality for the views
+        initListeners();
+        return fragmentView;
+    }
+
+    /**
+     * Initializes the following listeners:
+     * listview onItemClick and onMultiChoice listeners
+     */
+    private void initListeners(){
+        // init intents for the listeners
         final Intent musicListSelectIntent = new Intent(mainActivity, MusicPlayerService.class);
         final Intent musicListQueueIntent = new Intent(mainActivity, MusicPlayerService.class);
         final Intent addPlaylistIntent = new Intent(mainActivity, AddPlaylistActivity.class);
 
+        // init listview listeners
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
@@ -115,9 +131,6 @@ public class SongListTab extends Fragment {
             }
         });
 
-        // support scrolling with the coordinator layout
-        listView.setNestedScrollingEnabled(true);
-        listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
         listView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
             @Override
             public void onItemCheckedStateChanged(android.view.ActionMode mode, int position, long id, boolean checked) {
@@ -237,7 +250,6 @@ public class SongListTab extends Fragment {
                 userSelection.clear();
             }
         });
-        return fragmentView;
     }
 
     public static void toggleTabColor(){

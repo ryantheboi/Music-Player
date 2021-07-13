@@ -107,9 +107,7 @@ public class PlaylistTab extends Fragment {
         m_listView = fragmentView.findViewById(R.id.fragment_listview_playlists);
         m_listView.setAdapter(m_playlistAdapter);
         m_listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
-
-        // support scrolling with the coordinator layout
-        m_listView.setNestedScrollingEnabled(true);
+        m_listView.setNestedScrollingEnabled(true); // support scrolling with the coordinator layout
 
         // init rename alert dialog components
         renamePlaylist_view = LayoutInflater.from(m_mainActivity).inflate(R.layout.input_dialog_addplaylist, m_listView, false);

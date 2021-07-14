@@ -30,6 +30,10 @@
         <item name="android:fastScrollPreviewBackgroundRight">@drawable/ic_fastscroll_bubble</item>
     </style>
 
+    <style name = "ToolbarAppTheme.Playlist">
+        <item name="android:windowIsTranslucent">true</item>
+    </style>
+
     <style name="ToolbarActionMode" parent="@style/Widget.AppCompat.ActionMode">
         <item name="android:paddingRight">10dp</item>
     </style>

@@ -739,7 +739,7 @@ public class MainActivity extends AppCompatActivity {
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                String time = convertTime(progress);
+                String time = Song.convertTime(progress);
                 musicPosition.setText(time);
                 if (fromUser) {
                     seekBarSeekIntent.putExtra("seekbarSeek", progress);
@@ -1056,31 +1056,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * helper function to convert time in milliseconds to HH:MM:SS format
-     */
-    public static String convertTime(int timeInMS){
-        int timeInSeconds = timeInMS / 1000;
-
-        int seconds = timeInSeconds % 3600 % 60;
-        int minutes = timeInSeconds % 3600 / 60;
-        int hours = timeInSeconds / 3600;
-
-        String HH, MM, SS;
-        if (hours == 0){
-            MM = ((minutes  < 10) ? "" : "") + minutes;
-            SS = ((seconds  < 10) ? "0" : "") + seconds;
-            return MM + ":" + SS;
-        }
-        else {
-            HH = ((hours    < 10) ? "0" : "") + hours;
-            MM = ((minutes  < 10) ? "0" : "") + minutes;
-            SS = ((seconds  < 10) ? "0" : "") + seconds;
-        }
-
-        return HH + ":" + MM + ":" + SS;
-    }
-
-    /**
      * helper method to enable scaling of album art and visibility of song name & artist
      * based on largeAlbumArt boolean conditions:
      * false - album art is not large and song name & artist are visible
@@ -1378,7 +1353,7 @@ public class MainActivity extends AppCompatActivity {
                 case MusicPlayerService.UPDATE_SEEKBAR_DURATION:
                     // init the seekbar & textview max duration and begin thread to track progress
                     final int musicMaxDuration = (int) bundle.get("time");
-                    final String time = convertTime(musicMaxDuration);
+                    final String time = Song.convertTime(musicMaxDuration);
 
                     runOnUiThread(new Runnable() {
                         @Override
@@ -1446,7 +1421,7 @@ public class MainActivity extends AppCompatActivity {
                             artistName.setText(current_song.getArtist());
                             albumArt.setImageBitmap(current_albumImage);
                             seekBar.setMax(songDuration);
-                            musicDuration.setText(convertTime(songDuration));
+                            musicDuration.setText(Song.convertTime(songDuration));
                         }
                     });
 

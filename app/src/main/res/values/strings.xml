@@ -22,6 +22,7 @@
     <string name="RemoveSong">Remove Song</string>
     <string name="RemovePlaylist">Remove Playlist</string>
     <string name="RenamePlaylist">Rename Playlist</string>
+    <string name="Divider">•</string>
 
 
 </resources>

@@ -28,19 +28,26 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.graphics.drawable.DrawableCompat;
 
 import java.util.ArrayList;
 
-public class PlaylistActivity extends Activity {
+public class PlaylistActivity extends AppCompatActivity {
 
     private Messenger m_mainMessenger;
     private Playlist m_playlist;
     private ListView m_listView;
     private RelativeLayout m_playlist_layout;
+    private Toolbar m_playlist_toolbar;
+    private ActionBar m_playlist_actionBar;
     private ImageButton m_back_btn;
     private TextView m_playlist_name_tv;
     private TextView m_playlist_size_tv;
+    private TextView m_playlist_divider_tv;
+    private TextView m_playlist_time_tv;
     private SongListAdapter m_songListAdapter;
     private static ArrayList<Song> m_userSelection = new ArrayList<>();
 
@@ -70,11 +77,22 @@ public class PlaylistActivity extends Activity {
         }
 
         // initialize and set text in textviews
-        m_playlist_size_tv = findViewById(R.id.textview_playlist_size);
+        m_playlist_toolbar = findViewById(R.id.toolbar_playlist);
         m_playlist_name_tv = findViewById(R.id.textview_playlist_name);
+        m_playlist_size_tv = findViewById(R.id.textview_playlist_size);
+        m_playlist_divider_tv = findViewById(R.id.textview_playlist_divider);
+        m_playlist_time_tv = findViewById(R.id.textview_playlist_time);
         String playlist_size = m_playlist.getSize() + " Songs";
         m_playlist_size_tv.setText(playlist_size);
         m_playlist_name_tv.setText(m_playlist.getName());
+
+        // calculate playlist total time
+        ArrayList<Song> playlists_songs = m_playlist.getSongList();
+        int total_time = 0;
+        for (Song playlist_song : playlists_songs){
+            total_time += playlist_song.getDuration();
+        }
+        m_playlist_time_tv.setText(Song.convertTime(total_time));
 
         // set the window layout for a clean look
         DisplayMetrics dm = new DisplayMetrics();
@@ -297,7 +315,16 @@ public class PlaylistActivity extends Activity {
 
         // adjust activity colors for the current theme
         setThemeColors();
+    }
 
+    @Override
+    @TargetApi(23)
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // using toolbar as ActionBar without title
+        setSupportActionBar(m_playlist_toolbar);
+        m_playlist_actionBar = getSupportActionBar();
+        m_playlist_actionBar.setDisplayShowTitleEnabled(false);
+        return true;
     }
 
     /**
@@ -306,6 +333,9 @@ public class PlaylistActivity extends Activity {
     private void setThemeColors() {
         m_playlist_layout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
         m_playlist_name_tv.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+        m_playlist_size_tv.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+        m_playlist_divider_tv.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+        m_playlist_time_tv.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
         m_songListAdapter.setItemsTitleTextColor(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
         m_songListAdapter.setItemsAlbumArtistTextColor(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
         setBackBtnColor();
@@ -318,9 +348,9 @@ public class PlaylistActivity extends Activity {
     private void setBackBtnColor(){
         Drawable unwrappedBackBtn = m_back_btn.getDrawable();
         Drawable wrappedBackBtn = DrawableCompat.wrap(unwrappedBackBtn);
-        DrawableCompat.setTint(wrappedBackBtn, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
+        DrawableCompat.setTint(wrappedBackBtn, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
 
         RippleDrawable back_btn_ripple = (RippleDrawable) m_back_btn.getBackground();
-        back_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
+        back_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
     }
 }

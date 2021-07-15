@@ -39,8 +39,11 @@ public class PlaylistActivity extends AppCompatActivity {
 
     private Messenger m_mainMessenger;
     private Playlist m_playlist;
+    private SongListAdapter m_songListAdapter;
     private ListView m_listView;
     private RelativeLayout m_playlist_layout;
+    private ImageView m_playlist_background_layer;
+    private ImageView m_playlist_background_image;
     private Toolbar m_playlist_toolbar;
     private ActionBar m_playlist_actionBar;
     private ImageButton m_back_btn;
@@ -48,7 +51,7 @@ public class PlaylistActivity extends AppCompatActivity {
     private TextView m_playlist_size_tv;
     private TextView m_playlist_divider_tv;
     private TextView m_playlist_time_tv;
-    private SongListAdapter m_songListAdapter;
+
     private static ArrayList<Song> m_userSelection = new ArrayList<>();
 
     @Override
@@ -110,6 +113,10 @@ public class PlaylistActivity extends AppCompatActivity {
         m_listView = findViewById(R.id.listview_playlist_songs);
         m_songListAdapter = new SongListAdapter(this, R.layout.adapter_song_layout, m_playlist.getSongList(), this);
         m_listView.setAdapter(m_songListAdapter);
+
+        // init background assets
+        m_playlist_background_layer = findViewById(R.id.imageview_playlist_background_layer);
+        m_playlist_background_image = findViewById(R.id.imageview_playlist_background_image);
 
         // init decorView (Action Mode toolbar)
         final ViewGroup decorView = (ViewGroup) this.getWindow().getDecorView();
@@ -332,6 +339,8 @@ public class PlaylistActivity extends AppCompatActivity {
      */
     private void setThemeColors() {
         m_playlist_layout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        m_playlist_background_layer.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        m_playlist_background_image.setImageResource(ThemeColors.getThemeBackgroundAssetResourceId());
         m_playlist_name_tv.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
         m_playlist_size_tv.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
         m_playlist_divider_tv.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));

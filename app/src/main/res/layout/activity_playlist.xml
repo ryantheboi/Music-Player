@@ -72,8 +72,21 @@
 
     <View android:layout_width="match_parent"
         android:layout_height="5dp"
-        android:background="@drawable/toolbar_dropshadow"
-        android:layout_below="@+id/toolbar_playlist"/>
+        android:layout_below="@+id/toolbar_playlist"
+        android:background="@drawable/toolbar_dropshadow" />
+
+    <ImageView
+        android:id="@+id/imageview_playlist_background_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/toolbar_playlist"
+        android:scaleType="centerCrop"/>
+    <ImageView
+        android:id="@+id/imageview_playlist_background_layer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/toolbar_playlist"
+        android:alpha="0.5"/>
 
     <ListView
         android:id="@+id/listview_playlist_songs"

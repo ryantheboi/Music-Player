@@ -51,6 +51,7 @@ public class PlaylistActivity extends AppCompatActivity {
     private TextView m_playlist_size_tv;
     private TextView m_playlist_divider_tv;
     private TextView m_playlist_time_tv;
+    private int m_total_time;
 
     private static ArrayList<Song> m_userSelection = new ArrayList<>();
 
@@ -91,11 +92,11 @@ public class PlaylistActivity extends AppCompatActivity {
 
         // calculate playlist total time
         ArrayList<Song> playlists_songs = m_playlist.getSongList();
-        int total_time = 0;
+        m_total_time = 0;
         for (Song playlist_song : playlists_songs){
-            total_time += playlist_song.getDuration();
+            m_total_time += playlist_song.getDuration();
         }
-        m_playlist_time_tv.setText(Song.convertTime(total_time));
+        m_playlist_time_tv.setText(Song.convertTime(m_total_time));
 
         // set the window layout for a clean look
         DisplayMetrics dm = new DisplayMetrics();
@@ -282,6 +283,14 @@ public class PlaylistActivity extends AppCompatActivity {
                                 // update playlist size textview with new songs count
                                 String playlist_size = m_playlist.getSize() + " Songs";
                                 m_playlist_size_tv.setText(playlist_size);
+
+                                // update playlist time textview with new total time
+                                int remove_time = 0;
+                                for (Song playlist_song : m_userSelection){
+                                    remove_time += playlist_song.getDuration();
+                                }
+                                m_total_time -= remove_time;
+                                m_playlist_time_tv.setText(Song.convertTime(m_total_time));
 
                                 mode.finish(); // Action picked, so close the CAB
                             }

@@ -1,7 +1,6 @@
 package com.example.musicplayer;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -44,6 +43,7 @@ public class PlaylistActivity extends AppCompatActivity {
     private RelativeLayout m_playlist_layout;
     private ImageView m_playlist_background_layer;
     private ImageView m_playlist_background_image;
+    private ViewGroup decorView;
     private Toolbar m_playlist_toolbar;
     private ActionBar m_playlist_actionBar;
     private ImageButton m_back_btn;
@@ -61,7 +61,6 @@ public class PlaylistActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_playlist);
-        m_playlist_layout = findViewById(R.id.layout_playlist);
 
         // obtain the intent that started this activity (should contain an extra with a Playlist)
         Intent intent = this.getIntent();
@@ -80,48 +79,64 @@ public class PlaylistActivity extends AppCompatActivity {
             }
         }
 
-        // initialize and set text in textviews
+        initViews();
+        initObjects();
+        initListeners();
+        initWindowLayout();
+        setTextViews();
+
+        // adjust activity colors for the current theme
+        setThemeColors();
+    }
+
+    @Override
+    @TargetApi(23)
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // using toolbar as ActionBar without title
+        setSupportActionBar(m_playlist_toolbar);
+        m_playlist_actionBar = getSupportActionBar();
+        m_playlist_actionBar.setDisplayShowTitleEnabled(false);
+        return true;
+    }
+
+    private void initViews() {
+        // init decorView (Action Mode toolbar)
+        decorView = (ViewGroup) this.getWindow().getDecorView();
+
+        m_playlist_layout = findViewById(R.id.layout_playlist);
         m_playlist_toolbar = findViewById(R.id.toolbar_playlist);
         m_playlist_name_tv = findViewById(R.id.textview_playlist_name);
         m_playlist_size_tv = findViewById(R.id.textview_playlist_size);
         m_playlist_divider_tv = findViewById(R.id.textview_playlist_divider);
         m_playlist_time_tv = findViewById(R.id.textview_playlist_time);
-        String playlist_size = m_playlist.getSize() + " Songs";
-        m_playlist_size_tv.setText(playlist_size);
-        m_playlist_name_tv.setText(m_playlist.getName());
+        m_back_btn = findViewById(R.id.ibtn_playlist_back);
+        m_listView = findViewById(R.id.listview_playlist_songs);
+        m_playlist_background_layer = findViewById(R.id.imageview_playlist_background_layer);
+        m_playlist_background_image = findViewById(R.id.imageview_playlist_background_image);
+    }
 
-        // calculate playlist total time
-        ArrayList<Song> playlists_songs = m_playlist.getSongList();
-        m_total_time = 0;
-        for (Song playlist_song : playlists_songs){
-            m_total_time += playlist_song.getDuration();
-        }
-        m_playlist_time_tv.setText(Song.convertTime(m_total_time));
+    /**
+     * Initializes new instances of objects that cannot be found by views
+     */
+    private void initObjects() {
+        m_songListAdapter = new SongListAdapter(this, R.layout.adapter_song_layout, m_playlist.getSongList(), this);
+    }
 
-        // set the window layout for a clean look
-        DisplayMetrics dm = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(dm);
-        int width = dm.widthPixels;
-        int height = dm.heightPixels;
-        getWindow().setLayout((int) (width), (int) (height));
-
-        // init intents
+    /**
+     * Initializes the following listeners:
+     * listview onItemClick and onMultiChoice listeners
+     * back button onClick listener
+     */
+    private void initListeners(){
+        // init intents and attributes for listview listeners
         final Intent musicListSelectIntent = new Intent(this, MusicPlayerService.class);
         final Intent musicListQueueIntent = new Intent(this, MusicPlayerService.class);
         final Intent addPlaylistIntent = new Intent(this, AddPlaylistActivity.class);
-
-        // initialize listview and adapter using the songs in the playlist
-        m_listView = findViewById(R.id.listview_playlist_songs);
-        m_songListAdapter = new SongListAdapter(this, R.layout.adapter_song_layout, m_playlist.getSongList(), this);
         m_listView.setAdapter(m_songListAdapter);
+        m_listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
+        m_listView.setFastScrollEnabled(true);
 
-        // init background assets
-        m_playlist_background_layer = findViewById(R.id.imageview_playlist_background_layer);
-        m_playlist_background_image = findViewById(R.id.imageview_playlist_background_image);
-
-        // init decorView (Action Mode toolbar)
-        final ViewGroup decorView = (ViewGroup) this.getWindow().getDecorView();
-
+        // init listview single and multi click listeners
         m_listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
@@ -140,7 +155,6 @@ public class PlaylistActivity extends AppCompatActivity {
             }
         });
 
-        m_listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
         m_listView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
             @Override
             public void onItemCheckedStateChanged(android.view.ActionMode mode, int position, long id, boolean checked) {
@@ -321,26 +335,21 @@ public class PlaylistActivity extends AppCompatActivity {
         });
 
         // initialize button to return to previous activity
-        m_back_btn = findViewById(R.id.ibtn_playlist_back);
         m_back_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();
             }
         });
-
-        // adjust activity colors for the current theme
-        setThemeColors();
     }
 
-    @Override
-    @TargetApi(23)
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // using toolbar as ActionBar without title
-        setSupportActionBar(m_playlist_toolbar);
-        m_playlist_actionBar = getSupportActionBar();
-        m_playlist_actionBar.setDisplayShowTitleEnabled(false);
-        return true;
+    private void initWindowLayout() {
+        // set the window layout for a clean look
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+        int width = dm.widthPixels;
+        int height = dm.heightPixels;
+        getWindow().setLayout((int) (width), (int) (height));
     }
 
     /**
@@ -370,5 +379,22 @@ public class PlaylistActivity extends AppCompatActivity {
 
         RippleDrawable back_btn_ripple = (RippleDrawable) m_back_btn.getBackground();
         back_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
+    }
+
+    /**
+     * sets the text for every textview in this activity appropriate to this playlist
+     */
+    private void setTextViews(){
+        // calculate playlist total time
+        ArrayList<Song> playlists_songs = m_playlist.getSongList();
+        m_total_time = 0;
+        for (Song playlist_song : playlists_songs){
+            m_total_time += playlist_song.getDuration();
+        }
+        String playlist_size = m_playlist.getSize() + " Songs";
+
+        m_playlist_name_tv.setText(m_playlist.getName());
+        m_playlist_size_tv.setText(playlist_size);
+        m_playlist_time_tv.setText(Song.convertTime(m_total_time));
     }
 }

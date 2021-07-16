@@ -19,10 +19,11 @@
     <string name="CreatePlaylist">Create Playlist</string>
     <string name="SearchFilter">Search Filter</string>
     <string name="ChooseTheme">Choose Theme</string>
+    <string name="Remove">Remove</string>
     <string name="RemoveSong">Remove Song</string>
     <string name="RemovePlaylist">Remove Playlist</string>
+    <string name="Rename">Rename</string>
     <string name="RenamePlaylist">Rename Playlist</string>
     <string name="Divider">•</string>
-
 
 </resources>

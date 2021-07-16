@@ -70,30 +70,34 @@
         </RelativeLayout>
     </androidx.appcompat.widget.Toolbar>
 
-    <View android:layout_width="match_parent"
-        android:layout_height="5dp"
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardview_playlist"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_below="@+id/toolbar_playlist"
-        android:background="@drawable/toolbar_dropshadow" />
+        app1:cardCornerRadius="60dp">
 
-    <ImageView
-        android:id="@+id/imageview_playlist_background_image"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/toolbar_playlist"
-        android:scaleType="centerCrop"/>
-    <ImageView
-        android:id="@+id/imageview_playlist_background_layer"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/toolbar_playlist"
-        android:alpha="0.5"/>
+        <ImageView
+            android:id="@+id/imageview_playlist_background_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/toolbar_playlist"
+            android:scaleType="centerCrop"/>
+        <ImageView
+            android:id="@+id/imageview_playlist_background_layer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/toolbar_playlist"
+            android:alpha="0.5"/>
 
-    <ListView
-        android:id="@+id/listview_playlist_songs"
-        android:layout_below="@+id/toolbar_playlist"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:dividerHeight="18dp"
-        android:divider="@drawable/list_divider"
-        android:layout_marginTop="1.5dp"/>
+        <ListView
+            android:id="@+id/listview_playlist_songs"
+            android:layout_below="@+id/toolbar_playlist"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:dividerHeight="18dp"
+            android:divider="@drawable/list_divider"
+            android:layout_marginTop="1.5dp"/>
+    </androidx.cardview.widget.CardView>
+
 </RelativeLayout>

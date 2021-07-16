@@ -237,8 +237,8 @@ public class PlaylistTab extends Fragment {
                         }
                         renamePlaylist_dialogBuilder.setView(renamePlaylist_view);
 
-                        // ok button
-                        renamePlaylist_dialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        // ok (rename) button
+                        renamePlaylist_dialogBuilder.setPositiveButton(R.string.Rename, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 dialog.dismiss();
@@ -300,8 +300,8 @@ public class PlaylistTab extends Fragment {
                             removePlaylist_dialogBuilder.setTitle("Remove " + m_userSelection.size() + " playlists?");
                         }
 
-                        // ok button
-                        removePlaylist_dialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        // ok (remove) button
+                        removePlaylist_dialogBuilder.setPositiveButton(R.string.Remove, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 dialog.dismiss();

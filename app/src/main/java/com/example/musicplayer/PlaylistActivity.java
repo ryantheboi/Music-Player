@@ -30,6 +30,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.cardview.widget.CardView;
 import androidx.core.graphics.drawable.DrawableCompat;
 
 import java.util.ArrayList;
@@ -39,8 +40,9 @@ public class PlaylistActivity extends AppCompatActivity {
     private Messenger m_mainMessenger;
     private Playlist m_playlist;
     private SongListAdapter m_songListAdapter;
-    private ListView m_listView;
     private RelativeLayout m_playlist_layout;
+    private CardView m_playlist_cardview;
+    private ListView m_listView;
     private ImageView m_playlist_background_layer;
     private ImageView m_playlist_background_image;
     private ViewGroup decorView;
@@ -111,6 +113,7 @@ public class PlaylistActivity extends AppCompatActivity {
         m_playlist_time_tv = findViewById(R.id.textview_playlist_time);
         m_back_btn = findViewById(R.id.ibtn_playlist_back);
         m_listView = findViewById(R.id.listview_playlist_songs);
+        m_playlist_cardview = findViewById(R.id.cardview_playlist);
         m_playlist_background_layer = findViewById(R.id.imageview_playlist_background_layer);
         m_playlist_background_image = findViewById(R.id.imageview_playlist_background_image);
     }
@@ -134,7 +137,6 @@ public class PlaylistActivity extends AppCompatActivity {
         final Intent addPlaylistIntent = new Intent(this, AddPlaylistActivity.class);
         m_listView.setAdapter(m_songListAdapter);
         m_listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
-        m_listView.setFastScrollEnabled(true);
 
         // init listview single and multi click listeners
         m_listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -273,8 +275,8 @@ public class PlaylistActivity extends AppCompatActivity {
                             removeSong_dialogBuilder.setTitle("Remove " + m_userSelection.size() + " songs?");
                         }
 
-                        // ok button
-                        removeSong_dialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        // ok (remove) button
+                        removeSong_dialogBuilder.setPositiveButton(R.string.Remove, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 dialog.dismiss();
@@ -357,6 +359,7 @@ public class PlaylistActivity extends AppCompatActivity {
      */
     private void setThemeColors() {
         m_playlist_layout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        m_playlist_cardview.setCardBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_SECONDARY));
         m_playlist_background_layer.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
         m_playlist_background_image.setImageResource(ThemeColors.getThemeBackgroundAssetResourceId());
         m_playlist_name_tv.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));

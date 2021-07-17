@@ -171,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
         databaseRepository = new DatabaseRepository(this, this);
 
         // initialize all views
-        setContentView(R.layout.activity_musiclist);
+        setContentView(R.layout.activity_main);
         musicListRelativeLayout = findViewById(R.id.activity_musiclist);
         searchFilter_editText = findViewById(R.id.toolbar_searchFilter);
         slidingUpMenuLayout = findViewById(R.id.sliding_menu);

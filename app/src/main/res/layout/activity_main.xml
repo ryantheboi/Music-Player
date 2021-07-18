@@ -165,26 +165,29 @@
                 android:alpha="0"
                 tools:context=".MainActivity">
 
-                <com.mikhaellopez.circularimageview.CircularImageView
-                    android:id="@+id/circularImageView"
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/song_cardview"
                     android:layout_width="400dp"
                     android:layout_height="400dp"
-                    android:layout_alignParentTop="true"
+                    app:cardCornerRadius="40dp"
+                    android:layout_centerInParent="true"
                     android:layout_centerHorizontal="true"
-                    android:layout_marginTop="61dp"
-                    android:src="@drawable/default_albumart"
-                    app:civ_border_color="@color/generalBlack"
-                    app:civ_border_width="0.5dp" />
+                    android:layout_below="@id/btn_info"
+                    android:layout_marginTop="10dp">
 
-                <Button
-                    android:id="@+id/toggle_largeAlbumArt"
-                    android:layout_centerInParent="@+id/circularImageView"
-                    android:layout_width="370dp"
-                    android:layout_height="370dp"
-                    android:layout_alignParentTop="true"
-                    android:layout_centerHorizontal="true"
-                    android:layout_marginTop="60dp"
-                    android:background="@drawable/transparent_round_button"/>
+                    <ImageView
+                        android:id="@+id/song_albumart"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/default_albumart"
+                        android:scaleType="centerCrop"/>
+
+                    <Button
+                        android:id="@+id/toggle_largeAlbumArt"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/transparent_round_button"/>
+                </androidx.cardview.widget.CardView>
 
                 <SeekBar
                     android:id="@+id/seekBar"
@@ -200,7 +203,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="-80dp"
-                    android:layout_below="@+id/circularImageView"
+                    android:layout_below="@+id/song_cardview"
                     android:layout_centerHorizontal="true">
                     <TextView
                         android:id="@+id/song_title"

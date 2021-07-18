@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.cardview.widget.CardView;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
@@ -14,6 +15,7 @@ import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.viewpager.widget.ViewPager;
 
 import android.Manifest;
+import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -103,8 +105,11 @@ public class MainActivity extends AppCompatActivity {
     private ActionBar actionBar;
 
     // sliding up panel
-    private boolean largeAlbumArt;
+    private boolean isLargeAlbumArt;
     private ImageView albumArt;
+    private CardView albumArt_cardView;
+    private ObjectAnimator albumArt_cardView_animator_round;
+    private ObjectAnimator albumArt_cardView_animator_square;
     private Button albumArt_btn;
     private ImageButton info_btn;
     private RippleDrawable info_btn_ripple;
@@ -183,7 +188,8 @@ public class MainActivity extends AppCompatActivity {
         slidingUp_next_btn = findViewById(R.id.sliding_btn_next);
         slidingUp_prev_btn = findViewById(R.id.sliding_btn_prev);
         mainActivityRelativeLayout = findViewById(R.id.mainlayout);
-        albumArt = findViewById(R.id.circularImageView);
+        albumArt = findViewById(R.id.song_albumart);
+        albumArt_cardView = findViewById(R.id.song_cardview);
         albumArt_btn = findViewById(R.id.toggle_largeAlbumArt);
         songName = findViewById(R.id.song_title);
         artistName = findViewById(R.id.song_artist);
@@ -657,7 +663,16 @@ public class MainActivity extends AppCompatActivity {
      */
     public void initMainDisplay() {
         // init album art and transparent album art button
-        largeAlbumArt = true; // init album art as large
+        isLargeAlbumArt = true; // init album art as large
+
+        // init album art corner radius animations
+        albumArt_cardView_animator_round = ObjectAnimator
+                .ofFloat(albumArt_cardView, "radius", (float)albumArt_cardView.getWidth() / 2)
+                .setDuration(350);
+        albumArt_cardView_animator_square = ObjectAnimator
+                .ofFloat(albumArt_cardView, "radius", (float)albumArt_cardView.getWidth() / 10)
+                .setDuration(350);
+
         albumArt_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1063,19 +1078,17 @@ public class MainActivity extends AppCompatActivity {
      */
     @TargetApi(16)
     public void toggleLargeAlbumArt(){
-        if (largeAlbumArt) {
-            largeAlbumArt = false;
-            albumArt.animate().scaleX(0.6f).scaleY(0.6f);
-            albumArt_btn.setScaleX((float)0.65);
-            albumArt_btn.setScaleY((float)0.65);
+        if (isLargeAlbumArt) {
+            isLargeAlbumArt = false;
+            albumArt_cardView.animate().scaleX(0.5f).scaleY(0.5f);
+            albumArt_cardView_animator_round.start();
             songName.setVisibility(View.VISIBLE);
             artistName.setVisibility(View.VISIBLE);
         }
         else{
-            largeAlbumArt = true;
-            albumArt.animate().scaleX(1f).scaleY(1f);
-            albumArt_btn.setScaleX(1);
-            albumArt_btn.setScaleY(1);
+            isLargeAlbumArt = true;
+            albumArt_cardView.animate().scaleX(1f).scaleY(1f);
+            albumArt_cardView_animator_square.start();
             songName.setVisibility(View.INVISIBLE);
             artistName.setVisibility(View.INVISIBLE);
         }

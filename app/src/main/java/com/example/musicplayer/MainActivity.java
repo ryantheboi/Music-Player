@@ -662,9 +662,6 @@ public class MainActivity extends AppCompatActivity {
      * On button click (overlaps with albumart), scales the view and button with an animation
      */
     public void initMainDisplay() {
-        // init album art and transparent album art button
-        isLargeAlbumArt = true; // init album art as large
-
         // init album art corner radius animations
         albumArt_cardView_animator_round = ObjectAnimator
                 .ofFloat(albumArt_cardView, "radius", (float)albumArt_cardView.getWidth() / 2)
@@ -673,10 +670,21 @@ public class MainActivity extends AppCompatActivity {
                 .ofFloat(albumArt_cardView, "radius", (float)albumArt_cardView.getWidth() / 10)
                 .setDuration(350);
 
+        // init main display album art size if different from xml
+        if (!isLargeAlbumArt) {
+            albumArt_cardView.setScaleX(0.5f);
+            albumArt_cardView.setScaleY(0.5f);
+            albumArt_cardView.setRadius((float) albumArt_cardView.getWidth() / 2);
+            songName.setVisibility(View.VISIBLE);
+            artistName.setVisibility(View.VISIBLE);
+        }
+
+        // init album art size toggle button
         albumArt_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 toggleLargeAlbumArt();
+                databaseRepository.updateMetadataIsLargeAlbumArt(isLargeAlbumArt);
             }
         });
 
@@ -1177,6 +1185,7 @@ public class MainActivity extends AppCompatActivity {
                     int themeResourceId = metadata.getThemeResourceId();
                     int songtab_scrollindex = metadata.getSongtab_scrollindex();
                     int songtab_scrolloffset = metadata.getSongtab_scrolloffset();
+                    isLargeAlbumArt = metadata.getIsLargeAlbumArt();
 
                     // music player is playing, start music service but keep playing
                     if (isPlaying) {

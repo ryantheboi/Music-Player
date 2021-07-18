@@ -33,6 +33,7 @@ public class DatabaseRepository {
     public static final int UPDATE_METADATA_SONGTAB = 9;
     public static final int UPDATE_METADATA_ISPLAYING = 10;
     public static final int UPDATE_METADATA_SEEK = 11;
+    public static final int UPDATE_METADATA_ISLARGEALBUMART = 12;
 
     /**
      * Holds the query message and the object involved (if exists)
@@ -186,6 +187,9 @@ public class DatabaseRepository {
                                 case UPDATE_METADATA_SEEK:
                                     metadataDao.updateSeekPosition(0, (int) query.object);
                                     break;
+                                case UPDATE_METADATA_ISLARGEALBUMART:
+                                    metadataDao.updateIsLargeAlbumArt(0, (boolean) query.object);
+                                    break;
                             }
                             isModifying = false;
                         }catch (InterruptedException e){
@@ -306,5 +310,13 @@ public class DatabaseRepository {
      */
     public synchronized void updateMetadataSeek(int seekPosition){
         messageQueue.offer(new Query(UPDATE_METADATA_SEEK, seekPosition));
+    }
+
+    /**
+     * Queues message to update the isLargeAlbumArt value in the metadata
+     * @param isLargeAlbumArt true if the main display albumart is enlarged, false otherwise
+     */
+    public synchronized void updateMetadataIsLargeAlbumArt(boolean isLargeAlbumArt){
+        messageQueue.offer(new Query(UPDATE_METADATA_ISLARGEALBUMART, isLargeAlbumArt));
     }
 }

@@ -16,26 +16,28 @@ public class Metadata {
     private boolean isPlaying;
     private int seekPosition;
 
-    // theme last selected by the user
+    // values to determine how to init main ui components
     private int themeResourceId;
+    private boolean isLargeAlbumArt;
 
     // values to determine the exact songtab position where the user last was
     private int songtab_scrollindex;
     private int songtab_scrolloffset;
 
     @Ignore
-    public static Metadata DEFAULT_METADATA = new Metadata(0, false, 0, R.style.ThemeOverlay_AppCompat_MusicLight, 0, 0);
+    public static Metadata DEFAULT_METADATA = new Metadata(0, false, 0, R.style.ThemeOverlay_AppCompat_MusicLight, 0, 0, false);
 
     /**
      * Constructor used by database to create a metadata object
      */
-    public Metadata(int id, boolean isPlaying, int seekPosition, int themeResourceId, int songtab_scrollindex, int songtab_scrolloffset) {
+    public Metadata(int id, boolean isPlaying, int seekPosition, int themeResourceId, int songtab_scrollindex, int songtab_scrolloffset, boolean isLargeAlbumArt) {
         this.id = id;
         this.isPlaying = isPlaying;
         this.seekPosition = seekPosition;
         this.themeResourceId = themeResourceId;
         this.songtab_scrollindex = songtab_scrollindex;
         this.songtab_scrolloffset = songtab_scrolloffset;
+        this.isLargeAlbumArt = isLargeAlbumArt;
     }
 
     public int getId() {
@@ -60,5 +62,9 @@ public class Metadata {
 
     public int getSongtab_scrolloffset() {
         return songtab_scrolloffset;
+    }
+
+    public boolean getIsLargeAlbumArt() {
+        return isLargeAlbumArt;
     }
 }

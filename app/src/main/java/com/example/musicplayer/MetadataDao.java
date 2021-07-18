@@ -40,6 +40,12 @@ public interface MetadataDao {
     @Query("UPDATE Metadata SET themeResourceId = :themeResourceId WHERE id =:id")
     void updateTheme(int id, int themeResourceId);
 
+    /**
+     * Update only the isLargeAlbumArt metadata, by id
+     */
+    @Query("UPDATE Metadata SET isLargeAlbumArt = :isLargeAlbumArt WHERE id =:id")
+    void updateIsLargeAlbumArt(int id, boolean isLargeAlbumArt);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(Metadata metadata);
 

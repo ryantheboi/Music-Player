@@ -1392,7 +1392,9 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void run() {
                             while (true) {
-                                startService(seekBar_progressIntent);
+                                if (!seekBar_isTracking) {
+                                    startService(seekBar_progressIntent);
+                                }
                                 try {
                                     Thread.sleep(100);
                                 } catch (InterruptedException e) {
@@ -1404,10 +1406,8 @@ public class MainActivity extends AppCompatActivity {
                     seekbarUpdateThread.start();
                     break;
                 case MusicPlayerService.UPDATE_SEEKBAR_PROGRESS:
-                    if (!seekBar_isTracking) {
-                        int musicCurrentPosition = (int) bundle.get("time");
-                        seekBar.setProgress(musicCurrentPosition);
-                    }
+                    int musicCurrentPosition = (int) bundle.get("time");
+                    seekBar.setProgress(musicCurrentPosition);
                     break;
                 case MusicPlayerService.UPDATE_SONG:
                     // update main activitiy with the selected song from music list

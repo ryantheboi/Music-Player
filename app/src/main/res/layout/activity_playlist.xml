@@ -75,7 +75,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/toolbar_playlist"
-        app1:cardCornerRadius="60dp">
+        app1:cardCornerRadius="60dp"
+        app1:cardElevation="0dp">
 
         <ImageView
             android:id="@+id/imageview_playlist_background_image"

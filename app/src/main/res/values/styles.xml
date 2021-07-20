@@ -14,7 +14,7 @@
         <item name="android:windowBackground">@android:color/transparent</item>
     </style>
 
-    <style name = "AppTheme.Playlist">
+    <style name = "ToolbarAppTheme.Playlist">
         <item name="android:windowIsTranslucent">true</item>
     </style>
 
@@ -28,10 +28,6 @@
         <item name="android:navigationBarColor">@color/nightDark200</item>
         <item name="android:statusBarColor">@color/nightDark200</item>
         <item name="android:fastScrollPreviewBackgroundRight">@drawable/ic_fastscroll_bubble</item>
-    </style>
-
-    <style name = "ToolbarAppTheme.Playlist">
-        <item name="android:windowIsTranslucent">true</item>
     </style>
 
     <style name="ToolbarActionMode" parent="@style/Widget.AppCompat.ActionMode">

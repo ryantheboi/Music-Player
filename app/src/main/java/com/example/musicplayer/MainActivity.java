@@ -138,8 +138,9 @@ public class MainActivity extends AppCompatActivity {
     private Intent notificationPauseplayIntent;
     private Intent notificationPrevIntent;
     private Intent notificationNextIntent;
-    private Intent seekBarProgressIntent;
-    private Intent seekBarSeekIntent;
+    private Intent seekBar_progressIntent;
+    private Intent seekBar_seekIntent;
+    private boolean seekBar_isTracking;
     private static Song current_song = Song.EMPTY_SONG;
     private Bitmap current_albumImage;
     private RelativeLayout mainActivityRelativeLayout;
@@ -753,8 +754,8 @@ public class MainActivity extends AppCompatActivity {
 
         // set the seekbar & textview duration and sync with mediaplayer
         Intent seekBarDurationIntent = new Intent(this, MusicPlayerService.class);
-        seekBarProgressIntent = new Intent(this, MusicPlayerService.class);
-        seekBarSeekIntent = new Intent(this, MusicPlayerService.class);
+        seekBar_progressIntent = new Intent(this, MusicPlayerService.class);
+        seekBar_seekIntent = new Intent(this, MusicPlayerService.class);
         Messenger mainMessenger = new Messenger(messageHandler);
         seekBarDurationIntent.putExtra("seekbarDuration", mainMessenger);
         startService(seekBarDurationIntent);
@@ -762,25 +763,24 @@ public class MainActivity extends AppCompatActivity {
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                String time = Song.convertTime(progress);
+                String time = Song.convertTime(seekBar.getProgress());
                 musicPosition.setText(time);
-                if (fromUser) {
-                    seekBarSeekIntent.putExtra("seekbarSeek", progress);
-                    startService(seekBarSeekIntent);
-
-                    // update the seekPosition value in the local metadata
-                    databaseRepository.updateMetadataSeek(progress);
-                }
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-
+                seekBar_isTracking = true;
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
+                seekBar_seekIntent.putExtra("seekbarSeek", seekBar.getProgress());
+                startService(seekBar_seekIntent);
 
+                // update the seekPosition value in the local metadata
+                databaseRepository.updateMetadataSeek(seekBar.getProgress());
+
+                seekBar_isTracking = false;
             }
         });
     }
@@ -1202,8 +1202,8 @@ public class MainActivity extends AppCompatActivity {
                         initMusicUI();
 
                         // inform the music service about the seekbar's position from the metadata
-                        seekBarSeekIntent.putExtra("seekbarSeek", seekPosition);
-                        startService(seekBarSeekIntent);
+                        seekBar_seekIntent.putExtra("seekbarSeek", seekPosition);
+                        startService(seekBar_seekIntent);
                         seekBar.setProgress(seekPosition);
                     }
 
@@ -1387,12 +1387,12 @@ public class MainActivity extends AppCompatActivity {
 
                     // spawn a thread to update seekbar progress each 100 milliseconds
                     final Messenger seekMessenger = new Messenger(seekbarHandler);
-                    seekBarProgressIntent.putExtra("seekbarProgress", seekMessenger);
+                    seekBar_progressIntent.putExtra("seekbarProgress", seekMessenger);
                     Thread seekbarUpdateThread = new Thread(new Runnable() {
                         @Override
                         public void run() {
                             while (true) {
-                                startService(seekBarProgressIntent);
+                                startService(seekBar_progressIntent);
                                 try {
                                     Thread.sleep(100);
                                 } catch (InterruptedException e) {
@@ -1404,8 +1404,10 @@ public class MainActivity extends AppCompatActivity {
                     seekbarUpdateThread.start();
                     break;
                 case MusicPlayerService.UPDATE_SEEKBAR_PROGRESS:
-                    int musicCurrentPosition = (int) bundle.get("time");
-                    seekBar.setProgress(musicCurrentPosition);
+                    if (!seekBar_isTracking) {
+                        int musicCurrentPosition = (int) bundle.get("time");
+                        seekBar.setProgress(musicCurrentPosition);
+                    }
                     break;
                 case MusicPlayerService.UPDATE_SONG:
                     // update main activitiy with the selected song from music list

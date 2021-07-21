@@ -144,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
     private static Song current_song = Song.EMPTY_SONG;
     private Bitmap current_albumImage;
     private RelativeLayout mainActivityRelativeLayout;
-    private LinearLayout slidingUpMenuLayout;
+    private RelativeLayout slidingUpMenuLayout;
     private SlidingUpPanelLayout slidingUpPanelLayout;
     private ImageView slidingUp_albumArt;
     private TextView slidingUp_songName;

@@ -59,7 +59,6 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
@@ -72,6 +71,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Random;
 
 import static android.os.Build.VERSION_CODES.Q;
 import static com.example.musicplayer.Notifications.CHANNEL_ID_1;
@@ -105,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
     private ActionBar actionBar;
 
     // sliding up panel
+    private static int random_seed;
     private MessageHandler messageHandler;
     private MessageHandler seekbarHandler;
     private boolean isLargeAlbumArt;
@@ -123,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
     private RippleDrawable next_btn_ripple;
     private ImageButton shuffle_btn;
     private RippleDrawable shuffle_btn_ripple;
-    private boolean isShuffled;
+    private static boolean isShuffled;
     private AnimationDrawable mainAnimation;
     private GradientDrawable gradient1;
     private GradientDrawable gradient2;
@@ -289,6 +290,10 @@ public class MainActivity extends AppCompatActivity {
         int songtab_scrolloffset = SongListTab.getScrollOffset();
         databaseRepository.updateMetadataTheme(theme_resourceid);
         databaseRepository.updateMetadataSongtab(songtab_scrollindex, songtab_scrolloffset);
+
+        // save the current song and playlist to database
+        current_playlist.rearrange(current_song);
+        databaseRepository.insertPlaylist(current_playlist);
         super.onPause();
     }
 
@@ -743,6 +748,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        isShuffled = false;
+        shuffle_btn.setImageAlpha(40);
         shuffle_btn_ripple = (RippleDrawable) shuffle_btn.getBackground();
         shuffle_btn_ripple.setRadius(50);
         shuffle_btn.setOnClickListener(new View.OnClickListener() {
@@ -752,10 +759,13 @@ public class MainActivity extends AppCompatActivity {
                 if (isShuffled){
                     isShuffled = false;
                     shuffle_btn.setImageAlpha(40);
+                    current_playlist = current_playlist.unshufflePlaylist(random_seed);
                 }
                 else {
                     isShuffled = true;
+                    random_seed = Math.abs(new Random().nextInt());
                     shuffle_btn.setImageAlpha(255);
+                    current_playlist = current_playlist.shufflePlaylist(random_seed);
                 }
             }
         });
@@ -1152,7 +1162,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 // if a playlist wasn't retrieved from the database
-                if (current_playlist == null) {
+                else{
                     if (fullSongList.size() > 0) {
                         current_playlist = fullPlaylist;
                         current_song = fullSongList.get(0);
@@ -1284,7 +1294,12 @@ public class MainActivity extends AppCompatActivity {
         current_song = song;
     }
     public static void setCurrent_playlist(Playlist playlist){
-        current_playlist = playlist;
+        if (!isShuffled) {
+            current_playlist = playlist;
+        }
+        else{
+            current_playlist = playlist.shufflePlaylist(random_seed);
+        }
     }
 
     public static Notification getNotification(){
@@ -1491,10 +1506,6 @@ public class MainActivity extends AppCompatActivity {
                             updateSlidingMenuColors();
                         }
                     });
-
-                    // save the current song and playlist to database
-                    current_playlist.rearrangePlaylist(current_song);
-                    databaseRepository.insertPlaylist(current_playlist);
                     break;
                 case ChooseThemeActivity.THEME_SELECTED:
                     final int theme_resid = ThemeColors.getThemeResourceId();

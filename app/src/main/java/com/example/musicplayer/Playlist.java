@@ -3,6 +3,7 @@ package com.example.musicplayer;
 import android.annotation.TargetApi;
 import android.os.Parcel;
 import android.os.Parcelable;
+import java.util.Random;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
@@ -199,7 +200,7 @@ public class Playlist implements Parcelable {
      * Rearranges the playlist such that the playlist begins from the provided song
      * @param song the song to begin the playlist
      */
-    public void rearrangePlaylist(Song song){
+    public void rearrange(Song song){
         // get index of current song to split the current list of songs
         int splitIdx = songList.indexOf(song);
 
@@ -211,6 +212,53 @@ public class Playlist implements Parcelable {
         songList.addAll(secondHalf);
         songList.addAll(firstHalf);
         songHashMap = createHashMap(songList);
+    }
+
+    /**
+     * Randomly reorder every song in this playlist, given a seed
+     * @return a new playlist that was randomly shuffled based on the original (this playlist)
+     */
+    public Playlist shufflePlaylist(int seed){
+        ArrayList<Song> shuffled_songlist = new ArrayList<>(songList);
+
+        Random r = new Random(seed);
+        // start from the last element and swap one by one, excluding first element
+        int songlist_size = shuffled_songlist.size();
+        for (int i = songlist_size - 1; i > 0; i--){
+            int random_idx = r.nextInt(i);
+            Song temp = shuffled_songlist.get(i);
+            shuffled_songlist.set(i, shuffled_songlist.get(random_idx));
+            shuffled_songlist.set(random_idx, temp);
+        }
+
+        return new Playlist(name, shuffled_songlist);
+    }
+
+    /**
+     * Restores the original order of every song in this playlist, given the original seed
+     * @return a new playlist representing the original (unshuffled) playlist
+     */
+    public Playlist unshufflePlaylist(int seed){
+        ArrayList<Song> shuffled_songlist = new ArrayList<>(songList);
+
+        Random r = new Random(seed);
+
+        // obtain the order in which the random indexes were generated
+        int songlist_size = shuffled_songlist.size();
+        int[] random_indexes = new int[songlist_size];
+        for (int i = songlist_size - 1; i > 0; i--){
+            int random_idx = r.nextInt(i);
+            random_indexes[i] = random_idx;
+        }
+
+        // unshuffle this playlist
+        for (int i = 1; i < songlist_size; i++){
+            Song temp = shuffled_songlist.get(i);
+            shuffled_songlist.set(i, shuffled_songlist.get(random_indexes[i]));
+            shuffled_songlist.set(random_indexes[i], temp);
+        }
+
+        return new Playlist(name, shuffled_songlist);
     }
 
     @Override

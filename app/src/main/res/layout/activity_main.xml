@@ -180,8 +180,7 @@
                     app:cardElevation="0dp"
                     android:layout_centerInParent="true"
                     android:layout_centerHorizontal="true"
-                    android:layout_below="@id/btn_info"
-                    android:layout_marginTop="10dp">
+                    android:layout_below="@id/btn_info">
 
                     <ImageView
                         android:id="@+id/song_albumart"
@@ -261,6 +260,15 @@
                     android:text="@string/InitialTime"
                     android:layout_alignEnd="@+id/seekBar"
                     android:textSize="20sp" />
+
+                <ImageButton
+                    android:id="@+id/btn_shuffle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_above="@id/seekBar"
+                    android:layout_toEndOf="@id/music_position"
+                    android:src="@drawable/ic_shuffle36dp"
+                    android:background="?selectableItemBackgroundBorderless"/>
 
                 <ImageButton
                     android:id="@+id/btn_play"

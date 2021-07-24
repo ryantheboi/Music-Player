@@ -15,6 +15,7 @@ public class Metadata {
     // values to determine the mediaplayer's status
     private boolean isPlaying;
     private int seekPosition;
+    private int songIndex;
 
     // values to determine how to init main ui components
     private int themeResourceId;
@@ -24,20 +25,25 @@ public class Metadata {
     private int songtab_scrollindex;
     private int songtab_scrolloffset;
 
+    // value to store the last seed used for randomization
+    private int random_seed;
+
     @Ignore
-    public static Metadata DEFAULT_METADATA = new Metadata(0, false, 0, R.style.ThemeOverlay_AppCompat_MusicLight, 0, 0, false);
+    public static Metadata DEFAULT_METADATA = new Metadata(0, false, 0, 0, R.style.ThemeOverlay_AppCompat_MusicLight, 0, 0, false, 0);
 
     /**
      * Constructor used by database to create a metadata object
      */
-    public Metadata(int id, boolean isPlaying, int seekPosition, int themeResourceId, int songtab_scrollindex, int songtab_scrolloffset, boolean isLargeAlbumArt) {
+    public Metadata(int id, boolean isPlaying, int seekPosition, int songIndex, int themeResourceId, int songtab_scrollindex, int songtab_scrolloffset, boolean isLargeAlbumArt, int random_seed) {
         this.id = id;
         this.isPlaying = isPlaying;
         this.seekPosition = seekPosition;
+        this.songIndex = songIndex;
         this.themeResourceId = themeResourceId;
         this.songtab_scrollindex = songtab_scrollindex;
         this.songtab_scrolloffset = songtab_scrolloffset;
         this.isLargeAlbumArt = isLargeAlbumArt;
+        this.random_seed = random_seed;
     }
 
     public int getId() {
@@ -50,6 +56,10 @@ public class Metadata {
 
     public int getSeekPosition(){
         return seekPosition;
+    }
+
+    public int getSongIndex(){
+        return songIndex;
     }
 
     public int getThemeResourceId() {
@@ -66,5 +76,9 @@ public class Metadata {
 
     public boolean getIsLargeAlbumArt() {
         return isLargeAlbumArt;
+    }
+
+    public int getRandom_seed(){
+        return random_seed;
     }
 }

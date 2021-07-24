@@ -291,8 +291,10 @@ public class MainActivity extends AppCompatActivity {
         databaseRepository.updateMetadataTheme(theme_resourceid);
         databaseRepository.updateMetadataSongtab(songtab_scrollindex, songtab_scrolloffset);
 
-        // save the current song and playlist to database
-        current_playlist.rearrange(current_song);
+        // save the current random seed
+        databaseRepository.updateMetadataRandomSeed(random_seed);
+
+        // save current playlist to database
         databaseRepository.insertPlaylist(current_playlist);
         super.onPause();
     }
@@ -1157,12 +1159,9 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case DatabaseRepository.ASYNC_GET_CURRENT_PLAYLIST:
                 current_playlist = (Playlist) object;
-                if (current_playlist != null){
-                    current_song = current_playlist.getSongList().get(0);
-                }
 
                 // if a playlist wasn't retrieved from the database
-                else{
+                if (current_playlist == null) {
                     if (fullSongList.size() > 0) {
                         current_playlist = fullPlaylist;
                         current_song = fullSongList.get(0);
@@ -1216,10 +1215,15 @@ public class MainActivity extends AppCompatActivity {
                     Metadata metadata = (Metadata) object;
                     boolean isPlaying = metadata.getIsPlaying();
                     int seekPosition = metadata.getSeekPosition();
+                    int songIndex = metadata.getSongIndex();
                     int themeResourceId = metadata.getThemeResourceId();
                     int songtab_scrollindex = metadata.getSongtab_scrollindex();
                     int songtab_scrolloffset = metadata.getSongtab_scrolloffset();
                     isLargeAlbumArt = metadata.getIsLargeAlbumArt();
+                    random_seed = metadata.getRandom_seed();
+                    if (current_playlist.getSize() > 0) {
+                        current_song = current_playlist.getSongList().get(songIndex);
+                    }
 
                     // music player is playing, start music service but keep playing
                     if (isPlaying) {
@@ -1506,6 +1510,9 @@ public class MainActivity extends AppCompatActivity {
                             updateSlidingMenuColors();
                         }
                     });
+
+                    // update the index of the current song in database
+                    databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
                     break;
                 case ChooseThemeActivity.THEME_SELECTED:
                     final int theme_resid = ThemeColors.getThemeResourceId();

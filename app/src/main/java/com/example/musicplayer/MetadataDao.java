@@ -29,6 +29,12 @@ public interface MetadataDao {
     void updateSeekPosition(int id, int seekPosition);
 
     /**
+     * Update only the song index metadata, by id
+     */
+    @Query("UPDATE Metadata SET songIndex = :songIndex WHERE id =:id")
+    void updateSongIndex(int id, int songIndex);
+
+    /**
      * Update only the values associated with Songtab listview position (scroll index and scroll offset), by id
      */
     @Query("UPDATE Metadata SET songtab_scrollindex = :songtab_scrollindex, songtab_scrolloffset = :songtab_scrolloffset WHERE id =:id")
@@ -45,6 +51,12 @@ public interface MetadataDao {
      */
     @Query("UPDATE Metadata SET isLargeAlbumArt = :isLargeAlbumArt WHERE id =:id")
     void updateIsLargeAlbumArt(int id, boolean isLargeAlbumArt);
+
+    /**
+     * Update only the random seed metadata, by id
+     */
+    @Query("UPDATE Metadata SET random_seed = :random_seed WHERE id =:id")
+    void updateRandomSeed(int id, int random_seed);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(Metadata metadata);

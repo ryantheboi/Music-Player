@@ -197,24 +197,6 @@ public class Playlist implements Parcelable {
     }
 
     /**
-     * Rearranges the playlist such that the playlist begins from the provided song
-     * @param song the song to begin the playlist
-     */
-    public void rearrange(Song song){
-        // get index of current song to split the current list of songs
-        int splitIdx = songList.indexOf(song);
-
-        List<Song> firstHalf = songList.subList(0, splitIdx);
-        List<Song> secondHalf = songList.subList(splitIdx, songList.size());
-
-        // reconstruct the new songslist and hash map
-        songList = new ArrayList<>();
-        songList.addAll(secondHalf);
-        songList.addAll(firstHalf);
-        songHashMap = createHashMap(songList);
-    }
-
-    /**
      * Randomly reorder every song in this playlist, given a seed
      * @return a new playlist that was randomly shuffled based on the original (this playlist)
      */

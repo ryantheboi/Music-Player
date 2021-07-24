@@ -32,7 +32,7 @@ public class Metadata {
     private int random_seed;
 
     @Ignore
-    public static Metadata DEFAULT_METADATA = new Metadata(0, false, 0, 0, true, R.style.ThemeOverlay_AppCompat_MusicLight, 0, 0, false, 0);
+    public static Metadata DEFAULT_METADATA = new Metadata(0, false, 0, 0, false, R.style.ThemeOverlay_AppCompat_MusicLight, 0, 0, false, 0);
 
     /**
      * Constructor used by database to create a metadata object

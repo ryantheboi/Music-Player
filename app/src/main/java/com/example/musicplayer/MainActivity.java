@@ -297,7 +297,8 @@ public class MainActivity extends AppCompatActivity {
         // save the current shuffle option
         databaseRepository.updateMetadataIsShuffled(isShuffled);
 
-        // save current playlist to database
+        // save current song index and playlist to database
+        databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
         databaseRepository.insertPlaylist(current_playlist);
         super.onPause();
     }
@@ -1213,66 +1214,58 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             case DatabaseRepository.ASYNC_GET_METADATA:
-                if (object != null) {
-                    Metadata metadata = (Metadata) object;
-                    boolean isPlaying = metadata.getIsPlaying();
-                    int seekPosition = metadata.getSeekPosition();
-                    int songIndex = metadata.getSongIndex();
-                    int themeResourceId = metadata.getThemeResourceId();
-                    int songtab_scrollindex = metadata.getSongtab_scrollindex();
-                    int songtab_scrolloffset = metadata.getSongtab_scrolloffset();
-                    isShuffled = metadata.getIsShuffled();
-                    isLargeAlbumArt = metadata.getIsLargeAlbumArt();
-                    random_seed = metadata.getRandom_seed();
-
-                    // set current song using the song index metadata
-                    if (current_playlist.getSize() > 0) {
-                        current_song = current_playlist.getSongList().get(songIndex);
-                    }
-
-                    // set shuffle button transparency using the isShuffled metadata
-                    shuffle_btn.setImageAlpha(isShuffled ? 255 : 40);
-
-                    // music player is playing, start music service but keep playing
-                    if (isPlaying) {
-                        musicServiceIntent.putExtra("musicListInitPlaying", mainActivityMessenger);
-                        startService(musicServiceIntent);
-
-                        initMusicUI();
-                    }
-                    // music player is not playing, start music service for the first time
-                    else {
-                        musicServiceIntent.putExtra("musicListInitPaused", mainActivityMessenger);
-                        startService(musicServiceIntent);
-
-                        initMusicUI();
-
-                        // inform the music service about the seekbar's position from the metadata
-                        seekBar_seekIntent.putExtra("seekbarSeek", seekPosition);
-                        startService(seekBar_seekIntent);
-                        seekBar.setProgress(seekPosition);
-                    }
-
-                    // set the current theme and generate theme values
-                    setTheme(themeResourceId);
-                    ThemeColors.generateThemeValues(this, themeResourceId);
-
-                    // after generating theme values, update the main ui
-                    updateTheme(themeResourceId);
-                    theme_btn.setImageResource(ThemeColors.getThemeBtnResourceId());
-                    SongListTab.setScrollSelection(songtab_scrollindex, songtab_scrolloffset);
-                }
-
-                else{
+                if (object == null){
                     // insert metadata row into the database for the first time
                     databaseRepository.insertMetadata(Metadata.DEFAULT_METADATA);
+                }
 
-                    // start music service for the first time
-                    musicServiceIntent.putExtra("musicListInitPaused", mainActivityMessenger);
+                Metadata metadata = object == null ? Metadata.DEFAULT_METADATA : (Metadata) object;
+                boolean isPlaying = metadata.getIsPlaying();
+                int seekPosition = metadata.getSeekPosition();
+                int songIndex = metadata.getSongIndex();
+                int themeResourceId = metadata.getThemeResourceId();
+                int songtab_scrollindex = metadata.getSongtab_scrollindex();
+                int songtab_scrolloffset = metadata.getSongtab_scrolloffset();
+                isShuffled = metadata.getIsShuffled();
+                isLargeAlbumArt = metadata.getIsLargeAlbumArt();
+                random_seed = metadata.getRandom_seed();
+
+                // set current song using the song index metadata
+                if (current_playlist.getSize() > 0) {
+                    current_song = current_playlist.getSongList().get(songIndex);
+                }
+
+                // set shuffle button transparency using the isShuffled metadata
+                shuffle_btn.setImageAlpha(isShuffled ? 255 : 40);
+
+                // music player is playing, start music service but keep playing
+                if (isPlaying) {
+                    musicServiceIntent.putExtra("musicListInitPlaying", mainActivityMessenger);
                     startService(musicServiceIntent);
 
                     initMusicUI();
                 }
+                // music player is not playing, start music service for the first time
+                else {
+                    musicServiceIntent.putExtra("musicListInitPaused", mainActivityMessenger);
+                    startService(musicServiceIntent);
+
+                    initMusicUI();
+
+                    // inform the music service about the seekbar's position from the metadata
+                    seekBar_seekIntent.putExtra("seekbarSeek", seekPosition);
+                    startService(seekBar_seekIntent);
+                    seekBar.setProgress(seekPosition);
+                }
+
+                // set the current theme and generate theme values
+                setTheme(themeResourceId);
+                ThemeColors.generateThemeValues(this, themeResourceId);
+
+                // after generating theme values, update the main ui
+                updateTheme(themeResourceId);
+                theme_btn.setImageResource(ThemeColors.getThemeBtnResourceId());
+                SongListTab.setScrollSelection(songtab_scrollindex, songtab_scrolloffset);
                 break;
             }
 
@@ -1461,7 +1454,7 @@ public class MainActivity extends AppCompatActivity {
                     seekBar.setProgress(musicCurrentPosition);
                     break;
                 case MusicPlayerService.UPDATE_SONG:
-                    // update main activitiy with the selected song from music list
+                    // update main activity with the selected song from music list
                     current_song = (Song) bundle.get("song");
 
                     // grab song album art and duration
@@ -1520,6 +1513,7 @@ public class MainActivity extends AppCompatActivity {
                     });
 
                     // update the index of the current song in database
+                    // song can be updated within or outside of the app
                     databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
                     break;
                 case ChooseThemeActivity.THEME_SELECTED:

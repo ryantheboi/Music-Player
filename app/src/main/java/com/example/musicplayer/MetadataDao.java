@@ -35,6 +35,12 @@ public interface MetadataDao {
     void updateSongIndex(int id, int songIndex);
 
     /**
+     * Update only the isShuffled metadata, by id
+     */
+    @Query("UPDATE Metadata SET isShuffled = :isShuffled WHERE id =:id")
+    void updateIsShuffled(int id, boolean isShuffled);
+
+    /**
      * Update only the values associated with Songtab listview position (scroll index and scroll offset), by id
      */
     @Query("UPDATE Metadata SET songtab_scrollindex = :songtab_scrollindex, songtab_scrolloffset = :songtab_scrolloffset WHERE id =:id")

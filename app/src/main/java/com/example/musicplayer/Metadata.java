@@ -15,7 +15,10 @@ public class Metadata {
     // values to determine the mediaplayer's status
     private boolean isPlaying;
     private int seekPosition;
+
+    // values related to the behavior of the current playlist
     private int songIndex;
+    private boolean isShuffled;
 
     // values to determine how to init main ui components
     private int themeResourceId;
@@ -29,16 +32,17 @@ public class Metadata {
     private int random_seed;
 
     @Ignore
-    public static Metadata DEFAULT_METADATA = new Metadata(0, false, 0, 0, R.style.ThemeOverlay_AppCompat_MusicLight, 0, 0, false, 0);
+    public static Metadata DEFAULT_METADATA = new Metadata(0, false, 0, 0, true, R.style.ThemeOverlay_AppCompat_MusicLight, 0, 0, false, 0);
 
     /**
      * Constructor used by database to create a metadata object
      */
-    public Metadata(int id, boolean isPlaying, int seekPosition, int songIndex, int themeResourceId, int songtab_scrollindex, int songtab_scrolloffset, boolean isLargeAlbumArt, int random_seed) {
+    public Metadata(int id, boolean isPlaying, int seekPosition, int songIndex, boolean isShuffled, int themeResourceId, int songtab_scrollindex, int songtab_scrolloffset, boolean isLargeAlbumArt, int random_seed) {
         this.id = id;
         this.isPlaying = isPlaying;
         this.seekPosition = seekPosition;
         this.songIndex = songIndex;
+        this.isShuffled = isShuffled;
         this.themeResourceId = themeResourceId;
         this.songtab_scrollindex = songtab_scrollindex;
         this.songtab_scrolloffset = songtab_scrolloffset;
@@ -60,6 +64,10 @@ public class Metadata {
 
     public int getSongIndex(){
         return songIndex;
+    }
+
+    public boolean getIsShuffled(){
+        return isShuffled;
     }
 
     public int getThemeResourceId() {

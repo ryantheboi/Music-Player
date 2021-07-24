@@ -32,10 +32,11 @@ public class DatabaseRepository {
     public static final int UPDATE_METADATA_THEME = 8;
     public static final int UPDATE_METADATA_SONGTAB = 9;
     public static final int UPDATE_METADATA_SONGINDEX = 10;
-    public static final int UPDATE_METADATA_ISPLAYING = 11;
-    public static final int UPDATE_METADATA_SEEK = 12;
-    public static final int UPDATE_METADATA_ISLARGEALBUMART = 13;
-    public static final int UPDATE_METADATA_RANDOMSEED = 14;
+    public static final int UPDATE_METADATA_ISSHUFFLED = 11;
+    public static final int UPDATE_METADATA_ISPLAYING = 12;
+    public static final int UPDATE_METADATA_SEEK = 13;
+    public static final int UPDATE_METADATA_ISLARGEALBUMART = 14;
+    public static final int UPDATE_METADATA_RANDOMSEED = 15;
 
     /**
      * Holds the query message and the object involved (if exists)
@@ -186,6 +187,9 @@ public class DatabaseRepository {
                                 case UPDATE_METADATA_SONGINDEX:
                                     metadataDao.updateSongIndex(0, (int) query.object);
                                     break;
+                                case UPDATE_METADATA_ISSHUFFLED:
+                                    metadataDao.updateIsShuffled(0, (boolean) query.object);
+                                    break;
                                 case UPDATE_METADATA_ISPLAYING:
                                     metadataDao.updateIsPlaying(0, (boolean) query.object);
                                     break;
@@ -310,6 +314,14 @@ public class DatabaseRepository {
      */
     public synchronized void updateMetadataSongIndex(int songIndex){
         messageQueue.offer(new Query(UPDATE_METADATA_SONGINDEX, songIndex));
+    }
+
+    /**
+     * Queues message to update the isShuffled value in the metadata
+     * @param isShuffled true if playlist shuffling is enabled, false otherwise
+     */
+    public synchronized void updateMetadataIsShuffled(boolean isShuffled){
+        messageQueue.offer(new Query(UPDATE_METADATA_ISSHUFFLED, isShuffled));
     }
 
     /**

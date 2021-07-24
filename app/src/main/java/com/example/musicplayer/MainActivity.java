@@ -294,6 +294,9 @@ public class MainActivity extends AppCompatActivity {
         // save the current random seed
         databaseRepository.updateMetadataRandomSeed(random_seed);
 
+        // save the current shuffle option
+        databaseRepository.updateMetadataIsShuffled(isShuffled);
+
         // save current playlist to database
         databaseRepository.insertPlaylist(current_playlist);
         super.onPause();
@@ -750,8 +753,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        isShuffled = false;
-        shuffle_btn.setImageAlpha(40);
+        // init shuffle button functionality and its ripple
         shuffle_btn_ripple = (RippleDrawable) shuffle_btn.getBackground();
         shuffle_btn_ripple.setRadius(50);
         shuffle_btn.setOnClickListener(new View.OnClickListener() {
@@ -1219,11 +1221,17 @@ public class MainActivity extends AppCompatActivity {
                     int themeResourceId = metadata.getThemeResourceId();
                     int songtab_scrollindex = metadata.getSongtab_scrollindex();
                     int songtab_scrolloffset = metadata.getSongtab_scrolloffset();
+                    isShuffled = metadata.getIsShuffled();
                     isLargeAlbumArt = metadata.getIsLargeAlbumArt();
                     random_seed = metadata.getRandom_seed();
+
+                    // set current song using the song index metadata
                     if (current_playlist.getSize() > 0) {
                         current_song = current_playlist.getSongList().get(songIndex);
                     }
+
+                    // set shuffle button transparency using the isShuffled metadata
+                    shuffle_btn.setImageAlpha(isShuffled ? 255 : 40);
 
                     // music player is playing, start music service but keep playing
                     if (isPlaying) {

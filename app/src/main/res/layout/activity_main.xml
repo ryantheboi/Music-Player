@@ -271,6 +271,15 @@
                     android:background="?selectableItemBackgroundBorderless"/>
 
                 <ImageButton
+                    android:id="@+id/btn_repeat"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_above="@id/seekBar"
+                    android:layout_toEndOf="@id/btn_shuffle"
+                    android:src="@drawable/ic_repeat36dp"
+                    android:background="?selectableItemBackgroundBorderless"/>
+
+                <ImageButton
                     android:id="@+id/btn_play"
                     android:layout_width="70dp"
                     android:layout_height="70dp"

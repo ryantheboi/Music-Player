@@ -125,6 +125,9 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton shuffle_btn;
     private RippleDrawable shuffle_btn_ripple;
     private static boolean isShuffled;
+    private ImageButton repeat_btn;
+    private RippleDrawable repeat_btn_ripple;
+    private static int repeat_status;
     private AnimationDrawable mainAnimation;
     private GradientDrawable gradient1;
     private GradientDrawable gradient2;
@@ -202,6 +205,7 @@ public class MainActivity extends AppCompatActivity {
         next_btn = findViewById(R.id.btn_next);
         prev_btn = findViewById(R.id.btn_prev);
         shuffle_btn = findViewById(R.id.btn_shuffle);
+        repeat_btn = findViewById(R.id.btn_repeat);
         seekBar = findViewById(R.id.seekBar);
         musicPosition = findViewById(R.id.music_position);
         musicDuration = findViewById(R.id.music_duration);
@@ -774,6 +778,40 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        // init repeat button functionality and its ripple
+        repeat_status = 0;
+        repeat_btn_ripple = (RippleDrawable) repeat_btn.getBackground();
+        repeat_btn_ripple.setRadius(50);
+        repeat_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switch (repeat_status){
+                    // disable repeat
+                    case 0:
+                        repeat_btn.setImageResource(R.drawable.ic_repeat36dp);
+                        repeat_btn.setImageAlpha(40);
+                        break;
+
+                    // repeat playlist
+                    case 1:
+                        repeat_btn.setImageResource(R.drawable.ic_repeat36dp);
+                        repeat_btn.setImageAlpha(255);
+                        break;
+
+                    // repeat one song
+                    case 2:
+                        repeat_btn.setImageResource(R.drawable.ic_repeat_one36dp);
+                        repeat_btn.setImageAlpha(255);
+                        break;
+                }
+
+                Drawable unwrappedDrawableRepeat = repeat_btn.getDrawable();
+                Drawable wrappedDrawableRepeat = DrawableCompat.wrap(unwrappedDrawableRepeat);
+                DrawableCompat.setTint(wrappedDrawableRepeat, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
+                repeat_status = repeat_status + 1 > 2 ? 0 : repeat_status + 1;
+            }
+        });
     }
 
     /**
@@ -1000,16 +1038,19 @@ public class MainActivity extends AppCompatActivity {
         Drawable unwrappedDrawableNext = next_btn.getDrawable();
         Drawable unwrappedDrawablePrev = prev_btn.getDrawable();
         Drawable unwrappedDrawableShuffle = shuffle_btn.getDrawable();
+        Drawable unwrappedDrawableRepeat = repeat_btn.getDrawable();
         Drawable wrappedDrawableInfo = DrawableCompat.wrap(unwrappedDrawableInfo);
         Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
         Drawable wrappedDrawableNext = DrawableCompat.wrap(unwrappedDrawableNext);
         Drawable wrappedDrawablePrev = DrawableCompat.wrap(unwrappedDrawablePrev);
         Drawable wrappedDrawableShuffle = DrawableCompat.wrap(unwrappedDrawableShuffle);
+        Drawable wrappedDrawableRepeat = DrawableCompat.wrap(unwrappedDrawableRepeat);
         DrawableCompat.setTint(wrappedDrawableInfo, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
         DrawableCompat.setTint(wrappedDrawablePauseplay, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
         DrawableCompat.setTint(wrappedDrawableNext, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
         DrawableCompat.setTint(wrappedDrawablePrev, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
         DrawableCompat.setTint(wrappedDrawableShuffle, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
+        DrawableCompat.setTint(wrappedDrawableRepeat, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
 
         // update ripple colors
         info_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
@@ -1017,6 +1058,7 @@ public class MainActivity extends AppCompatActivity {
         next_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
         prev_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
         shuffle_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
+        repeat_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
     }
 
     /**

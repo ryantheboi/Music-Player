@@ -781,12 +781,14 @@ public class MainActivity extends AppCompatActivity {
 
         // init repeat button functionality and its ripple
         repeat_status = 0;
+        repeat_btn.setImageAlpha(40);
         repeat_btn_ripple = (RippleDrawable) repeat_btn.getBackground();
         repeat_btn_ripple.setRadius(50);
         repeat_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                switch (repeat_status){
+                int next_repeat_status = repeat_status + 1 > 2 ? 0 : repeat_status + 1;
+                switch (next_repeat_status){
                     // disable repeat
                     case 0:
                         repeat_btn.setImageResource(R.drawable.ic_repeat36dp);
@@ -809,7 +811,7 @@ public class MainActivity extends AppCompatActivity {
                 Drawable unwrappedDrawableRepeat = repeat_btn.getDrawable();
                 Drawable wrappedDrawableRepeat = DrawableCompat.wrap(unwrappedDrawableRepeat);
                 DrawableCompat.setTint(wrappedDrawableRepeat, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
-                repeat_status = repeat_status + 1 > 2 ? 0 : repeat_status + 1;
+                repeat_status = next_repeat_status;
             }
         });
     }
@@ -1325,6 +1327,9 @@ public class MainActivity extends AppCompatActivity {
             }
     }
 
+    public static int getRepeat_status(){
+        return repeat_status;
+    }
     public static Song getCurrent_song(){
         return current_song;
     }
@@ -1428,7 +1433,15 @@ public class MainActivity extends AppCompatActivity {
                     // update the isPlaying and seekPosition values in the metadata
                     if ((boolean)bundle.get("updateDatabase")) {
                         databaseRepository.updateMetadataIsPlaying(false);
-                        databaseRepository.updateMetadataSeek(seekBar.getProgress());
+
+                        // use the seek position given by the music player service
+                        if ((int)bundle.get("updateSeek") >= 0) {
+                            databaseRepository.updateMetadataSeek((int)bundle.get("updateSeek"));
+                        }
+                        // use the seek position from the seekbar view
+                        else {
+                            databaseRepository.updateMetadataSeek(seekBar.getProgress());
+                        }
                     }
                     break;
                 case MusicPlayerService.UPDATE_PAUSE:

@@ -55,10 +55,11 @@ public class MusicPlayerService
     public static final int PREPARE_PLAY = 3;
     public static final int PREPARE_PREV = 4;
     public static final int PREPARE_NEXT = 5;
-    public static final int PREPARE_DURATION = 6;
-    public static final int PREPARE_SEEK = 7;
-    public static final int PREPARE_SEEKBAR_PROGRESS = 8;
-    public static final int PREPARE_NOTIFICATION = 9;
+    public static final int PREPARE_NEXT_PAUSE = 6;
+    public static final int PREPARE_DURATION = 7;
+    public static final int PREPARE_SEEK = 8;
+    public static final int PREPARE_SEEKBAR_PROGRESS = 9;
+    public static final int PREPARE_NOTIFICATION = 10;
 
 
 
@@ -262,13 +263,42 @@ public class MusicPlayerService
     }
 
     /**
-     * what to do when the current song finishes playing
+     * What to do when the current song finishes playing
+     * Behavior depends on the repeat status from MainActivity
      * @param mp (unused) the mediaplayer object responsible for playing the song
      */
     @Override
     public void onCompletion(MediaPlayer mp) {
-        playerHandler.removeMessages(PREPARE_NEXT);
-        playerHandler.obtainMessage(PREPARE_NEXT).sendToTarget();
+        switch(MainActivity.getRepeat_status()){
+            // disable repeat
+            case 0:
+                Playlist curr_playlist = MainActivity.getCurrent_playlist();
+                Song curr_song = MainActivity.getCurrent_song();
+                int curr_playlist_size = curr_playlist.getSize();
+
+                // if the current song is the last song in the playlist
+                if (curr_playlist.getSongList().indexOf(curr_song) == curr_playlist_size - 1){
+                    playerHandler.removeMessages(PREPARE_NEXT_PAUSE);
+                    playerHandler.obtainMessage(PREPARE_NEXT_PAUSE).sendToTarget();
+                }
+                else{
+                    playerHandler.removeMessages(PREPARE_NEXT);
+                    playerHandler.obtainMessage(PREPARE_NEXT).sendToTarget();
+                }
+                break;
+
+            // repeat playlist
+            case 1:
+                playerHandler.removeMessages(PREPARE_NEXT);
+                playerHandler.obtainMessage(PREPARE_NEXT).sendToTarget();
+                break;
+
+            // repeat one song
+            case 2:
+                playerHandler.removeMessages(PREPARE_SONG);
+                playerHandler.obtainMessage(PREPARE_SONG).sendToTarget();
+                break;
+        }
     }
 
     private static final class PlaybackHandler extends Handler {
@@ -284,13 +314,15 @@ public class MusicPlayerService
          * @param messenger the messenger to send update to
          * @param message the update code
          * @param updateDatabase true if this will push an update to the database, false otherwise
+         * @param updateSeek the seek position to update the database (usually for paused next or prev song), -1 to ignore this
          */
-        private void sendUpdateMessage(Messenger messenger, int message, boolean updateDatabase) {
+        private void sendUpdateMessage(Messenger messenger, int message, boolean updateDatabase, int updateSeek) {
             Message msg = Message.obtain();
             Bundle bundle = new Bundle();
 
             bundle.putInt("update", message);
             bundle.putBoolean("updateDatabase", updateDatabase);
+            bundle.putInt("updateSeek", updateSeek);
             msg.setData(bundle);
             try {
                 messenger.send(msg);
@@ -364,7 +396,7 @@ public class MusicPlayerService
                             mp.setOnErrorListener(mService);
                             mp.setWakeMode(mService, PowerManager.PARTIAL_WAKE_LOCK);
                             mediaPlayer = mp;
-                            sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY, false);
+                            sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY, false, -1);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -376,7 +408,7 @@ public class MusicPlayerService
                         Song current_song = MainActivity.getCurrent_song();
                         if (current_song != Song.EMPTY_SONG) {
                             sendSongUpdateMessage(mainActivity_messenger, current_song);
-                            sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE, false);
+                            sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE, false, -1);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -404,7 +436,7 @@ public class MusicPlayerService
                         mp.setWakeMode(mService, PowerManager.PARTIAL_WAKE_LOCK);
                         mediaPlayer = mp;
                         audioFocusToggleMedia();
-                        sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE, true);
+                        sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE, true, -1);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -412,12 +444,12 @@ public class MusicPlayerService
                 case PREPARE_PLAY:
                     if (playing) {
                         // disable playback in background
-                        sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY, true);
+                        sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY, true, -1);
                         mService.stopForeground(false);
                     }
                     else{
                         // enable playback in background
-                        sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE, true);
+                        sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE, true, -1);
                         mService.startForeground(1, notification);
                     }
                     audioFocusToggleMedia();
@@ -443,10 +475,10 @@ public class MusicPlayerService
                             mediaPlayer = mp;
 
                             if (playing) {
-                                sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE, true);
+                                sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE, true, -1);
                                 audioFocusToggleMedia();
                             } else {
-                                sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY, true);
+                                sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY, true, 0);
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -474,11 +506,39 @@ public class MusicPlayerService
                             mediaPlayer = mp;
 
                             if (playing) {
-                                sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE, true);
+                                sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE, true, -1);
                                 audioFocusToggleMedia();
                             } else {
-                                sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY, true);
+                                sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY, true, 0);
                             }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+                case PREPARE_NEXT_PAUSE:
+                    if (MainActivity.getCurrent_playlist().getSize() > 0) {
+                        try {
+                            // update main ui with next song
+                            Song next_song = MainActivity.getCurrent_playlist().getNextSong();
+                            sendSongUpdateMessage(mainActivity_messenger, next_song);
+
+                            // release current mediaplayer to allow another to be created
+                            mediaPlayer.release();
+
+                            // prepare next song and keep it paused at seek position 0
+                            int songID = next_song.getID();
+                            Uri audioURI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                            Uri songURI = ContentUris.withAppendedId(audioURI, songID);
+                            MediaPlayer mp = MediaPlayer.create(mService, songURI);
+                            mp.setOnCompletionListener(mService);
+                            mp.setOnErrorListener(mService);
+                            mp.setWakeMode(mService, PowerManager.PARTIAL_WAKE_LOCK);
+                            mediaPlayer = mp;
+
+                            playing = false;
+                            sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY, true, 0);
+
                         } catch (Exception e) {
                             e.printStackTrace();
                         }

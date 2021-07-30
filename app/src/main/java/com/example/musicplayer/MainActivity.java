@@ -1047,7 +1047,7 @@ public class MainActivity extends AppCompatActivity {
         Drawable wrappedDrawablePrev = DrawableCompat.wrap(unwrappedDrawablePrev);
         Drawable wrappedDrawableShuffle = DrawableCompat.wrap(unwrappedDrawableShuffle);
         Drawable wrappedDrawableRepeat = DrawableCompat.wrap(unwrappedDrawableRepeat);
-        DrawableCompat.setTint(wrappedDrawableInfo, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
+        DrawableCompat.setTint(wrappedDrawableInfo, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
         DrawableCompat.setTint(wrappedDrawablePauseplay, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
         DrawableCompat.setTint(wrappedDrawableNext, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
         DrawableCompat.setTint(wrappedDrawablePrev, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
@@ -1055,7 +1055,7 @@ public class MainActivity extends AppCompatActivity {
         DrawableCompat.setTint(wrappedDrawableRepeat, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
 
         // update ripple colors
-        info_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
+        info_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
         pauseplay_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
         next_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
         prev_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));

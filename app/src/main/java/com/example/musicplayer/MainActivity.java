@@ -298,8 +298,9 @@ public class MainActivity extends AppCompatActivity {
         // save the current random seed
         databaseRepository.updateMetadataRandomSeed(random_seed);
 
-        // save the current shuffle option
+        // save the current shuffle and repeat option
         databaseRepository.updateMetadataIsShuffled(isShuffled);
+        databaseRepository.updateMetadataRepeatStatus(repeat_status);
 
         // save current song index and playlist to database
         databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
@@ -780,37 +781,13 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // init repeat button functionality and its ripple
-        repeat_status = 0;
-        repeat_btn.setImageAlpha(40);
         repeat_btn_ripple = (RippleDrawable) repeat_btn.getBackground();
         repeat_btn_ripple.setRadius(50);
         repeat_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 int next_repeat_status = repeat_status + 1 > 2 ? 0 : repeat_status + 1;
-                switch (next_repeat_status){
-                    // disable repeat
-                    case 0:
-                        repeat_btn.setImageResource(R.drawable.ic_repeat36dp);
-                        repeat_btn.setImageAlpha(40);
-                        break;
-
-                    // repeat playlist
-                    case 1:
-                        repeat_btn.setImageResource(R.drawable.ic_repeat36dp);
-                        repeat_btn.setImageAlpha(255);
-                        break;
-
-                    // repeat one song
-                    case 2:
-                        repeat_btn.setImageResource(R.drawable.ic_repeat_one36dp);
-                        repeat_btn.setImageAlpha(255);
-                        break;
-                }
-
-                Drawable unwrappedDrawableRepeat = repeat_btn.getDrawable();
-                Drawable wrappedDrawableRepeat = DrawableCompat.wrap(unwrappedDrawableRepeat);
-                DrawableCompat.setTint(wrappedDrawableRepeat, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
+                toggleRepeatButton(next_repeat_status);
                 repeat_status = next_repeat_status;
             }
         });
@@ -1162,8 +1139,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * helper method to enable scaling of album art and visibility of song name & artist
-     * based on largeAlbumArt boolean conditions:
+     * Helper method to enable scaling of album art and visibility of song name & artist
+     * Based on largeAlbumArt boolean conditions:
      * false - album art is not large and song name & artist are visible
      * true - album art is large and hides song name & artist
      */
@@ -1183,6 +1160,37 @@ public class MainActivity extends AppCompatActivity {
             songName.setVisibility(View.INVISIBLE);
             artistName.setVisibility(View.INVISIBLE);
         }
+    }
+
+    /**
+     * Helper method to set the appearance of the repeat button, based on the repeat status
+     * @param repeatStatus 0 for disable, 1 for repeat playlist, 2 for repeat one song
+     */
+    public void toggleRepeatButton(int repeatStatus){
+        switch (repeatStatus){
+            // disable repeat
+            case 0:
+                repeat_btn.setImageResource(R.drawable.ic_repeat36dp);
+                repeat_btn.setImageAlpha(40);
+                break;
+
+            // repeat playlist
+            case 1:
+                repeat_btn.setImageResource(R.drawable.ic_repeat36dp);
+                repeat_btn.setImageAlpha(255);
+                break;
+
+            // repeat one song
+            case 2:
+                repeat_btn.setImageResource(R.drawable.ic_repeat_one36dp);
+                repeat_btn.setImageAlpha(255);
+                break;
+        }
+
+        // set appropriate colors for the button
+        Drawable unwrappedDrawableRepeat = repeat_btn.getDrawable();
+        Drawable wrappedDrawableRepeat = DrawableCompat.wrap(unwrappedDrawableRepeat);
+        DrawableCompat.setTint(wrappedDrawableRepeat, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
     }
 
     /**
@@ -1271,6 +1279,7 @@ public class MainActivity extends AppCompatActivity {
                 int songtab_scrollindex = metadata.getSongtab_scrollindex();
                 int songtab_scrolloffset = metadata.getSongtab_scrolloffset();
                 isShuffled = metadata.getIsShuffled();
+                repeat_status = metadata.getRepeatStatus();
                 isLargeAlbumArt = metadata.getIsLargeAlbumArt();
                 random_seed = metadata.getRandom_seed();
 
@@ -1281,6 +1290,9 @@ public class MainActivity extends AppCompatActivity {
 
                 // set shuffle button transparency using the isShuffled metadata
                 shuffle_btn.setImageAlpha(isShuffled ? 255 : 40);
+
+                // set repeat button appearance using repeatStatus metadata
+                toggleRepeatButton(repeat_status);
 
                 // music player is playing, start music service but keep playing
                 if (isPlaying) {

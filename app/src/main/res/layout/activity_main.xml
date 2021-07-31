@@ -275,7 +275,7 @@
                     android:layout_height="wrap_content"
                     android:layout_above="@id/seekBar"
                     android:layout_toStartOf="@id/btn_info"
-                    android:layout_marginBottom="22dp"
+                    android:layout_marginBottom="26dp"
                     android:layout_marginEnd="10dp"
                     android:src="@drawable/ic_shuffle36dp"
                     android:background="?selectableItemBackgroundBorderless"/>
@@ -286,7 +286,7 @@
                     android:layout_height="wrap_content"
                     android:layout_above="@id/seekBar"
                     android:layout_toEndOf="@id/btn_info"
-                    android:layout_marginBottom="22dp"
+                    android:layout_marginBottom="26dp"
                     android:layout_marginStart="10dp"
                     android:src="@drawable/ic_repeat36dp"
                     android:background="?selectableItemBackgroundBorderless"/>

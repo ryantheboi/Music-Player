@@ -33,10 +33,11 @@ public class DatabaseRepository {
     public static final int UPDATE_METADATA_SONGTAB = 9;
     public static final int UPDATE_METADATA_SONGINDEX = 10;
     public static final int UPDATE_METADATA_ISSHUFFLED = 11;
-    public static final int UPDATE_METADATA_ISPLAYING = 12;
-    public static final int UPDATE_METADATA_SEEK = 13;
-    public static final int UPDATE_METADATA_ISLARGEALBUMART = 14;
-    public static final int UPDATE_METADATA_RANDOMSEED = 15;
+    public static final int UPDATE_METADATA_REPEATSTATUS = 12;
+    public static final int UPDATE_METADATA_ISPLAYING = 13;
+    public static final int UPDATE_METADATA_SEEK = 14;
+    public static final int UPDATE_METADATA_ISLARGEALBUMART = 15;
+    public static final int UPDATE_METADATA_RANDOMSEED = 16;
 
     /**
      * Holds the query message and the object involved (if exists)
@@ -190,6 +191,9 @@ public class DatabaseRepository {
                                 case UPDATE_METADATA_ISSHUFFLED:
                                     metadataDao.updateIsShuffled(0, (boolean) query.object);
                                     break;
+                                case UPDATE_METADATA_REPEATSTATUS:
+                                    metadataDao.updateRepeatStatus(0, (int) query.object);
+                                    break;
                                 case UPDATE_METADATA_ISPLAYING:
                                     metadataDao.updateIsPlaying(0, (boolean) query.object);
                                     break;
@@ -322,6 +326,14 @@ public class DatabaseRepository {
      */
     public synchronized void updateMetadataIsShuffled(boolean isShuffled){
         messageQueue.offer(new Query(UPDATE_METADATA_ISSHUFFLED, isShuffled));
+    }
+
+    /**
+     * Queues message to update the repeatStatus value in the metadata
+     * @param repeatStatus 0 for disable, 1 for repeat playlist, 2 for repeat one song
+     */
+    public synchronized void updateMetadataRepeatStatus(int repeatStatus){
+        messageQueue.offer(new Query(UPDATE_METADATA_REPEATSTATUS, repeatStatus));
     }
 
     /**

@@ -103,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
     private Toolbar toolbar;
     private TextView toolbar_title;
     private ActionBar actionBar;
+    private boolean isDestroyed = false;
 
     // sliding up panel
     private static int random_seed;
@@ -318,6 +319,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         System.out.println("destroyed");
+        isDestroyed = true;
         super.onDestroy();
     }
 
@@ -1502,7 +1504,7 @@ public class MainActivity extends AppCompatActivity {
                     Thread seekbarUpdateThread = new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            while (true) {
+                            while (!isDestroyed) {
                                 if (!seekBar_isTracking) {
                                     startService(seekBar_progressIntent);
                                 }

@@ -79,6 +79,7 @@ import static com.example.musicplayer.Notifications.CHANNEL_ID_1;
 public class MainActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSION_REQUEST = 1;
+    private boolean isPermissionGranted = false;
     private boolean isThemeSelecting;
     private boolean isInfoDisplaying;
     private ImageView theme_btn;
@@ -223,20 +224,10 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         System.out.println("started");
 
+        isPermissionGranted = ContextCompat.checkSelfPermission(MainActivity.this,
+                Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
         // check and request for read permissions
-        if (ContextCompat.checkSelfPermission(MainActivity.this,
-                Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
-            } else { // temp else branch
-                ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
-            }
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
-        } else {
+        if (isPermissionGranted) {
             setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
             // init thread for message handling
@@ -255,13 +246,26 @@ public class MainActivity extends AppCompatActivity {
             initInfoButton();
             initActionBar();
         }
+        else if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            // present rationale to user and then request for permissions
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
+        }
+        else {
+            // request for permissions
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
+        }
     }
 
     @Override
     protected void onResume() {
         System.out.println("resumed");
-        mainAnimation.start();
-        isInfoDisplaying = false;
+        if (isPermissionGranted) {
+            mainAnimation.start();
+            isInfoDisplaying = false;
+        }
         super.onResume();
     }
 
@@ -289,30 +293,34 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         System.out.println("paused");
 
-        // update current metadata values in database
-        int theme_resourceid = ThemeColors.getThemeResourceId();
-        int songtab_scrollindex = SongListTab.getScrollIndex();
-        int songtab_scrolloffset = SongListTab.getScrollOffset();
-        databaseRepository.updateMetadataTheme(theme_resourceid);
-        databaseRepository.updateMetadataSongtab(songtab_scrollindex, songtab_scrolloffset);
+        if (isPermissionGranted) {
+            // update current metadata values in database
+            int theme_resourceid = ThemeColors.getThemeResourceId();
+            int songtab_scrollindex = SongListTab.getScrollIndex();
+            int songtab_scrolloffset = SongListTab.getScrollOffset();
+            databaseRepository.updateMetadataTheme(theme_resourceid);
+            databaseRepository.updateMetadataSongtab(songtab_scrollindex, songtab_scrolloffset);
 
-        // save the current random seed
-        databaseRepository.updateMetadataRandomSeed(random_seed);
+            // save the current random seed
+            databaseRepository.updateMetadataRandomSeed(random_seed);
 
-        // save the current shuffle and repeat option
-        databaseRepository.updateMetadataIsShuffled(isShuffled);
-        databaseRepository.updateMetadataRepeatStatus(repeat_status);
+            // save the current shuffle and repeat option
+            databaseRepository.updateMetadataIsShuffled(isShuffled);
+            databaseRepository.updateMetadataRepeatStatus(repeat_status);
 
-        // save current song index and playlist to database
-        databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
-        databaseRepository.insertPlaylist(current_playlist);
+            // save current song index and playlist to database
+            databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
+            databaseRepository.insertPlaylist(current_playlist);
+        }
         super.onPause();
     }
 
     @Override
     protected void onStop() {
         System.out.println("stopped");
-        mainAnimation.stop();
+        if (isPermissionGranted) {
+            mainAnimation.stop();
+        }
         super.onStop();
     }
 
@@ -540,15 +548,15 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         switch (requestCode) {
             case MY_PERMISSION_REQUEST:
+                // if request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    if (ContextCompat.checkSelfPermission(MainActivity.this,
-                            Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                        Toast.makeText(this, "Permission granted!", Toast.LENGTH_SHORT).show();
-                        onStart();
-                    }
+                    Toast.makeText(this, "Permission granted!", Toast.LENGTH_SHORT).show();
+                    onStart();
                 } else {
                     Toast.makeText(this, "Permission denied..", Toast.LENGTH_SHORT).show();
+                    // gracefully degrade app experience and explain what features are unavailable
                 }
+                break;
         }
     }
 

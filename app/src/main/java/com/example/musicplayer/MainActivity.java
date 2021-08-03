@@ -342,7 +342,9 @@ public class MainActivity extends AppCompatActivity {
         fullSongList.sort(new Comparator<Song>() {
             @Override
             public int compare(Song o1, Song o2) {
-                return o1.getTitle().compareTo(o2.getTitle());
+                String o1_title = o1.getTitle().toUpperCase();
+                String o2_title = o2.getTitle().toUpperCase();
+                return o1_title.compareTo(o2_title);
             }
         });
 

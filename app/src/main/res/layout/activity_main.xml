@@ -100,7 +100,7 @@
 
                 <RelativeLayout
                     android:id="@+id/sliding_text"
-                    android:layout_width="180dp"
+                    android:layout_width="170dp"
                     android:layout_height="match_parent"
                     android:layout_marginTop="12dp"
                     android:layout_marginStart="10dp"
@@ -135,11 +135,10 @@
                 </RelativeLayout>
 
                 <RelativeLayout
-                    android:layout_width="150dp"
+                    android:layout_width="170dp"
                     android:layout_height="match_parent"
                     android:layout_alignParentEnd="true"
-                    android:layout_marginTop="2dp"
-                    android:layout_marginEnd="10dp">
+                    android:layout_marginTop="2dp">
                     <ImageButton
                         android:id="@+id/sliding_btn_prev"
                         android:layout_width="55dp"

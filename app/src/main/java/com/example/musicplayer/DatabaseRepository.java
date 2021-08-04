@@ -31,8 +31,13 @@ public class DatabaseRepository {
     public static final int INSERT_METADATA = 7;
     public static final int UPDATE_METADATA_THEME = 8;
     public static final int UPDATE_METADATA_SONGTAB = 9;
-    public static final int UPDATE_METADATA_ISPLAYING = 10;
-    public static final int UPDATE_METADATA_SEEK = 11;
+    public static final int UPDATE_METADATA_SONGINDEX = 10;
+    public static final int UPDATE_METADATA_ISSHUFFLED = 11;
+    public static final int UPDATE_METADATA_REPEATSTATUS = 12;
+    public static final int UPDATE_METADATA_ISPLAYING = 13;
+    public static final int UPDATE_METADATA_SEEK = 14;
+    public static final int UPDATE_METADATA_ISLARGEALBUMART = 15;
+    public static final int UPDATE_METADATA_RANDOMSEED = 16;
 
     /**
      * Holds the query message and the object involved (if exists)
@@ -180,11 +185,26 @@ public class DatabaseRepository {
                                 case UPDATE_METADATA_SONGTAB:
                                     metadataDao.updateSongTab(0, (int) query.object, (int) query.extra);
                                     break;
+                                case UPDATE_METADATA_SONGINDEX:
+                                    metadataDao.updateSongIndex(0, (int) query.object);
+                                    break;
+                                case UPDATE_METADATA_ISSHUFFLED:
+                                    metadataDao.updateIsShuffled(0, (boolean) query.object);
+                                    break;
+                                case UPDATE_METADATA_REPEATSTATUS:
+                                    metadataDao.updateRepeatStatus(0, (int) query.object);
+                                    break;
                                 case UPDATE_METADATA_ISPLAYING:
                                     metadataDao.updateIsPlaying(0, (boolean) query.object);
                                     break;
                                 case UPDATE_METADATA_SEEK:
                                     metadataDao.updateSeekPosition(0, (int) query.object);
+                                    break;
+                                case UPDATE_METADATA_ISLARGEALBUMART:
+                                    metadataDao.updateIsLargeAlbumArt(0, (boolean) query.object);
+                                    break;
+                                case UPDATE_METADATA_RANDOMSEED:
+                                    metadataDao.updateRandomSeed(0, (int) query.object);
                                     break;
                             }
                             isModifying = false;
@@ -293,6 +313,30 @@ public class DatabaseRepository {
     }
 
     /**
+     * Queues message to update the song index value in the metadata
+     * @param songIndex int representing the index of the current song in playlist 0
+     */
+    public synchronized void updateMetadataSongIndex(int songIndex){
+        messageQueue.offer(new Query(UPDATE_METADATA_SONGINDEX, songIndex));
+    }
+
+    /**
+     * Queues message to update the isShuffled value in the metadata
+     * @param isShuffled true if playlist shuffling is enabled, false otherwise
+     */
+    public synchronized void updateMetadataIsShuffled(boolean isShuffled){
+        messageQueue.offer(new Query(UPDATE_METADATA_ISSHUFFLED, isShuffled));
+    }
+
+    /**
+     * Queues message to update the repeatStatus value in the metadata
+     * @param repeatStatus 0 for disable, 1 for repeat playlist, 2 for repeat one song
+     */
+    public synchronized void updateMetadataRepeatStatus(int repeatStatus){
+        messageQueue.offer(new Query(UPDATE_METADATA_REPEATSTATUS, repeatStatus));
+    }
+
+    /**
      * Queues message to update the isPlaying value in the metadata
      * @param isPlaying true if the mediaplayer is playing, false otherwise
      */
@@ -306,5 +350,21 @@ public class DatabaseRepository {
      */
     public synchronized void updateMetadataSeek(int seekPosition){
         messageQueue.offer(new Query(UPDATE_METADATA_SEEK, seekPosition));
+    }
+
+    /**
+     * Queues message to update the isLargeAlbumArt value in the metadata
+     * @param isLargeAlbumArt true if the main display albumart is enlarged, false otherwise
+     */
+    public synchronized void updateMetadataIsLargeAlbumArt(boolean isLargeAlbumArt){
+        messageQueue.offer(new Query(UPDATE_METADATA_ISLARGEALBUMART, isLargeAlbumArt));
+    }
+
+    /**
+     * Queues message to update the random seed value in the metadata
+     * @param random_seed int representing the seed used for randomization
+     */
+    public synchronized void updateMetadataRandomSeed(int random_seed){
+        messageQueue.offer(new Query(UPDATE_METADATA_RANDOMSEED, random_seed));
     }
 }

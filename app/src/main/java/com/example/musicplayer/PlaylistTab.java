@@ -1,6 +1,8 @@
 package com.example.musicplayer;
 
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
@@ -9,7 +11,10 @@ import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.text.Editable;
 import android.text.SpannableString;
+import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -18,6 +23,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -40,10 +46,17 @@ public class PlaylistTab extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static ListView m_listView;
+    private static ImageView background;
     private static PlaylistAdapter m_playlistAdapter;
     private static MainActivity m_mainActivity;
     private static Messenger m_mainMessenger;
     private static ArrayList<Playlist> m_userSelection = new ArrayList<>();
+    private static EditText renamePlaylist_input;
+    private ViewGroup decorView;
+    private View renamePlaylist_view;
+    private AlertDialog renamePlaylist_dialog;
+    private AlertDialog.Builder renamePlaylist_dialogBuilder;
+
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -85,14 +98,34 @@ public class PlaylistTab extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View fragmentView = inflater.inflate(R.layout.fragment_tab_playlists, container, false);
-        m_listView = fragmentView.findViewById(R.id.fragment_listview_playlists);
-        m_listView.setAdapter(m_playlistAdapter);
+        background = fragmentView.findViewById(R.id.background_layer);
 
         // init decorView (Action Mode toolbar)
-        final ViewGroup decorView = (ViewGroup) getActivity().getWindow().getDecorView();
+        decorView = (ViewGroup) getActivity().getWindow().getDecorView();
 
-        // support scrolling with the coordinator layout
-        m_listView.setNestedScrollingEnabled(true);
+        // init listview
+        m_listView = fragmentView.findViewById(R.id.fragment_listview_playlists);
+        m_listView.setAdapter(m_playlistAdapter);
+        m_listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
+        m_listView.setNestedScrollingEnabled(true); // support scrolling with the coordinator layout
+
+        // init rename alert dialog components
+        renamePlaylist_view = LayoutInflater.from(m_mainActivity).inflate(R.layout.input_dialog_addplaylist, m_listView, false);
+        renamePlaylist_input = renamePlaylist_view.findViewById(R.id.input);
+
+        // init functionality for the views
+        initListeners();
+        return fragmentView;
+    }
+
+    /**
+     * Initializes the following listeners:
+     * listview onItemClick and onMultiChoice listeners
+     * renameInput editText onTextChange listener
+     */
+    private void initListeners(){
+
+        // init listview listeners
         m_listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
@@ -106,7 +139,6 @@ public class PlaylistTab extends Fragment {
             }
         });
 
-        m_listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
         m_listView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
             @Override
             public void onItemCheckedStateChanged(android.view.ActionMode mode, int position, long id, boolean checked) {
@@ -135,6 +167,11 @@ public class PlaylistTab extends Fragment {
             @Override
             @TargetApi(21)
             public boolean onCreateActionMode(final android.view.ActionMode mode, final Menu menu) {
+                // finish any action modes from other fragments before creating a new one
+                if (MainActivity.isActionMode){
+                    MainActivity.actionMode.finish();
+                }
+
                 mode.getMenuInflater().inflate(R.menu.playlist_menu, menu);
 
                 // update the tint and ripple color of every item in the menu
@@ -187,29 +224,121 @@ public class PlaylistTab extends Fragment {
             }
 
             @Override
-            public boolean onActionItemClicked(android.view.ActionMode mode, MenuItem item) {
+            public boolean onActionItemClicked(final android.view.ActionMode mode, MenuItem item) {
                 switch (item.getItemId()) {
+                    case R.id.menuitem_renameplaylist:
+
+                        // construct dialog to input playlist name
+                        renamePlaylist_dialogBuilder = new AlertDialog.Builder(m_mainActivity, ThemeColors.getAlertDialogStyleResourceId());
+                        renamePlaylist_dialogBuilder.setTitle(R.string.RenamePlaylist);
+                        // avoid adding the child again if it already exists
+                        if (renamePlaylist_view.getParent() != null) {
+                            ((ViewGroup) renamePlaylist_view.getParent()).removeView(renamePlaylist_view);
+                        }
+                        renamePlaylist_dialogBuilder.setView(renamePlaylist_view);
+
+                        // ok (rename) button
+                        renamePlaylist_dialogBuilder.setPositiveButton(R.string.Rename, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                // rename playlist(s) by the order they were selected
+                                for (int i = 0; i < m_userSelection.size(); i++){
+                                    Playlist modify_playlist = m_userSelection.get(i);
+                                    if (i == 0){
+                                        modify_playlist.setName(renamePlaylist_input.getText().toString());
+                                    }
+                                    else{
+                                        modify_playlist.setName(renamePlaylist_input.getText().toString() + " (" + i + ")");
+                                    }
+                                    // notify MainActivity about modified playlist
+                                    Message msg = Message.obtain();
+                                    Bundle bundle = new Bundle();
+                                    bundle.putInt("update", AddPlaylistActivity.MODIFY_PLAYLIST);
+                                    bundle.putParcelable("playlist", modify_playlist);
+                                    bundle.putParcelable("messenger", null);
+                                    msg.setData(bundle);
+
+                                    try {
+                                        m_mainMessenger.send(msg);
+                                    } catch (RemoteException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                                renamePlaylist_input.getText().clear();
+
+                                mode.finish(); // Action picked, so close the CAB
+                            }
+                        });
+
+                        // cancel button
+                        renamePlaylist_dialogBuilder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                            }
+                        });
+
+                        // create and show dialog
+                        renamePlaylist_dialog = renamePlaylist_dialogBuilder.show();
+
+                        // initially disable ok button if there isn't already text
+                        if (renamePlaylist_input.getText().toString().equals("")) {
+                            renamePlaylist_dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                        }
+                        return true;
+
                     case R.id.menuitem_removeplaylist:
-                        // construct id array from the user selected playlists and send to main
-                        int numPlaylists = m_userSelection.size();
-                        int[] playlistIds = new int[numPlaylists];
-                        for (int i = 0; i < numPlaylists; i++){
-                            playlistIds[i] = m_userSelection.get(i).getId();
+                        // construct alert dialog for removing playlist
+                        AlertDialog.Builder removePlaylist_dialogBuilder = new AlertDialog.Builder(m_mainActivity, ThemeColors.getAlertDialogStyleResourceId());
+
+                        if (m_userSelection.size() == 1) {
+                            Playlist playlist = m_userSelection.get(0);
+                            removePlaylist_dialogBuilder.setTitle("Remove Playlist " + playlist.getName() + " (" + playlist.getSize() + " songs)?");
+                        }
+                        else{
+                            removePlaylist_dialogBuilder.setTitle("Remove " + m_userSelection.size() + " playlists?");
                         }
 
-                        // send message to update mainactivity
-                        Message msg = Message.obtain();
-                        Bundle bundle = new Bundle();
-                        bundle.putInt("update", REMOVE_PLAYLISTS);
-                        bundle.putIntArray("ids", playlistIds);
-                        msg.setData(bundle);
-                        try {
-                            m_mainMessenger.send(msg);
-                        } catch (RemoteException e) {
-                            e.printStackTrace();
-                        }
+                        // ok (remove) button
+                        removePlaylist_dialogBuilder.setPositiveButton(R.string.Remove, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
 
-                        mode.finish(); // Action picked, so close the CAB
+                                // construct id array from the user selected playlists and send to main
+                                int numPlaylists = m_userSelection.size();
+                                int[] playlistIds = new int[numPlaylists];
+                                for (int i = 0; i < numPlaylists; i++){
+                                    playlistIds[i] = m_userSelection.get(i).getId();
+                                }
+
+                                // send message to update mainactivity
+                                Message msg = Message.obtain();
+                                Bundle bundle = new Bundle();
+                                bundle.putInt("update", REMOVE_PLAYLISTS);
+                                bundle.putIntArray("ids", playlistIds);
+                                msg.setData(bundle);
+                                try {
+                                    m_mainMessenger.send(msg);
+                                } catch (RemoteException e) {
+                                    e.printStackTrace();
+                                }
+
+                                mode.finish(); // Action picked, so close the CAB
+                            }
+                        });
+
+                        // cancel button
+                        removePlaylist_dialogBuilder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                            }
+                        });
+
+                        // show dialog
+                        removePlaylist_dialogBuilder.show();
                         return true;
                     default:
                         return false;
@@ -223,15 +352,40 @@ public class PlaylistTab extends Fragment {
                 m_userSelection.clear();
             }
         });
-        
 
-        return fragmentView;
+        // init edittext listener
+        renamePlaylist_input.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before,
+                                      int count) {
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count,
+                                          int after) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // disable ok button if there is no text
+                if (TextUtils.isEmpty(s)) {
+                    renamePlaylist_dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                }
+                // enable ok button if there is text
+                else {
+                    renamePlaylist_dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                }
+            }
+        });
     }
 
     public static void toggleTabColor(){
-        m_listView.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
-        m_playlistAdapter.setItemsFrameColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        background.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
         m_playlistAdapter.setItemsTitleTextColor(m_mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
         m_playlistAdapter.setItemsSizeTextColor(m_mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
+        renamePlaylist_input.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+        renamePlaylist_input.setHintTextColor(m_mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
+        renamePlaylist_input.setBackgroundTintList(m_mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
     }
 }

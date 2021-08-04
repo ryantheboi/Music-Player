@@ -17,9 +17,9 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
         <activity android:name=".PlaylistActivity"
-            android:theme="@style/AppTheme.Playlist"/>
+            android:theme="@style/ToolbarAppTheme.Playlist"/>
         <activity android:name=".AddPlaylistActivity"
-            android:theme="@style/AppTheme.Playlist"/>
+            android:theme="@style/ToolbarAppTheme.Playlist"/>
         <activity android:name=".MusicDetailsActivity"
             android:theme="@style/AppTheme.MusicPopup"/>
         <activity android:name=".ChooseThemeActivity"

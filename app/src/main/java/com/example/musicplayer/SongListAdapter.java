@@ -8,30 +8,31 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.SectionIndexer;
 import android.widget.TextView;
-
-import androidx.core.graphics.drawable.DrawableCompat;
-
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class SongListAdapter extends ArrayAdapter {
+public class SongListAdapter extends ArrayAdapter implements SectionIndexer {
 
     private Activity mActivity;
     private Context mContext;
     private int mResource;
     private HashSet<ViewHolder> mItems;
+    private HashMap<String, Integer> alphabetIndex;
+    private String[] sections;
 
     /**
      * Holds variables about an item (song) in a View
@@ -41,8 +42,6 @@ public class SongListAdapter extends ArrayAdapter {
         TextView artist;
         TextView album;
         ImageView albumArt;
-        ImageView innerFrame;
-        ImageView outerFrame;
     }
 
     public SongListAdapter(Context context, int resource, ArrayList<Song> objects, Activity activity) {
@@ -51,6 +50,28 @@ public class SongListAdapter extends ArrayAdapter {
         mResource = resource;
         mActivity = activity;
         mItems = new HashSet<>();
+
+        alphabetIndex = new HashMap<>();
+        int size = objects.size();
+
+        for (int i = 0; i < size; i++) {
+            // get the first letter of the song title
+            String titleChar = objects.get(i).getTitle().substring(0, 1);
+
+            // convert to uppercase otherwise lowercase a-z will be sorted after upper A-Z
+            titleChar = titleChar.toUpperCase();
+
+            // put only if the key does not exist
+            if (!alphabetIndex.containsKey(titleChar)){
+                alphabetIndex.put(titleChar, i);
+            }
+        }
+
+        // create a list from the set to sort and populate sections
+        ArrayList<String> sectionList = new ArrayList<>(alphabetIndex.keySet());
+        Collections.sort(sectionList);
+        sections = new String[sectionList.size()];
+        sectionList.toArray(sections);
     }
 
     @Override
@@ -82,8 +103,6 @@ public class SongListAdapter extends ArrayAdapter {
                     item.artist = cv.findViewById(R.id.textView2);
                     item.album = cv.findViewById(R.id.textView3);
                     item.albumArt = cv.findViewById(R.id.album_art);
-                    item.innerFrame = cv.findViewById(R.id.albumart_innerframe);
-                    item.outerFrame = cv.findViewById(R.id.albumart_outerframe);
                     cv.setTag(item);
 
                     arr[0] = title;
@@ -147,7 +166,6 @@ public class SongListAdapter extends ArrayAdapter {
                         // put item in arraylist if it doesn't exist already and set the appropriate colors
                         if (!mItems.contains(item)) {
                             mItems.add(item);
-                            setItemsFrameColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
                             setItemsTitleTextColor(mContext.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
                             setItemsAlbumArtistTextColor(mContext.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
                         }
@@ -199,21 +217,18 @@ public class SongListAdapter extends ArrayAdapter {
         }
     }
 
-    /**
-     * sets the color of the albumart frame of every item in the list view
-     * @param code the color resource code to set the frame
-     */
-    public void setItemsFrameColor(int code){
-        for (ViewHolder item : mItems){
-            Drawable unwrappedInnerFrame = item.innerFrame.getDrawable();
-            Drawable wrappedInnerFrame = DrawableCompat.wrap(unwrappedInnerFrame);
-            DrawableCompat.setTint(wrappedInnerFrame, code);
-
-            Drawable unwrappedOuterFrame = item.outerFrame.getDrawable();
-            Drawable wrappedOuterFrame = DrawableCompat.wrap(unwrappedOuterFrame);
-            DrawableCompat.setTint(wrappedOuterFrame, code);
-        }
-
+    @Override
+    public int getPositionForSection(int section) {
+        return alphabetIndex.get(sections[section]);
     }
 
+    @Override
+    public int getSectionForPosition(int position) {
+        return 0;
+    }
+
+    @Override
+    public Object[] getSections() {
+        return sections;
+    }
 }

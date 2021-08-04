@@ -20,7 +20,6 @@ import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.fragment.app.Fragment;
@@ -38,10 +37,12 @@ public class SongListTab extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static ListView listView;
+    private static ImageView background;
     private static SongListAdapter songListAdapter;
     private static Messenger mainActivityMessenger;
     private static MainActivity mainActivity;
     private static ArrayList<Song> userSelection;
+    private ViewGroup decorView;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -84,17 +85,34 @@ public class SongListTab extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View fragmentView = inflater.inflate(R.layout.fragment_tab_songs, container, false);
-        listView = fragmentView.findViewById(R.id.fragment_listview_songs);
-        listView.setAdapter(songListAdapter);
+        background = fragmentView.findViewById(R.id.background_layer);
 
         // init decorView (Action Mode toolbar)
-        final ViewGroup decorView = (ViewGroup) getActivity().getWindow().getDecorView();
+        decorView = (ViewGroup) getActivity().getWindow().getDecorView();
 
-        // init intents
+        // init listview
+        listView = fragmentView.findViewById(R.id.fragment_listview_songs);
+        listView.setAdapter(songListAdapter);
+        listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
+        listView.setFastScrollEnabled(true); // support index scrolling
+        listView.setNestedScrollingEnabled(true); // support scrolling with the coordinator layout
+
+        // init functionality for the views
+        initListeners();
+        return fragmentView;
+    }
+
+    /**
+     * Initializes the following listeners:
+     * listview onItemClick and onMultiChoice listeners
+     */
+    private void initListeners(){
+        // init intents for the listeners
         final Intent musicListSelectIntent = new Intent(mainActivity, MusicPlayerService.class);
         final Intent musicListQueueIntent = new Intent(mainActivity, MusicPlayerService.class);
         final Intent addPlaylistIntent = new Intent(mainActivity, AddPlaylistActivity.class);
 
+        // init listview listeners
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
@@ -113,9 +131,6 @@ public class SongListTab extends Fragment {
             }
         });
 
-        // support scrolling with the coordinator layout
-        listView.setNestedScrollingEnabled(true);
-        listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
         listView.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
             @Override
             public void onItemCheckedStateChanged(android.view.ActionMode mode, int position, long id, boolean checked) {
@@ -142,8 +157,13 @@ public class SongListTab extends Fragment {
             }
 
             @Override
-            @TargetApi(26)
+            @TargetApi(21)
             public boolean onCreateActionMode(final android.view.ActionMode mode, final Menu menu) {
+                // finish any action modes from other fragments before creating a new one
+                if (MainActivity.isActionMode){
+                    MainActivity.actionMode.finish();
+                }
+
                 mode.getMenuInflater().inflate(R.menu.songs_menu, menu);
 
                 // update the tint and ripple color of every item in the menu
@@ -230,12 +250,11 @@ public class SongListTab extends Fragment {
                 userSelection.clear();
             }
         });
-        return fragmentView;
     }
 
     public static void toggleTabColor(){
-        listView.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
-        songListAdapter.setItemsFrameColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        background.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        listView.setFastScrollStyle(ThemeColors.getThemeResourceId());
         songListAdapter.setItemsTitleTextColor(mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
         songListAdapter.setItemsAlbumArtistTextColor(mainActivity.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
     }
@@ -267,6 +286,5 @@ public class SongListTab extends Fragment {
     public static void setScrollSelection(int index, int offset){
         listView.setSelectionFromTop(index, offset);
     }
-
 
 }

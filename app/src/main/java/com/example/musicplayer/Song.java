@@ -223,4 +223,29 @@ public class Song implements Parcelable {
     public String toString() {
         return title;
     }
+
+    /**
+     * helper function to convert time in milliseconds to HH:MM:SS format
+     */
+    public static String convertTime(int timeInMS){
+        int timeInSeconds = timeInMS / 1000;
+
+        int seconds = timeInSeconds % 3600 % 60;
+        int minutes = timeInSeconds % 3600 / 60;
+        int hours = timeInSeconds / 3600;
+
+        String HH, MM, SS;
+        if (hours == 0){
+            MM = ((minutes  < 10) ? "" : "") + minutes;
+            SS = ((seconds  < 10) ? "0" : "") + seconds;
+            return MM + ":" + SS;
+        }
+        else {
+            HH = ((hours    < 10) ? "0" : "") + hours;
+            MM = ((minutes  < 10) ? "0" : "") + minutes;
+            SS = ((seconds  < 10) ? "0" : "") + seconds;
+        }
+
+        return HH + ":" + MM + ":" + SS;
+    }
 }

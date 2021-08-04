@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout android:id="@+id/activity_playlist"
+<RelativeLayout android:id="@+id/layout_playlists"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/lightWhite100"
     xmlns:android="http://schemas.android.com/apk/res/android">
+
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar_addPlaylist"
         android:layout_width="match_parent"
@@ -33,37 +34,21 @@
         android:layout_height="60dp"
         android:layout_below="@id/toolbar_addPlaylist">
 
-        <FrameLayout
-            android:id="@+id/framelayout_addPlaylist"
+        <ImageView
+            android:id="@+id/imageview_addPlaylist"
             android:layout_width="60dp"
-            android:layout_height="60dp">
-
-            <ImageView
-                android:id="@+id/imageview_addPlaylist"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:src="@drawable/ic_library_add48dp"/>
-
-            <ImageView
-                android:id="@+id/imageview_addPlaylist_innerframe"
-                android:src="@drawable/albumart_innerframe"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-
-            <ImageView
-                android:id="@+id/imageview_addPlaylist_outerframe"
-                android:src="@drawable/albumart_outerframe"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-        </FrameLayout>
+            android:layout_height="60dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginStart="10dp"
+            android:src="@drawable/ic_library_add48dp"/>
 
         <TextView
             android:id="@+id/textview_addPlaylist"
-            android:layout_toRightOf="@+id/framelayout_addPlaylist"
-            android:layout_toEndOf="@+id/framelayout_addPlaylist"
+            android:layout_toRightOf="@+id/imageview_addPlaylist"
+            android:layout_toEndOf="@+id/imageview_addPlaylist"
             android:textSize="16sp"
             android:singleLine="true"
-            android:textColor="@color/itemlightselectorblue"
+            android:textColor="@color/selector_default_lite"
             android:textStyle="bold"
             android:gravity="start"
             android:textAlignment="viewStart"
@@ -71,8 +56,8 @@
             android:layout_width="190dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="21dp"
-            android:layout_marginLeft="11dp"
-            android:layout_marginStart="11dp"/>
+            android:layout_marginLeft="10dp"
+            android:layout_marginStart="10dp"/>
 
         <Button
             android:id="@+id/btn_addPlaylist"

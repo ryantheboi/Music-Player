@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
+        android:id="@+id/menuitem_renameplaylist"
+        android:title="@string/RenamePlaylist"
+        android:actionLayout="@layout/menuitem_edit_btn_layout"/>
+
+    <item
         android:id="@+id/menuitem_removeplaylist"
         android:title="@string/RemovePlaylist"
         android:actionLayout="@layout/menuitem_remove_btn_layout"/>

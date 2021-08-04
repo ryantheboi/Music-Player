@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.cardview.widget.CardView;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
@@ -14,6 +15,7 @@ import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.viewpager.widget.ViewPager;
 
 import android.Manifest;
+import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -57,7 +59,6 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
@@ -68,7 +69,9 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Random;
 
 import static android.os.Build.VERSION_CODES.Q;
 import static com.example.musicplayer.Notifications.CHANNEL_ID_1;
@@ -76,6 +79,7 @@ import static com.example.musicplayer.Notifications.CHANNEL_ID_1;
 public class MainActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSION_REQUEST = 1;
+    private boolean isPermissionGranted = false;
     private boolean isThemeSelecting;
     private boolean isInfoDisplaying;
     private ImageView theme_btn;
@@ -96,14 +100,21 @@ public class MainActivity extends AppCompatActivity {
     private ImageView searchFilter_btn;
     private RippleDrawable searchFilter_btn_ripple;
     private TabLayout tabLayout;
-    private ViewPager viewPager;
+    private DynamicViewPager viewPager;
     private Toolbar toolbar;
     private TextView toolbar_title;
     private ActionBar actionBar;
+    private boolean isDestroyed = false;
 
     // sliding up panel
-    private boolean largeAlbumArt;
+    private static int random_seed;
+    private MessageHandler messageHandler;
+    private MessageHandler seekbarHandler;
+    private boolean isLargeAlbumArt;
     private ImageView albumArt;
+    private CardView albumArt_cardView;
+    private ObjectAnimator albumArt_cardView_animator_round;
+    private ObjectAnimator albumArt_cardView_animator_square;
     private Button albumArt_btn;
     private ImageButton info_btn;
     private RippleDrawable info_btn_ripple;
@@ -113,6 +124,12 @@ public class MainActivity extends AppCompatActivity {
     private RippleDrawable prev_btn_ripple;
     private RippleDrawable pauseplay_btn_ripple;
     private RippleDrawable next_btn_ripple;
+    private ImageButton shuffle_btn;
+    private RippleDrawable shuffle_btn_ripple;
+    private static boolean isShuffled;
+    private ImageButton repeat_btn;
+    private RippleDrawable repeat_btn_ripple;
+    private static int repeat_status;
     private AnimationDrawable mainAnimation;
     private GradientDrawable gradient1;
     private GradientDrawable gradient2;
@@ -132,12 +149,13 @@ public class MainActivity extends AppCompatActivity {
     private Intent notificationPauseplayIntent;
     private Intent notificationPrevIntent;
     private Intent notificationNextIntent;
-    private Intent seekBarProgressIntent;
-    private Intent seekBarSeekIntent;
+    private Intent seekBar_progressIntent;
+    private Intent seekBar_seekIntent;
+    private boolean seekBar_isTracking;
     private static Song current_song = Song.EMPTY_SONG;
     private Bitmap current_albumImage;
     private RelativeLayout mainActivityRelativeLayout;
-    private LinearLayout slidingUpMenuLayout;
+    private RelativeLayout slidingUpMenuLayout;
     private SlidingUpPanelLayout slidingUpPanelLayout;
     private ImageView slidingUp_albumArt;
     private TextView slidingUp_songName;
@@ -152,8 +170,6 @@ public class MainActivity extends AppCompatActivity {
     private RippleDrawable slidingUp_prev_btn_ripple;
     private RippleDrawable slidingUp_pauseplay_btn_ripple;
     private RippleDrawable slidingUp_next_btn_ripple;
-    private MessageHandler messageHandler;
-    private MessageHandler seekbarHandler;
 
     // database
     private DatabaseRepository databaseRepository;
@@ -170,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
         databaseRepository = new DatabaseRepository(this, this);
 
         // initialize all views
-        setContentView(R.layout.activity_musiclist);
+        setContentView(R.layout.activity_main);
         musicListRelativeLayout = findViewById(R.id.activity_musiclist);
         searchFilter_editText = findViewById(R.id.toolbar_searchFilter);
         slidingUpMenuLayout = findViewById(R.id.sliding_menu);
@@ -182,13 +198,16 @@ public class MainActivity extends AppCompatActivity {
         slidingUp_next_btn = findViewById(R.id.sliding_btn_next);
         slidingUp_prev_btn = findViewById(R.id.sliding_btn_prev);
         mainActivityRelativeLayout = findViewById(R.id.mainlayout);
-        albumArt = findViewById(R.id.circularImageView);
+        albumArt = findViewById(R.id.song_albumart);
+        albumArt_cardView = findViewById(R.id.song_cardview);
         albumArt_btn = findViewById(R.id.toggle_largeAlbumArt);
         songName = findViewById(R.id.song_title);
         artistName = findViewById(R.id.song_artist);
-        pauseplay_btn = findViewById((R.id.btn_play));
-        next_btn = findViewById((R.id.btn_next));
-        prev_btn = findViewById((R.id.btn_prev));
+        pauseplay_btn = findViewById(R.id.btn_play);
+        next_btn = findViewById(R.id.btn_next);
+        prev_btn = findViewById(R.id.btn_prev);
+        shuffle_btn = findViewById(R.id.btn_shuffle);
+        repeat_btn = findViewById(R.id.btn_repeat);
         seekBar = findViewById(R.id.seekBar);
         musicPosition = findViewById(R.id.music_position);
         musicDuration = findViewById(R.id.music_duration);
@@ -205,20 +224,10 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         System.out.println("started");
 
+        isPermissionGranted = ContextCompat.checkSelfPermission(MainActivity.this,
+                Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
         // check and request for read permissions
-        if (ContextCompat.checkSelfPermission(MainActivity.this,
-                Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
-            } else { // temp else branch
-                ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
-            }
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
-        } else {
+        if (isPermissionGranted) {
             setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
             // init thread for message handling
@@ -237,13 +246,26 @@ public class MainActivity extends AppCompatActivity {
             initInfoButton();
             initActionBar();
         }
+        else if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            // present rationale to user and then request for permissions
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
+        }
+        else {
+            // request for permissions
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
+        }
     }
 
     @Override
     protected void onResume() {
         System.out.println("resumed");
-        mainAnimation.start();
-        isInfoDisplaying = false;
+        if (isPermissionGranted) {
+            mainAnimation.start();
+            isInfoDisplaying = false;
+        }
         super.onResume();
     }
 
@@ -271,35 +293,61 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         System.out.println("paused");
 
-        // update current metadata values in database
-        int theme_resourceid = ThemeColors.getThemeResourceId();
-        int songtab_scrollindex = SongListTab.getScrollIndex();
-        int songtab_scrolloffset = SongListTab.getScrollOffset();
-        databaseRepository.updateMetadataTheme(theme_resourceid);
-        databaseRepository.updateMetadataSongtab(songtab_scrollindex, songtab_scrolloffset);
+        if (isPermissionGranted) {
+            // update current metadata values in database
+            int theme_resourceid = ThemeColors.getThemeResourceId();
+            int songtab_scrollindex = SongListTab.getScrollIndex();
+            int songtab_scrolloffset = SongListTab.getScrollOffset();
+            databaseRepository.updateMetadataTheme(theme_resourceid);
+            databaseRepository.updateMetadataSongtab(songtab_scrollindex, songtab_scrolloffset);
+
+            // save the current random seed
+            databaseRepository.updateMetadataRandomSeed(random_seed);
+
+            // save the current shuffle and repeat option
+            databaseRepository.updateMetadataIsShuffled(isShuffled);
+            databaseRepository.updateMetadataRepeatStatus(repeat_status);
+
+            // save current song index and playlist to database
+            databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
+            databaseRepository.insertPlaylist(current_playlist);
+        }
         super.onPause();
     }
 
     @Override
     protected void onStop() {
         System.out.println("stopped");
-        mainAnimation.stop();
+        if (isPermissionGranted) {
+            mainAnimation.stop();
+        }
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
         System.out.println("destroyed");
+        isDestroyed = true;
         super.onDestroy();
     }
 
     /**
      * Initializes all songs from the device and all playlists from the database
      */
+    @TargetApi(24)
     public void initMusicList() {
-        // gets all songs from device
+        // gets all songs from device and sorts them
         fullSongList = new ArrayList<>();
         getMusic(); // populates fullSongList
+        fullSongList.sort(new Comparator<Song>() {
+            @Override
+            public int compare(Song o1, Song o2) {
+                String o1_title = o1.getTitle().toUpperCase();
+                String o2_title = o2.getTitle().toUpperCase();
+                return o1_title.compareTo(o2_title);
+            }
+        });
+
         fullPlaylist = new Playlist("FULL_PLAYLIST", fullSongList);
 
         // asynchronously gets all playlists from database, then updates main activity
@@ -502,15 +550,15 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         switch (requestCode) {
             case MY_PERMISSION_REQUEST:
+                // if request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    if (ContextCompat.checkSelfPermission(MainActivity.this,
-                            Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                        Toast.makeText(this, "Permission granted!", Toast.LENGTH_SHORT).show();
-                        onStart();
-                    }
+                    Toast.makeText(this, "Permission granted!", Toast.LENGTH_SHORT).show();
+                    onStart();
                 } else {
                     Toast.makeText(this, "Permission denied..", Toast.LENGTH_SHORT).show();
+                    // gracefully degrade app experience and explain what features are unavailable
                 }
+                break;
         }
     }
 
@@ -647,12 +695,29 @@ public class MainActivity extends AppCompatActivity {
      * On button click (overlaps with albumart), scales the view and button with an animation
      */
     public void initMainDisplay() {
-        // init album art and transparent album art button
-        largeAlbumArt = true; // init album art as large
+        // init album art corner radius animations
+        albumArt_cardView_animator_round = ObjectAnimator
+                .ofFloat(albumArt_cardView, "radius", (float)albumArt_cardView.getWidth() / 2)
+                .setDuration(350);
+        albumArt_cardView_animator_square = ObjectAnimator
+                .ofFloat(albumArt_cardView, "radius", (float)albumArt_cardView.getWidth() / 10)
+                .setDuration(350);
+
+        // init main display album art size if different from xml
+        if (!isLargeAlbumArt) {
+            albumArt_cardView.setScaleX(0.5f);
+            albumArt_cardView.setScaleY(0.5f);
+            albumArt_cardView.setRadius((float) albumArt_cardView.getWidth() / 2);
+            songName.setVisibility(View.VISIBLE);
+            artistName.setVisibility(View.VISIBLE);
+        }
+
+        // init album art size toggle button
         albumArt_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 toggleLargeAlbumArt();
+                databaseRepository.updateMetadataIsLargeAlbumArt(isLargeAlbumArt);
             }
         });
 
@@ -662,12 +727,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Initializes the three main buttons in main activity:
-     * Pauseplay, previous, and next
-     * Each one will trigger a unique event from MusicPlayerService
+     * Initializes the main buttons in main activity:
+     * Pauseplay, Previous, Next, Shuffle
+     * Pauseplay, Previous, and Next will trigger a unique event from MusicPlayerService
      */
-    @SuppressLint("ClickableViewAccessibility")
-    @TargetApi(21)
+    @TargetApi(23)
     public void initMainButtons() {
         Messenger mainMessenger = new Messenger(messageHandler);
 
@@ -706,6 +770,39 @@ public class MainActivity extends AppCompatActivity {
                 startService(mainPrevIntent);
             }
         });
+
+        // init shuffle button functionality and its ripple
+        shuffle_btn_ripple = (RippleDrawable) shuffle_btn.getBackground();
+        shuffle_btn_ripple.setRadius(50);
+        shuffle_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // toggle shuffle button
+                if (isShuffled){
+                    isShuffled = false;
+                    shuffle_btn.setImageAlpha(40);
+                    current_playlist = current_playlist.unshufflePlaylist(random_seed);
+                }
+                else {
+                    isShuffled = true;
+                    random_seed = Math.abs(new Random().nextInt());
+                    shuffle_btn.setImageAlpha(255);
+                    current_playlist = current_playlist.shufflePlaylist(random_seed);
+                }
+            }
+        });
+
+        // init repeat button functionality and its ripple
+        repeat_btn_ripple = (RippleDrawable) repeat_btn.getBackground();
+        repeat_btn_ripple.setRadius(50);
+        repeat_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int next_repeat_status = repeat_status + 1 > 2 ? 0 : repeat_status + 1;
+                toggleRepeatButton(next_repeat_status);
+                repeat_status = next_repeat_status;
+            }
+        });
     }
 
     /**
@@ -721,8 +818,8 @@ public class MainActivity extends AppCompatActivity {
 
         // set the seekbar & textview duration and sync with mediaplayer
         Intent seekBarDurationIntent = new Intent(this, MusicPlayerService.class);
-        seekBarProgressIntent = new Intent(this, MusicPlayerService.class);
-        seekBarSeekIntent = new Intent(this, MusicPlayerService.class);
+        seekBar_progressIntent = new Intent(this, MusicPlayerService.class);
+        seekBar_seekIntent = new Intent(this, MusicPlayerService.class);
         Messenger mainMessenger = new Messenger(messageHandler);
         seekBarDurationIntent.putExtra("seekbarDuration", mainMessenger);
         startService(seekBarDurationIntent);
@@ -730,25 +827,24 @@ public class MainActivity extends AppCompatActivity {
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                String time = convertTime(progress);
+                String time = Song.convertTime(seekBar.getProgress());
                 musicPosition.setText(time);
-                if (fromUser) {
-                    seekBarSeekIntent.putExtra("seekbarSeek", progress);
-                    startService(seekBarSeekIntent);
-
-                    // update the seekPosition value in the local metadata
-                    databaseRepository.updateMetadataSeek(progress);
-                }
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-
+                seekBar_isTracking = true;
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
+                seekBar_seekIntent.putExtra("seekbarSeek", seekBar.getProgress());
+                startService(seekBar_seekIntent);
 
+                // update the seekPosition value in the local metadata
+                databaseRepository.updateMetadataSeek(seekBar.getProgress());
+
+                seekBar_isTracking = false;
             }
         });
     }
@@ -823,6 +919,10 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.addTab(tabLayout.newTab().setText("Playlists"));
 
         pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, this);
+
+        // set dynamic viewpager
+        viewPager.setMaxPages(pagerAdapter.getCount());
+        viewPager.setBackgroundAsset(ThemeColors.getThemeBackgroundAssetResourceId());
         viewPager.setAdapter(pagerAdapter);
 
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener(){
@@ -895,6 +995,7 @@ public class MainActivity extends AppCompatActivity {
         PlaylistTab.toggleTabColor();
         updateSeekBarColors();
         updateTabLayoutColors();
+        updateViewPager();
         updateSearchFilterColors();
         updateMainColors();
         updateSlidingMenuColors();
@@ -927,20 +1028,28 @@ public class MainActivity extends AppCompatActivity {
         Drawable unwrappedDrawablePauseplay = pauseplay_btn.getDrawable();
         Drawable unwrappedDrawableNext = next_btn.getDrawable();
         Drawable unwrappedDrawablePrev = prev_btn.getDrawable();
+        Drawable unwrappedDrawableShuffle = shuffle_btn.getDrawable();
+        Drawable unwrappedDrawableRepeat = repeat_btn.getDrawable();
         Drawable wrappedDrawableInfo = DrawableCompat.wrap(unwrappedDrawableInfo);
         Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
         Drawable wrappedDrawableNext = DrawableCompat.wrap(unwrappedDrawableNext);
         Drawable wrappedDrawablePrev = DrawableCompat.wrap(unwrappedDrawablePrev);
-        DrawableCompat.setTint(wrappedDrawableInfo, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
+        Drawable wrappedDrawableShuffle = DrawableCompat.wrap(unwrappedDrawableShuffle);
+        Drawable wrappedDrawableRepeat = DrawableCompat.wrap(unwrappedDrawableRepeat);
+        DrawableCompat.setTint(wrappedDrawableInfo, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
         DrawableCompat.setTint(wrappedDrawablePauseplay, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
         DrawableCompat.setTint(wrappedDrawableNext, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
         DrawableCompat.setTint(wrappedDrawablePrev, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
+        DrawableCompat.setTint(wrappedDrawableShuffle, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
+        DrawableCompat.setTint(wrappedDrawableRepeat, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
 
         // update ripple colors
-        info_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
+        info_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
         pauseplay_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
         next_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
         prev_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
+        shuffle_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
+        repeat_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
     }
 
     /**
@@ -983,6 +1092,10 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
         tabLayout.setTabTextColors(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.TAB_TEXT_COLOR)));
         tabLayout.setSelectedTabIndicatorColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+    }
+
+    private void updateViewPager(){
+        viewPager.setBackgroundAsset(ThemeColors.getThemeBackgroundAssetResourceId());
     }
 
     @TargetApi(21)
@@ -1038,54 +1151,58 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * helper function to convert time in milliseconds to HH:MM:SS format
-     */
-    public static String convertTime(int timeInMS){
-        int timeInSeconds = timeInMS / 1000;
-
-        int seconds = timeInSeconds % 3600 % 60;
-        int minutes = timeInSeconds % 3600 / 60;
-        int hours = timeInSeconds / 3600;
-
-        String HH, MM, SS;
-        if (hours == 0){
-            MM = ((minutes  < 10) ? "" : "") + minutes;
-            SS = ((seconds  < 10) ? "0" : "") + seconds;
-            return MM + ":" + SS;
-        }
-        else {
-            HH = ((hours    < 10) ? "0" : "") + hours;
-            MM = ((minutes  < 10) ? "0" : "") + minutes;
-            SS = ((seconds  < 10) ? "0" : "") + seconds;
-        }
-
-        return HH + ":" + MM + ":" + SS;
-    }
-
-    /**
-     * helper method to enable scaling of album art and visibility of song name & artist
-     * based on largeAlbumArt boolean conditions:
+     * Helper method to enable scaling of album art and visibility of song name & artist
+     * Based on largeAlbumArt boolean conditions:
      * false - album art is not large and song name & artist are visible
      * true - album art is large and hides song name & artist
      */
     @TargetApi(16)
     public void toggleLargeAlbumArt(){
-        if (largeAlbumArt) {
-            largeAlbumArt = false;
-            albumArt.animate().scaleX(0.6f).scaleY(0.6f);
-            albumArt_btn.setScaleX((float)0.65);
-            albumArt_btn.setScaleY((float)0.65);
+        if (isLargeAlbumArt) {
+            isLargeAlbumArt = false;
+            albumArt_cardView.animate().scaleX(0.5f).scaleY(0.5f);
+            albumArt_cardView_animator_round.start();
             songName.setVisibility(View.VISIBLE);
             artistName.setVisibility(View.VISIBLE);
         }
         else{
-            largeAlbumArt = true;
-            albumArt.animate().scaleX(1f).scaleY(1f);
-            albumArt_btn.setScaleX(1);
-            albumArt_btn.setScaleY(1);
+            isLargeAlbumArt = true;
+            albumArt_cardView.animate().scaleX(1f).scaleY(1f);
+            albumArt_cardView_animator_square.start();
             songName.setVisibility(View.INVISIBLE);
             artistName.setVisibility(View.INVISIBLE);
         }
+    }
+
+    /**
+     * Helper method to set the appearance of the repeat button, based on the repeat status
+     * @param repeatStatus 0 for disable, 1 for repeat playlist, 2 for repeat one song
+     */
+    public void toggleRepeatButton(int repeatStatus){
+        switch (repeatStatus){
+            // disable repeat
+            case 0:
+                repeat_btn.setImageResource(R.drawable.ic_repeat36dp);
+                repeat_btn.setImageAlpha(40);
+                break;
+
+            // repeat playlist
+            case 1:
+                repeat_btn.setImageResource(R.drawable.ic_repeat36dp);
+                repeat_btn.setImageAlpha(255);
+                break;
+
+            // repeat one song
+            case 2:
+                repeat_btn.setImageResource(R.drawable.ic_repeat_one36dp);
+                repeat_btn.setImageAlpha(255);
+                break;
+        }
+
+        // set appropriate colors for the button
+        Drawable unwrappedDrawableRepeat = repeat_btn.getDrawable();
+        Drawable wrappedDrawableRepeat = DrawableCompat.wrap(unwrappedDrawableRepeat);
+        DrawableCompat.setTint(wrappedDrawableRepeat, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
     }
 
     /**
@@ -1109,9 +1226,6 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case DatabaseRepository.ASYNC_GET_CURRENT_PLAYLIST:
                 current_playlist = (Playlist) object;
-                if (current_playlist != null){
-                    current_song = current_playlist.getSongList().get(0);
-                }
 
                 // if a playlist wasn't retrieved from the database
                 if (current_playlist == null) {
@@ -1133,23 +1247,29 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case DatabaseRepository.ASYNC_MODIFY_PLAYLIST:
                 Playlist temp_playlist = (Playlist) object;
-                // check if songs were removed from existing playlist
                 Playlist original_playlist = (Playlist) playlistAdapter.getItem(playlistAdapter.getPosition(temp_playlist));
+
+                // check if songs were removed from existing playlist
                 if (original_playlist.getSize() > temp_playlist.getSize()) {
                     // modify the original playlist to adopt the changes
                     original_playlist.adoptSongList(temp_playlist);
+
+                    // reconstruct viewpager adapter to reflect changes to individual playlist
+                    pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, mainActivity);
+                    viewPager.setAdapter(pagerAdapter);
+
+                    // adjust tab colors
+                    SongListTab.toggleTabColor();
+                    PlaylistTab.toggleTabColor();
+
+                    // move to playlist tab
+                    viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
                 }
 
-                // reconstruct viewpager adapter to reflect changes to individual playlist
-                PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, mainActivity);
-                viewPager.setAdapter(pagerAdapter);
-
-                // adjust tab colors
-                SongListTab.toggleTabColor();
-                PlaylistTab.toggleTabColor();
-
-                // move to playlist tab
-                viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
+                // playlist was simply renamed, or extended, notify playlist adapter
+                else{
+                    playlistAdapter.notifyDataSetChanged();
+                }
                 break;
             case DatabaseRepository.ASYNC_DELETE_PLAYLISTS_BY_ID:
                 ArrayList<Playlist> playlists = (ArrayList<Playlist>) object;
@@ -1158,54 +1278,62 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             case DatabaseRepository.ASYNC_GET_METADATA:
-                if (object != null) {
-                    Metadata metadata = (Metadata) object;
-                    boolean isPlaying = metadata.getIsPlaying();
-                    int seekPosition = metadata.getSeekPosition();
-                    int themeResourceId = metadata.getThemeResourceId();
-                    int songtab_scrollindex = metadata.getSongtab_scrollindex();
-                    int songtab_scrolloffset = metadata.getSongtab_scrolloffset();
-
-                    // music player is playing, start music service but keep playing
-                    if (isPlaying) {
-                        musicServiceIntent.putExtra("musicListInitPlaying", mainActivityMessenger);
-                        startService(musicServiceIntent);
-
-                        initMusicUI();
-                    }
-                    // music player is not playing, start music service for the first time
-                    else {
-                        musicServiceIntent.putExtra("musicListInitPaused", mainActivityMessenger);
-                        startService(musicServiceIntent);
-
-                        initMusicUI();
-
-                        // inform the music service about the seekbar's position from the metadata
-                        seekBarSeekIntent.putExtra("seekbarSeek", seekPosition);
-                        startService(seekBarSeekIntent);
-                        seekBar.setProgress(seekPosition);
-                    }
-
-                    // set the current theme and generate theme values
-                    setTheme(themeResourceId);
-                    ThemeColors.generateThemeValues(this, themeResourceId);
-
-                    // after generating theme values, update the main ui
-                    updateTheme(themeResourceId);
-                    theme_btn.setImageResource(ThemeColors.getThemeBtnResourceId());
-                    SongListTab.setScrollSelection(songtab_scrollindex, songtab_scrolloffset);
-                }
-
-                else{
+                if (object == null){
                     // insert metadata row into the database for the first time
                     databaseRepository.insertMetadata(Metadata.DEFAULT_METADATA);
+                }
 
-                    // start music service for the first time
-                    musicServiceIntent.putExtra("musicListInitPaused", mainActivityMessenger);
+                Metadata metadata = object == null ? Metadata.DEFAULT_METADATA : (Metadata) object;
+                boolean isPlaying = metadata.getIsPlaying();
+                int seekPosition = metadata.getSeekPosition();
+                int songIndex = metadata.getSongIndex();
+                int themeResourceId = metadata.getThemeResourceId();
+                int songtab_scrollindex = metadata.getSongtab_scrollindex();
+                int songtab_scrolloffset = metadata.getSongtab_scrolloffset();
+                isShuffled = metadata.getIsShuffled();
+                repeat_status = metadata.getRepeatStatus();
+                isLargeAlbumArt = metadata.getIsLargeAlbumArt();
+                random_seed = metadata.getRandom_seed();
+
+                // set current song using the song index metadata
+                if (current_playlist.getSize() > 0) {
+                    current_song = current_playlist.getSongList().get(songIndex);
+                }
+
+                // set shuffle button transparency using the isShuffled metadata
+                shuffle_btn.setImageAlpha(isShuffled ? 255 : 40);
+
+                // set repeat button appearance using repeatStatus metadata
+                toggleRepeatButton(repeat_status);
+
+                // music player is playing, start music service but keep playing
+                if (isPlaying) {
+                    musicServiceIntent.putExtra("musicListInitPlaying", mainActivityMessenger);
                     startService(musicServiceIntent);
 
                     initMusicUI();
                 }
+                // music player is not playing, start music service for the first time
+                else {
+                    musicServiceIntent.putExtra("musicListInitPaused", mainActivityMessenger);
+                    startService(musicServiceIntent);
+
+                    initMusicUI();
+
+                    // inform the music service about the seekbar's position from the metadata
+                    seekBar_seekIntent.putExtra("seekbarSeek", seekPosition);
+                    startService(seekBar_seekIntent);
+                    seekBar.setProgress(seekPosition);
+                }
+
+                // set the current theme and generate theme values
+                setTheme(themeResourceId);
+                ThemeColors.generateThemeValues(this, themeResourceId);
+
+                // after generating theme values, update the main ui
+                updateTheme(themeResourceId);
+                theme_btn.setImageResource(ThemeColors.getThemeBtnResourceId());
+                SongListTab.setScrollSelection(songtab_scrollindex, songtab_scrolloffset);
                 break;
             }
 
@@ -1223,6 +1351,9 @@ public class MainActivity extends AppCompatActivity {
             }
     }
 
+    public static int getRepeat_status(){
+        return repeat_status;
+    }
     public static Song getCurrent_song(){
         return current_song;
     }
@@ -1239,7 +1370,12 @@ public class MainActivity extends AppCompatActivity {
         current_song = song;
     }
     public static void setCurrent_playlist(Playlist playlist){
-        current_playlist = playlist;
+        if (!isShuffled) {
+            current_playlist = playlist;
+        }
+        else{
+            current_playlist = playlist.shufflePlaylist(random_seed);
+        }
     }
 
     public static Notification getNotification(){
@@ -1321,7 +1457,15 @@ public class MainActivity extends AppCompatActivity {
                     // update the isPlaying and seekPosition values in the metadata
                     if ((boolean)bundle.get("updateDatabase")) {
                         databaseRepository.updateMetadataIsPlaying(false);
-                        databaseRepository.updateMetadataSeek(seekBar.getProgress());
+
+                        // use the seek position given by the music player service
+                        if ((int)bundle.get("updateSeek") >= 0) {
+                            databaseRepository.updateMetadataSeek((int)bundle.get("updateSeek"));
+                        }
+                        // use the seek position from the seekbar view
+                        else {
+                            databaseRepository.updateMetadataSeek(seekBar.getProgress());
+                        }
                     }
                     break;
                 case MusicPlayerService.UPDATE_PAUSE:
@@ -1354,7 +1498,7 @@ public class MainActivity extends AppCompatActivity {
                 case MusicPlayerService.UPDATE_SEEKBAR_DURATION:
                     // init the seekbar & textview max duration and begin thread to track progress
                     final int musicMaxDuration = (int) bundle.get("time");
-                    final String time = convertTime(musicMaxDuration);
+                    final String time = Song.convertTime(musicMaxDuration);
 
                     runOnUiThread(new Runnable() {
                         @Override
@@ -1366,12 +1510,14 @@ public class MainActivity extends AppCompatActivity {
 
                     // spawn a thread to update seekbar progress each 100 milliseconds
                     final Messenger seekMessenger = new Messenger(seekbarHandler);
-                    seekBarProgressIntent.putExtra("seekbarProgress", seekMessenger);
+                    seekBar_progressIntent.putExtra("seekbarProgress", seekMessenger);
                     Thread seekbarUpdateThread = new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            while (true) {
-                                startService(seekBarProgressIntent);
+                            while (!isDestroyed) {
+                                if (!seekBar_isTracking) {
+                                    startService(seekBar_progressIntent);
+                                }
                                 try {
                                     Thread.sleep(100);
                                 } catch (InterruptedException e) {
@@ -1387,7 +1533,7 @@ public class MainActivity extends AppCompatActivity {
                     seekBar.setProgress(musicCurrentPosition);
                     break;
                 case MusicPlayerService.UPDATE_SONG:
-                    // update main activitiy with the selected song from music list
+                    // update main activity with the selected song from music list
                     current_song = (Song) bundle.get("song");
 
                     // grab song album art and duration
@@ -1422,7 +1568,7 @@ public class MainActivity extends AppCompatActivity {
                             artistName.setText(current_song.getArtist());
                             albumArt.setImageBitmap(current_albumImage);
                             seekBar.setMax(songDuration);
-                            musicDuration.setText(convertTime(songDuration));
+                            musicDuration.setText(Song.convertTime(songDuration));
                         }
                     });
 
@@ -1445,9 +1591,9 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
 
-                    // save the current song and playlist to database
-                    current_playlist.rearrangePlaylist(current_song);
-                    databaseRepository.insertPlaylist(current_playlist);
+                    // update the index of the current song in database
+                    // song can be updated within or outside of the app
+                    databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
                     break;
                 case ChooseThemeActivity.THEME_SELECTED:
                     final int theme_resid = ThemeColors.getThemeResourceId();

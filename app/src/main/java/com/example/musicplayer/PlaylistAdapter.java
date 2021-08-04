@@ -40,8 +40,6 @@ public class PlaylistAdapter extends ArrayAdapter {
         TextView name;
         TextView size;
         ImageView albumArt;
-        ImageView innerFrame;
-        ImageView outerFrame;
     }
 
     public PlaylistAdapter(Context context, int resource, ArrayList<Playlist> objects, Activity activity) {
@@ -85,8 +83,6 @@ public class PlaylistAdapter extends ArrayAdapter {
                     item.name = cv.findViewById(R.id.textView1);
                     item.size = cv.findViewById(R.id.textView2);
                     item.albumArt = cv.findViewById(R.id.album_art);
-                    item.innerFrame = cv.findViewById(R.id.albumart_innerframe);
-                    item.outerFrame = cv.findViewById(R.id.albumart_outerframe);
                     cv.setTag(item);
 
                     arr[0] = name;
@@ -151,7 +147,6 @@ public class PlaylistAdapter extends ArrayAdapter {
                         // put item in arraylist if it doesn't exist already and set the appropriate colors
                         if (!items.contains(item)) {
                             items.add(item);
-                            setItemsFrameColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
                             setItemsTitleTextColor(mContext.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
                             setItemsSizeTextColor(mContext.getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
                         }
@@ -201,22 +196,4 @@ public class PlaylistAdapter extends ArrayAdapter {
             item.size.setTextColor(code);
         }
     }
-
-    /**
-     * sets the color of the albumart frame of every item in the list view
-     * @param code the color resource code to set the frame
-     */
-    public void setItemsFrameColor(int code){
-        for (ViewHolder item : items){
-            Drawable unwrappedInnerFrame = item.innerFrame.getDrawable();
-            Drawable wrappedInnerFrame = DrawableCompat.wrap(unwrappedInnerFrame);
-            DrawableCompat.setTint(wrappedInnerFrame, code);
-
-            Drawable unwrappedOuterFrame = item.outerFrame.getDrawable();
-            Drawable wrappedOuterFrame = DrawableCompat.wrap(unwrappedOuterFrame);
-            DrawableCompat.setTint(wrappedOuterFrame, code);
-        }
-
-    }
-
 }

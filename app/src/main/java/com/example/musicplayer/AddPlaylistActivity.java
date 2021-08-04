@@ -39,8 +39,6 @@ public class AddPlaylistActivity extends Activity {
     private RelativeLayout addPlaylist_layout;
     private ImageButton back_btn;
     private ImageView addPlaylist_imageView;
-    private ImageView addPlaylist_innerframe;
-    private ImageView addPlaylist_outerframe;
     private Button addPlaylist_button;
     private TextView addPlaylist_tv;
     private TextView addTo_tv;
@@ -187,7 +185,7 @@ public class AddPlaylistActivity extends Activity {
 
     private void initViews() {
         // init layout and inflated view
-        addPlaylist_layout = findViewById(R.id.activity_playlist);
+        addPlaylist_layout = findViewById(R.id.layout_playlists);
         addPlaylist_view = LayoutInflater.from(this).inflate(R.layout.input_dialog_addplaylist, addPlaylist_layout, false);
 
         // init textviews
@@ -199,8 +197,6 @@ public class AddPlaylistActivity extends Activity {
 
         // init addPlaylist imageview and its frame
         addPlaylist_imageView = findViewById(R.id.imageview_addPlaylist);
-        addPlaylist_innerframe = findViewById(R.id.imageview_addPlaylist_innerframe);
-        addPlaylist_outerframe = findViewById(R.id.imageview_addPlaylist_outerframe);
 
         // init buttons
         back_btn = findViewById(R.id.ibtn_addPlaylist_back);
@@ -233,31 +229,15 @@ public class AddPlaylistActivity extends Activity {
     @TargetApi(21)
     private void setThemeColors() {
         addPlaylist_layout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
-        this.setAddPlaylistBtnFrameColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
         addTo_tv.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
         addPlaylist_tv.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
         addPlaylist_input.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
         addPlaylist_input.setHintTextColor(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
         addPlaylist_input.setBackgroundTintList(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
-        playlistAdapter.setItemsFrameColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
         playlistAdapter.setItemsTitleTextColor(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
         playlistAdapter.setItemsSizeTextColor(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
         setBackBtnColor();
         setAddPlaylistImageViewColor();
-    }
-
-    /**
-     * sets the color of the albumart frame of every item in the list view
-     * @param code the color resource code to set the frame
-     */
-    private void setAddPlaylistBtnFrameColor(int code) {
-        Drawable unwrappedInnerFrame = addPlaylist_innerframe.getDrawable();
-        Drawable wrappedInnerFrame = DrawableCompat.wrap(unwrappedInnerFrame);
-        DrawableCompat.setTint(wrappedInnerFrame, code);
-
-        Drawable unwrappedOuterFrame = addPlaylist_outerframe.getDrawable();
-        Drawable wrappedOuterFrame = DrawableCompat.wrap(unwrappedOuterFrame);
-        DrawableCompat.setTint(wrappedOuterFrame, code);
     }
 
     /**

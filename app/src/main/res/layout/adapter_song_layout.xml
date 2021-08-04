@@ -1,48 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:weightSum="100">
+    android:layout_height="match_parent">
 
-    <FrameLayout
-        android:layout_width="match_parent"
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardview"
+        android:layout_width="60dp"
         android:layout_height="60dp"
-        android:layout_weight="85">
+        app:cardCornerRadius="13dp"
+        android:layout_marginTop="1dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginStart="10dp">
 
         <ImageView
             android:id="@+id/album_art"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
+    </androidx.cardview.widget.CardView>
 
-        <ImageView
-            android:id="@+id/albumart_innerframe"
-            android:src="@drawable/albumart_innerframe"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-        <ImageView
-            android:id="@+id/albumart_outerframe"
-            android:src="@drawable/albumart_outerframe"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-    </FrameLayout>
-
-    <LinearLayout
-        android:orientation="vertical"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:layout_weight="15"
         android:layout_marginLeft="10dp"
         android:layout_marginStart="10dp"
         android:layout_marginRight="10dp"
-        android:layout_marginEnd="10dp">
+        android:layout_marginEnd="10dp"
+        android:layout_toRightOf="@+id/cardview"
+        android:layout_toEndOf="@+id/cardview">
 
         <TextView
             android:id="@+id/textView1"
             android:textSize="16sp"
             android:singleLine="true"
-            android:textColor="@color/itemlightselectorblue"
+            android:textColor="@color/selector_default_lite"
             android:gravity="start"
             android:textAlignment="viewStart"
             android:text="@string/TextView1"
@@ -52,22 +44,24 @@
             android:id="@+id/textView2"
             android:textSize="14sp"
             android:singleLine="true"
-            android:textColor="@color/itemdefaultselectorblue"
+            android:textColor="@color/selector_default"
             android:gravity="start"
             android:textAlignment="viewStart"
             android:text="@string/TextView2"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textView1"/>
         <TextView
             android:id="@+id/textView3"
             android:textSize="14sp"
             android:singleLine="true"
-            android:textColor="@color/itemdefaultselectorblue"
+            android:textColor="@color/selector_default"
             android:gravity="start"
             android:textAlignment="viewStart"
             android:text="@string/TextView3"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-    </LinearLayout>
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textView2"/>
+    </RelativeLayout>
 
-</LinearLayout>
+</RelativeLayout>

@@ -22,6 +22,8 @@ public class ChooseThemeActivity extends Activity {
     private ImageButton subaru_btn;
     private ImageButton puck_btn;
     private ImageButton sucrose_btn;
+    private ImageButton bronya_btn;
+    private ImageButton noelle_btn;
 
     public static final int THEME_SELECTED = 99;
     public static final int THEME_DONE = 98;
@@ -62,6 +64,8 @@ public class ChooseThemeActivity extends Activity {
         subaru_btn = findViewById(R.id.btn_subaru);
         puck_btn = findViewById(R.id.btn_puck);
         sucrose_btn = findViewById(R.id.btn_sucrose);
+        bronya_btn = findViewById(R.id.btn_bronya);
+        noelle_btn = findViewById(R.id.btn_noelle);
     }
 
     private void initBackgroundClickListener(){
@@ -124,6 +128,19 @@ public class ChooseThemeActivity extends Activity {
             @Override
             public void onClick(View v) {
                 updateTheme(R.style.ThemeOverlay_AppCompat_MusicSucrose);
+            }
+        });
+
+        bronya_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                updateTheme(R.style.ThemeOverlay_AppCompat_MusicBronya);
+            }
+        });
+        noelle_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                updateTheme(R.style.ThemeOverlay_AppCompat_MusicNoelle);
             }
         });
     }

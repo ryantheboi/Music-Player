@@ -16,26 +16,40 @@ public class Metadata {
     private boolean isPlaying;
     private int seekPosition;
 
-    // theme last selected by the user
+    // values related to the behavior of the current playlist
+    private int songIndex;
+    private boolean isShuffled;
+    private int repeatStatus;
+
+    // values to determine how to init main ui components
     private int themeResourceId;
+    private boolean isLargeAlbumArt;
 
     // values to determine the exact songtab position where the user last was
     private int songtab_scrollindex;
     private int songtab_scrolloffset;
 
+    // value to store the last seed used for randomization
+    private int random_seed;
+
     @Ignore
-    public static Metadata DEFAULT_METADATA = new Metadata(0, false, 0, R.style.ThemeOverlay_AppCompat_MusicLight, 0, 0);
+    public static Metadata DEFAULT_METADATA = new Metadata(0, false, 0, 0, false, 0, R.style.ThemeOverlay_AppCompat_MusicLight, 0, 0, false, 0);
 
     /**
      * Constructor used by database to create a metadata object
      */
-    public Metadata(int id, boolean isPlaying, int seekPosition, int themeResourceId, int songtab_scrollindex, int songtab_scrolloffset) {
+    public Metadata(int id, boolean isPlaying, int seekPosition, int songIndex, boolean isShuffled, int repeatStatus, int themeResourceId, int songtab_scrollindex, int songtab_scrolloffset, boolean isLargeAlbumArt, int random_seed) {
         this.id = id;
         this.isPlaying = isPlaying;
         this.seekPosition = seekPosition;
+        this.songIndex = songIndex;
+        this.repeatStatus = repeatStatus;
+        this.isShuffled = isShuffled;
         this.themeResourceId = themeResourceId;
         this.songtab_scrollindex = songtab_scrollindex;
         this.songtab_scrolloffset = songtab_scrolloffset;
+        this.isLargeAlbumArt = isLargeAlbumArt;
+        this.random_seed = random_seed;
     }
 
     public int getId() {
@@ -50,6 +64,18 @@ public class Metadata {
         return seekPosition;
     }
 
+    public int getSongIndex(){
+        return songIndex;
+    }
+
+    public boolean getIsShuffled(){
+        return isShuffled;
+    }
+
+    public int getRepeatStatus(){
+        return repeatStatus;
+    }
+
     public int getThemeResourceId() {
         return themeResourceId;
     }
@@ -60,5 +86,13 @@ public class Metadata {
 
     public int getSongtab_scrolloffset() {
         return songtab_scrolloffset;
+    }
+
+    public boolean getIsLargeAlbumArt() {
+        return isLargeAlbumArt;
+    }
+
+    public int getRandom_seed(){
+        return random_seed;
     }
 }

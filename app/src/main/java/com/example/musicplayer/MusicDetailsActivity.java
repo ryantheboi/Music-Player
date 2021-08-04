@@ -2,7 +2,6 @@ package com.example.musicplayer;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.Spannable;
@@ -71,7 +70,7 @@ public class MusicDetailsActivity extends Activity {
         appendDetail("Artist", song.getArtist());
         appendDetail("Album", song.getAlbum());
         appendDetail("Album ID", (song.getAlbumID()));
-        appendDetail("Duration", MainActivity.convertTime(song.getDuration()));
+        appendDetail("Duration", Song.convertTime(song.getDuration()));
         appendDetail("Data Path", song.getDataPath());
         appendDetail("Size", convertMegabytesString(song.getSize()));
         appendDetail("Relative Path", song.getRelativePath());

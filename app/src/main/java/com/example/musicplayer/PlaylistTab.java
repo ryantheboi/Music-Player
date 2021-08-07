@@ -27,6 +27,7 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.fragment.app.Fragment;
@@ -286,6 +287,44 @@ public class PlaylistTab extends Fragment {
                         if (renamePlaylist_input.getText().toString().equals("")) {
                             renamePlaylist_dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
                         }
+                        return true;
+
+                    case R.id.menuitem_exportplaylist:
+                        // construct alert dialog for exporting playlist
+                        AlertDialog.Builder exportPlaylist_dialogBuilder = new AlertDialog.Builder(m_mainActivity, ThemeColors.getAlertDialogStyleResourceId());
+
+                        if (m_userSelection.size() == 1) {
+                            exportPlaylist_dialogBuilder.setTitle("Export Playlist to '/storage/emulated/0/Playlists' ?");
+                        }
+                        else{
+                            exportPlaylist_dialogBuilder.setTitle("Export " + m_userSelection.size() + " playlists to '/storage/emulated/0/Playlists' ?");
+                        }
+
+                        // ok (export) button
+                        exportPlaylist_dialogBuilder.setPositiveButton(R.string.Export, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+
+                                // export all playlists selected
+                                for (Playlist playlist : m_userSelection){
+                                    M3U.exportM3U(playlist);
+                                }
+                                Toast.makeText(m_mainActivity.getApplicationContext(), "Exported to /storage/emulated/0/Playlists/", Toast.LENGTH_LONG).show();
+                                mode.finish(); // Action picked, so close the CAB
+                            }
+                        });
+
+                        // cancel button
+                        exportPlaylist_dialogBuilder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                            }
+                        });
+
+                        // show dialog
+                        exportPlaylist_dialogBuilder.show();
                         return true;
 
                     case R.id.menuitem_removeplaylist:

@@ -14,6 +14,8 @@ import java.util.HashMap;
  * based on the standard m3u format specification
  */
 public class M3U {
+    private static final String EXPORT_DIRECTORY = "/storage/emulated/0/Playlists";
+    private static final String M3U_EXTENSION = ".m3u";
 
     /**
      * Creates and returns a playlist object given the path to a .m3u file
@@ -61,7 +63,7 @@ public class M3U {
         }
 
         String[] temp_arraySplit = filepath.split("/");
-        String playlistName = temp_arraySplit[temp_arraySplit.length - 1].replaceAll(".m3u", "");
+        String playlistName = temp_arraySplit[temp_arraySplit.length - 1].replaceAll(M3U_EXTENSION, "");
         return new Playlist(DatabaseRepository.generatePlaylistId(), playlistName, m3uSongs);
     }
 
@@ -72,13 +74,25 @@ public class M3U {
      */
     public static boolean exportM3U(Playlist playlist){
         try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter("/storage/emulated/0/Playlists/" + playlist.getName() +".m3u", true));
+            File f = new File(EXPORT_DIRECTORY);
+            if (!f.exists()){
+                f.mkdir();
+            }
+
+            BufferedWriter writer = new BufferedWriter(new FileWriter(EXPORT_DIRECTORY + "/" + playlist.getName() + M3U_EXTENSION, false));
             writer.append("#EXTM3U\n");
 
             ArrayList<Song> songsList = playlist.getSongList();
             for (Song song : songsList){
-                writer.append("#EXTINF:" + (song.getDuration() / 1000) + "," + song.getArtist() + " - " + song.getTitle() + "\n");
-                writer.append(song.getDataPath() + "\n");
+                writer.append("#EXTINF:");
+                writer.append(Integer.toString(song.getDuration() / 1000));
+                writer.append(',');
+                writer.append(song.getArtist());
+                writer.append(" - ");
+                writer.append(song.getTitle());
+                writer.append("\n");
+                writer.append(song.getDataPath());
+                writer.append("\n");
             }
             writer.close();
             return true;

@@ -6,6 +6,11 @@
         android:actionLayout="@layout/menuitem_edit_btn_layout"/>
 
     <item
+        android:id="@+id/menuitem_exportplaylist"
+        android:title="@string/ExportPlaylist"
+        android:actionLayout="@layout/menuitem_export_btn_layout"/>
+
+    <item
         android:id="@+id/menuitem_removeplaylist"
         android:title="@string/RemovePlaylist"
         android:actionLayout="@layout/menuitem_remove_btn_layout"/>

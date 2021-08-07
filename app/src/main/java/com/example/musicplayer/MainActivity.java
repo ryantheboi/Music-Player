@@ -225,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
         System.out.println("started");
 
         isPermissionGranted = ContextCompat.checkSelfPermission(MainActivity.this,
-                Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
         // check and request for read permissions
         if (isPermissionGranted) {
             setVolumeControlStream(AudioManager.STREAM_MUSIC);
@@ -247,15 +247,15 @@ public class MainActivity extends AppCompatActivity {
             initActionBar();
         }
         else if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
             // present rationale to user and then request for permissions
             ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
         }
         else {
             // request for permissions
             ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
         }
     }
 

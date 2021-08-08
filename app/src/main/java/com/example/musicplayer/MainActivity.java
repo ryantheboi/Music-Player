@@ -1235,6 +1235,19 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
 
+                // get m3u playlists from internal storage and add them to playlist adapter
+                ArrayList<String> filepaths = M3U.findM3U("/storage");
+                filepaths.addAll(M3U.findM3U("/storage/emulated/0"));
+                StringBuilder m3uFilePaths = new StringBuilder();
+                for (String s : filepaths){
+                    m3uFilePaths.append(s);
+                    m3uFilePaths.append("\n");
+
+                    Playlist m3uPlaylist = M3U.parseM3U(s);
+                    playlistAdapter.add((Playlist) m3uPlaylist);
+                }
+                Toast.makeText(getApplicationContext(), m3uFilePaths.toString(), Toast.LENGTH_LONG).show();
+
                 // retrieve metadata values from database
                 databaseRepository.asyncGetMetadata();
                 break;

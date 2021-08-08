@@ -101,4 +101,28 @@ public class M3U {
             return false;
         }
     }
+
+    /**
+     * Recursively searches a directory to find all .m3u files
+     * @param directory the directory to begin recursively searching for .m3u files
+     * @return an arraylist of strings representing the path to a .m3u file
+     */
+    public static ArrayList<String> findM3U(String directory){
+        ArrayList<String> m3uFilePaths = new ArrayList<>();
+        File root_directory = new File(directory);
+        File[] children = root_directory.listFiles();
+        if (children != null) {
+            int num_children = children.length;
+            for (int i = 0; i < num_children; i++) {
+                File child = children[i];
+                if (child.toString().endsWith(".m3u")) {
+                    m3uFilePaths.add(child.getAbsolutePath());
+                } else {
+                    m3uFilePaths.addAll(findM3U(child.getAbsolutePath()));
+                }
+            }
+        }
+
+        return m3uFilePaths;
+    }
 }

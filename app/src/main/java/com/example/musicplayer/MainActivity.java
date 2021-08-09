@@ -30,7 +30,6 @@ import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.RippleDrawable;
@@ -132,9 +131,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton repeat_btn;
     private RippleDrawable repeat_btn_ripple;
     private static int repeat_status;
-    private AnimationDrawable mainAnimation;
-    private GradientDrawable gradient1;
-    private GradientDrawable gradient2;
+    private GradientDrawable mainGradient;
     private SeekBar seekBar;
     private TextView musicPosition;
     private TextView musicDuration;
@@ -243,7 +240,7 @@ public class MainActivity extends AppCompatActivity {
             initMusicList();
 
             initNotification();
-            initMainAnimation();
+            initMainGradient();
             initMainButtons();
             initInfoButton();
             initActionBar();
@@ -265,7 +262,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         System.out.println("resumed");
         if (isPermissionGranted) {
-            mainAnimation.start();
             isInfoDisplaying = false;
         }
         super.onResume();
@@ -321,7 +317,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         System.out.println("stopped");
         if (isPermissionGranted) {
-            mainAnimation.stop();
+
         }
         super.onStop();
     }
@@ -693,25 +689,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Initialize the animated gradient based on night mode and album art
-     * Gradients are set up to be mutated, here
+     * Initialize the gradient, which can be mutated based on the on the theme and album art
      */
     @TargetApi(16)
-    public void initMainAnimation() {
-        // set up gradients that can be mutated
-        gradient1 = (GradientDrawable) ResourcesCompat.getDrawable(this.getResources(), R.drawable.gradient_default1, null);
-        gradient2 = (GradientDrawable) ResourcesCompat.getDrawable(this.getResources(), R.drawable.gradient_default2, null);
-        gradient1.mutate();
-        gradient2.mutate();
-
-        // 6 second animated gradients with 3 second transitions
-        mainAnimation = new AnimationDrawable();
-        mainAnimation.addFrame(gradient1, 6000);
-        mainAnimation.addFrame(gradient2, 6000);
-        mainAnimation.setEnterFadeDuration(3000);
-        mainAnimation.setExitFadeDuration(3000);
-        mainAnimation.setOneShot(false);
-        mainActivityRelativeLayout.setBackground(mainAnimation);
+    public void initMainGradient() {
+        // set up gradient background which can be mutated
+        mainGradient = (GradientDrawable) ResourcesCompat.getDrawable(this.getResources(), R.drawable.gradient_default, null);
+        mainGradient.mutate();
+        mainActivityRelativeLayout.setBackground(mainGradient);
     }
 
     /**
@@ -1042,10 +1027,8 @@ public class MainActivity extends AppCompatActivity {
         artistName.setTextColor(textArtistColor);
         musicPosition.setTextColor(textSeekbarColor);
         musicDuration.setTextColor(textSeekbarColor);
-        gradient1.setColors(new int[]{primaryColor, secondaryColor});
-        gradient1.setOrientation(GradientDrawable.Orientation.TR_BL);
-        gradient2.setColors(new int[]{primaryColor, secondaryColor});
-        gradient2.setOrientation(GradientDrawable.Orientation.BL_TR);
+        mainGradient.setColors(new int[]{primaryColor, secondaryColor});
+        mainGradient.setOrientation(GradientDrawable.Orientation.BL_TR);
 
         // update drawable vector colors
         Drawable unwrappedDrawableInfo = info_btn.getDrawable();

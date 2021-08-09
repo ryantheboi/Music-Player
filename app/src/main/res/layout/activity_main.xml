@@ -166,7 +166,7 @@
                 android:padding="20dp"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@drawable/gradient_default_list"
+                android:background="@drawable/gradient_default"
                 android:id="@+id/mainlayout"
                 android:alpha="0"
                 tools:context=".MainActivity">

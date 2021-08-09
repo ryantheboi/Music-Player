@@ -72,8 +72,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
-import static android.os.Build.VERSION_CODES.Q;
 import static com.example.musicplayer.Notifications.CHANNEL_ID_1;
 
 public class MainActivity extends AppCompatActivity {
@@ -373,77 +375,88 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    @TargetApi(Q)
     public void getMusic() {
         ContentResolver contentResolver = getContentResolver();
         Uri songUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         Cursor songCursor = contentResolver.query(songUri, null, null, null, null);
-        if (songCursor != null && songCursor.moveToFirst()) {
-            int songID = songCursor.getColumnIndex(MediaStore.Audio.Media._ID);
-            int songTitle = songCursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
-            int songArtist = songCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
-            int songAlbum = songCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM);
-            int songAlbumID = songCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID);
-            int songDuration = songCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
 
-            int bucketID = songCursor.getColumnIndex(MediaStore.Audio.Media.BUCKET_ID);
-            int bucketDisplayName = songCursor.getColumnIndex(MediaStore.Audio.Media.BUCKET_DISPLAY_NAME);
-            int dataPath = songCursor.getColumnIndex(MediaStore.Audio.Media.DATA);
-            int dateAdded = songCursor.getColumnIndex(MediaStore.Audio.Media.DATE_ADDED);
-            int dateModified = songCursor.getColumnIndex(MediaStore.Audio.Media.DATE_MODIFIED);
-            int displayName = songCursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME);
-            int documentID = songCursor.getColumnIndex(MediaStore.Audio.Media.DOCUMENT_ID);
-            int instanceID = songCursor.getColumnIndex(MediaStore.Audio.Media.INSTANCE_ID);
-            int mimeType = songCursor.getColumnIndex(MediaStore.Audio.Media.MIME_TYPE);
-            int originalDocumentID = songCursor.getColumnIndex(MediaStore.Audio.Media.ORIGINAL_DOCUMENT_ID);
-            int relativePath = songCursor.getColumnIndex(MediaStore.Audio.Media.RELATIVE_PATH);
-            int size = songCursor.getColumnIndex(MediaStore.Audio.Media.SIZE);
+        if (songCursor != null && songCursor.moveToFirst()) {
+            SongHelper.setSongCursorIndexes(songCursor);
 
             do {
-                int currentID = songCursor.getInt(songID);
-                String currentTitle = songCursor.getString(songTitle);
-                String currentArtist = songCursor.getString(songArtist);
-                String currentAlbum = songCursor.getString(songAlbum);
-                String currentAlbumID = songCursor.getString(songAlbumID);
-                int currentSongDuration = songCursor.getInt(songDuration);
-
-                String currentBucketID = songCursor.getString(bucketID);
-                String currentBucketDisplayName = songCursor.getString(bucketDisplayName);
-                String currentDataPath = songCursor.getString(dataPath);
-                String currentDateAdded = songCursor.getString(dateAdded);
-                String currentDateModified = songCursor.getString(dateModified);
-                String currentDisplayName = songCursor.getString(displayName);
-                String currentDocumentID = songCursor.getString(documentID);
-                String currentInstanceID = songCursor.getString(instanceID);
-                String currentMimeType = songCursor.getString(mimeType);
-                String currentOriginalDocumentID = songCursor.getString(originalDocumentID);
-                String currentRelativePath = songCursor.getString(relativePath);
-                String currentSize = songCursor.getString(size);
-
-                Song song = new Song(currentID,
-                        currentTitle,
-                        currentArtist,
-                        currentAlbum,
-                        currentAlbumID,
-                        currentSongDuration,
-                        currentBucketID,
-                        currentBucketDisplayName,
-                        currentDataPath,
-                        currentDateAdded,
-                        currentDateModified,
-                        currentDisplayName,
-                        currentDocumentID,
-                        currentInstanceID,
-                        currentMimeType,
-                        currentOriginalDocumentID,
-                        currentRelativePath,
-                        currentSize
-                );
+                Song song = SongHelper.createSong(songCursor);
                 fullSongList.add(song);
             } while (songCursor.moveToNext());
 
             songCursor.close();
         }
+    }
+
+    @TargetApi(24)
+    public void getMusicPlaylistsAsync() {
+        CompletableFuture<ArrayList<Playlist>> cf;
+
+        // perform asynchronously to return all playlists from mediastore
+        cf = CompletableFuture.supplyAsync(new Supplier<ArrayList<Playlist>>() {
+            @Override
+            public ArrayList<Playlist> get() {
+                ArrayList<Playlist> mediastorePlaylists = new ArrayList<>();
+                ContentResolver contentResolver = getContentResolver();
+                Cursor playlistCursor = contentResolver.query(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, null, null, null, null);
+                if (playlistCursor != null && playlistCursor.moveToFirst()) {
+
+                    int playlistId = playlistCursor.getColumnIndex(MediaStore.Audio.Playlists._ID);
+                    int playlistName = playlistCursor.getColumnIndex(MediaStore.Audio.Playlists.NAME);
+
+                    do {
+                        long current_playlistId = playlistCursor.getLong(playlistId);
+                        String current_playlistName = playlistCursor.getString(playlistName);
+
+                        Uri playListUri = MediaStore.Audio.Playlists.Members.getContentUri("external", current_playlistId);
+                        Cursor playlistMembersCursor = contentResolver.query(playListUri, null, null, null, null);
+                        if (playlistMembersCursor != null) {
+                            if (playlistMembersCursor.moveToFirst()) {
+                                ArrayList<Song> current_playlistSongs = new ArrayList<>();
+                                Uri songUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                                String selection = MediaStore.Audio.Media._ID + "=?";
+                                do {
+                                    String track_id = playlistMembersCursor.getString(playlistMembersCursor.getColumnIndex(MediaStore.Audio.Playlists.Members.AUDIO_ID));
+                                    String[] selectionArgs = new String[]{track_id};
+                                    Cursor songCursor = contentResolver.query(songUri, null, selection, selectionArgs, null);
+                                    SongHelper.setSongCursorIndexes(songCursor);
+
+                                    if (songCursor.getCount() >= 0 && songCursor.moveToFirst()) {
+                                        Song song = SongHelper.createSong(songCursor);
+                                        current_playlistSongs.add(song);
+                                    }
+                                    songCursor.close();
+                                } while (playlistMembersCursor.moveToNext());
+                                Playlist current_playlist = new Playlist(DatabaseRepository.generatePlaylistId(), current_playlistName, current_playlistSongs);
+                                mediastorePlaylists.add(current_playlist);
+                            }
+                            playlistMembersCursor.close();
+                        }
+                    } while (playlistCursor.moveToNext());
+                    playlistCursor.close();
+                }
+                return mediastorePlaylists;
+            }
+        });
+
+        // perform after the asynchronous operation is complete
+        cf.thenAccept(new Consumer<ArrayList<Playlist>>() {
+            @Override
+            public void accept(final ArrayList<Playlist> arr) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (Playlist mediastorePlaylist : arr){
+                            playlistAdapter.add((Playlist) mediastorePlaylist);
+                        }
+                    }
+                });
+            }
+        });
     }
 
     /**
@@ -827,7 +840,7 @@ public class MainActivity extends AppCompatActivity {
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                String time = Song.convertTime(seekBar.getProgress());
+                String time = SongHelper.convertTime(seekBar.getProgress());
                 musicPosition.setText(time);
             }
 
@@ -1235,18 +1248,8 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
 
-                // get m3u playlists from internal storage and add them to playlist adapter
-                ArrayList<String> filepaths = M3U.findM3U("/storage");
-                filepaths.addAll(M3U.findM3U("/storage/emulated/0"));
-                StringBuilder m3uFilePaths = new StringBuilder();
-                for (String s : filepaths){
-                    m3uFilePaths.append(s);
-                    m3uFilePaths.append("\n");
-
-                    Playlist m3uPlaylist = M3U.parseM3U(s);
-                    playlistAdapter.add((Playlist) m3uPlaylist);
-                }
-                Toast.makeText(getApplicationContext(), m3uFilePaths.toString(), Toast.LENGTH_LONG).show();
+                // retrieve all playlists that exist in mediastore
+                getMusicPlaylistsAsync();
 
                 // retrieve metadata values from database
                 databaseRepository.asyncGetMetadata();
@@ -1511,7 +1514,7 @@ public class MainActivity extends AppCompatActivity {
                 case MusicPlayerService.UPDATE_SEEKBAR_DURATION:
                     // init the seekbar & textview max duration and begin thread to track progress
                     final int musicMaxDuration = (int) bundle.get("time");
-                    final String time = Song.convertTime(musicMaxDuration);
+                    final String time = SongHelper.convertTime(musicMaxDuration);
 
                     runOnUiThread(new Runnable() {
                         @Override
@@ -1581,7 +1584,7 @@ public class MainActivity extends AppCompatActivity {
                             artistName.setText(current_song.getArtist());
                             albumArt.setImageBitmap(current_albumImage);
                             seekBar.setMax(songDuration);
-                            musicDuration.setText(Song.convertTime(songDuration));
+                            musicDuration.setText(SongHelper.convertTime(songDuration));
                         }
                     });
 

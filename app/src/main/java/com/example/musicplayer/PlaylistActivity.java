@@ -306,7 +306,7 @@ public class PlaylistActivity extends AppCompatActivity {
                                     remove_time += playlist_song.getDuration();
                                 }
                                 m_total_time -= remove_time;
-                                m_playlist_time_tv.setText(Song.convertTime(m_total_time));
+                                m_playlist_time_tv.setText(SongHelper.convertTime(m_total_time));
 
                                 mode.finish(); // Action picked, so close the CAB
                             }
@@ -398,6 +398,6 @@ public class PlaylistActivity extends AppCompatActivity {
 
         m_playlist_name_tv.setText(m_playlist.getName());
         m_playlist_size_tv.setText(playlist_size);
-        m_playlist_time_tv.setText(Song.convertTime(m_total_time));
+        m_playlist_time_tv.setText(SongHelper.convertTime(m_total_time));
     }
 }

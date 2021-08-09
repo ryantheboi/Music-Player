@@ -179,16 +179,6 @@ public class Song implements Parcelable {
         this.size = in.readString();
     }
 
-    public static Creator<Song> CREATOR = new Creator<Song>() {
-        public Song createFromParcel(Parcel source) {
-            return new Song(source);
-        }
-
-        public Song[] newArray(int size) {
-            return new Song[size];
-        }
-    };
-
     @Override
     public int hashCode() {
         try {
@@ -224,28 +214,13 @@ public class Song implements Parcelable {
         return title;
     }
 
-    /**
-     * helper function to convert time in milliseconds to HH:MM:SS format
-     */
-    public static String convertTime(int timeInMS){
-        int timeInSeconds = timeInMS / 1000;
-
-        int seconds = timeInSeconds % 3600 % 60;
-        int minutes = timeInSeconds % 3600 / 60;
-        int hours = timeInSeconds / 3600;
-
-        String HH, MM, SS;
-        if (hours == 0){
-            MM = ((minutes  < 10) ? "" : "") + minutes;
-            SS = ((seconds  < 10) ? "0" : "") + seconds;
-            return MM + ":" + SS;
-        }
-        else {
-            HH = ((hours    < 10) ? "0" : "") + hours;
-            MM = ((minutes  < 10) ? "0" : "") + minutes;
-            SS = ((seconds  < 10) ? "0" : "") + seconds;
+    public static Creator<Song> CREATOR = new Creator<Song>() {
+        public Song createFromParcel(Parcel source) {
+            return new Song(source);
         }
 
-        return HH + ":" + MM + ":" + SS;
-    }
+        public Song[] newArray(int size) {
+            return new Song[size];
+        }
+    };
 }

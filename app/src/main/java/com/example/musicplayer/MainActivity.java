@@ -396,10 +396,11 @@ public class MainActivity extends AppCompatActivity {
     public void getMusicPlaylistsAsync() {
         CompletableFuture<ArrayList<Playlist>> cf;
 
-        // perform asynchronously to return all playlists from mediastore
+        // perform asynchronously to return all playlists and their songs from mediastore
         cf = CompletableFuture.supplyAsync(new Supplier<ArrayList<Playlist>>() {
             @Override
             public ArrayList<Playlist> get() {
+                // query for cursor to iterate over all playlists in mediastore
                 ArrayList<Playlist> mediastorePlaylists = new ArrayList<>();
                 ContentResolver contentResolver = getContentResolver();
                 Cursor playlistCursor = contentResolver.query(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, null, null, null, null);
@@ -409,6 +410,7 @@ public class MainActivity extends AppCompatActivity {
                     int playlistName = playlistCursor.getColumnIndex(MediaStore.Audio.Playlists.NAME);
 
                     do {
+                        // query for cursor to iterate over each member in a playlist (using its id)
                         long current_playlistId = playlistCursor.getLong(playlistId);
                         String current_playlistName = playlistCursor.getString(playlistName);
 
@@ -420,6 +422,7 @@ public class MainActivity extends AppCompatActivity {
                                 Uri songUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
                                 String selection = MediaStore.Audio.Media._ID + "=?";
                                 do {
+                                    // query for cursor to identify playlist members that are songs
                                     String track_id = playlistMembersCursor.getString(playlistMembersCursor.getColumnIndex(MediaStore.Audio.Playlists.Members.AUDIO_ID));
                                     String[] selectionArgs = new String[]{track_id};
                                     Cursor songCursor = contentResolver.query(songUri, null, selection, selectionArgs, null);
@@ -431,8 +434,13 @@ public class MainActivity extends AppCompatActivity {
                                     }
                                     songCursor.close();
                                 } while (playlistMembersCursor.moveToNext());
+
+                                // add the playlist and its songs to the async return
                                 Playlist current_playlist = new Playlist(DatabaseRepository.generatePlaylistId(), current_playlistName, current_playlistSongs);
                                 mediastorePlaylists.add(current_playlist);
+
+                                // add the playlist and its songs to the database
+                                databaseRepository.insertPlaylist(current_playlist);
                             }
                             playlistMembersCursor.close();
                         }
@@ -451,10 +459,13 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         for (Playlist mediastorePlaylist : arr){
-                            playlistAdapter.add((Playlist) mediastorePlaylist);
+                            // update the viewpager adapter with the mediastore playlists
+                            playlistAdapter.add(mediastorePlaylist);
                         }
                     }
                 });
+                // update db to notify that mediastore playlists (if any) have been imported
+                databaseRepository.updateMetadataIsMediaStorePlaylistsImported(true);
             }
         });
     }
@@ -1248,9 +1259,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
 
-                // retrieve all playlists that exist in mediastore
-                getMusicPlaylistsAsync();
-
                 // retrieve metadata values from database
                 databaseRepository.asyncGetMetadata();
                 break;
@@ -1308,6 +1316,7 @@ public class MainActivity extends AppCompatActivity {
                 int songtab_scrolloffset = metadata.getSongtab_scrolloffset();
                 isShuffled = metadata.getIsShuffled();
                 repeat_status = metadata.getRepeatStatus();
+                boolean isMediaStorePlaylistsImported = metadata.getIsMediaStorePlaylistsImported();
                 isLargeAlbumArt = metadata.getIsLargeAlbumArt();
                 random_seed = metadata.getRandom_seed();
 
@@ -1321,6 +1330,11 @@ public class MainActivity extends AppCompatActivity {
 
                 // set repeat button appearance using repeatStatus metadata
                 toggleRepeatButton(repeat_status);
+
+                // retrieve all playlists that exist in mediastore if this hasn't been done before
+                if (!isMediaStorePlaylistsImported){
+                    getMusicPlaylistsAsync();
+                }
 
                 // music player is playing, start music service but keep playing
                 if (isPlaying) {

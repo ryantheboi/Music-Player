@@ -47,6 +47,12 @@ public interface MetadataDao {
     void updateRepeatStatus(int id, int repeatStatus);
 
     /**
+     * Update only the isMediaStorePlaylistsImported metadata, by id
+     */
+    @Query("UPDATE Metadata SET isMediaStorePlaylistsImported = :isMediaStorePlaylistsImported WHERE id =:id")
+    void updateIsMediaStorePlaylistsImported(int id, boolean isMediaStorePlaylistsImported);
+
+    /**
      * Update only the values associated with Songtab listview position (scroll index and scroll offset), by id
      */
     @Query("UPDATE Metadata SET songtab_scrollindex = :songtab_scrollindex, songtab_scrolloffset = :songtab_scrolloffset WHERE id =:id")

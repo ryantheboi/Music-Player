@@ -34,10 +34,11 @@ public class DatabaseRepository {
     public static final int UPDATE_METADATA_SONGINDEX = 10;
     public static final int UPDATE_METADATA_ISSHUFFLED = 11;
     public static final int UPDATE_METADATA_REPEATSTATUS = 12;
-    public static final int UPDATE_METADATA_ISPLAYING = 13;
-    public static final int UPDATE_METADATA_SEEK = 14;
-    public static final int UPDATE_METADATA_ISLARGEALBUMART = 15;
-    public static final int UPDATE_METADATA_RANDOMSEED = 16;
+    public static final int UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED = 13;
+    public static final int UPDATE_METADATA_ISPLAYING = 14;
+    public static final int UPDATE_METADATA_SEEK = 15;
+    public static final int UPDATE_METADATA_ISLARGEALBUMART = 16;
+    public static final int UPDATE_METADATA_RANDOMSEED = 17;
 
     /**
      * Holds the query message and the object involved (if exists)
@@ -194,6 +195,9 @@ public class DatabaseRepository {
                                 case UPDATE_METADATA_REPEATSTATUS:
                                     metadataDao.updateRepeatStatus(0, (int) query.object);
                                     break;
+                                case UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED:
+                                    metadataDao.updateIsMediaStorePlaylistsImported(0, (boolean) query.object);
+                                    break;
                                 case UPDATE_METADATA_ISPLAYING:
                                     metadataDao.updateIsPlaying(0, (boolean) query.object);
                                     break;
@@ -334,6 +338,14 @@ public class DatabaseRepository {
      */
     public synchronized void updateMetadataRepeatStatus(int repeatStatus){
         messageQueue.offer(new Query(UPDATE_METADATA_REPEATSTATUS, repeatStatus));
+    }
+
+    /**
+     * Queues message to update the isMediaStorePlaylistsImported value in the metadata
+     * @param isMediaStorePlaylistsImported true if MediaStore playlists have been imported, false otherwise
+     */
+    public synchronized void updateMetadataIsMediaStorePlaylistsImported(boolean isMediaStorePlaylistsImported){
+        messageQueue.offer(new Query(UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED, isMediaStorePlaylistsImported));
     }
 
     /**

@@ -14,8 +14,12 @@ import java.util.HashMap;
  * based on the standard m3u format specification
  */
 public class M3U {
+    private static final char COMMA_SEPARATOR = ',';
+    private static final String DASH_SEPARATOR = " - ";
     private static final String EXPORT_DIRECTORY = "/storage/emulated/0/Playlists";
     private static final String M3U_EXTENSION = ".m3u";
+    private static final String M3U_HEADER = "#EXTM3U";
+    private static final String M3U_TRACK_INFO_DIRECTIVE = "#EXTINF:";
 
     /**
      * Creates and returns a playlist object given the path to a .m3u file
@@ -79,20 +83,21 @@ public class M3U {
                 f.mkdir();
             }
 
-            BufferedWriter writer = new BufferedWriter(new FileWriter(EXPORT_DIRECTORY + "/" + playlist.getName() + M3U_EXTENSION, false));
-            writer.append("#EXTM3U\n");
+            BufferedWriter writer = new BufferedWriter(new FileWriter(EXPORT_DIRECTORY + '/' + playlist.getName() + M3U_EXTENSION, false));
+            writer.append(M3U_HEADER);
+            writer.append('\n');
 
             ArrayList<Song> songsList = playlist.getSongList();
             for (Song song : songsList){
-                writer.append("#EXTINF:");
+                writer.append(M3U_TRACK_INFO_DIRECTIVE);
                 writer.append(Integer.toString(song.getDuration() / 1000));
-                writer.append(',');
+                writer.append(COMMA_SEPARATOR);
                 writer.append(song.getArtist());
-                writer.append(" - ");
+                writer.append(DASH_SEPARATOR);
                 writer.append(song.getTitle());
-                writer.append("\n");
+                writer.append('\n');
                 writer.append(song.getDataPath());
-                writer.append("\n");
+                writer.append('\n');
             }
             writer.close();
             return true;
@@ -115,7 +120,7 @@ public class M3U {
             int num_children = children.length;
             for (int i = 0; i < num_children; i++) {
                 File child = children[i];
-                if (child.toString().endsWith(".m3u")) {
+                if (child.toString().endsWith(M3U_EXTENSION)) {
                     m3uFilePaths.add(child.getAbsolutePath());
                 } else {
                     m3uFilePaths.addAll(findM3U(child.getAbsolutePath()));

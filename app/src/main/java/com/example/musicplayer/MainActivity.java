@@ -109,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
 
     // sliding up panel
     private static int random_seed;
-    private boolean isLargeAlbumArt;
+    private boolean isAlbumArtCircular;
     private static boolean isShuffled;
     private static int repeat_status;
     private MessageHandler messageHandler;
@@ -726,10 +726,10 @@ public class MainActivity extends AppCompatActivity {
             mainDisplay_albumArt_cardView.getLayoutParams().width *= shrink_factor;
         }
 
-        // init main display album art size if different from xml
-        if (!isLargeAlbumArt) {
-            mainDisplay_albumArt_cardView.setScaleX(0.5f);
-            mainDisplay_albumArt_cardView.setScaleY(0.5f);
+        // init main display album art circular if different from xml (less rounded corners)
+        if (isAlbumArtCircular) {
+            mainDisplay_albumArt_cardView.setScaleX(0.95f);
+            mainDisplay_albumArt_cardView.setScaleY(0.95f);
             mainDisplay_albumArt_cardView.setRadius((float) mainDisplay_albumArt_cardView.getWidth() / 2);
         }
 
@@ -738,7 +738,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 toggleLargeAlbumArt();
-                databaseRepository.updateMetadataIsLargeAlbumArt(isLargeAlbumArt);
+                databaseRepository.updateMetadataIsAlbumArtCircular(isAlbumArtCircular);
             }
         });
 
@@ -1176,15 +1176,15 @@ public class MainActivity extends AppCompatActivity {
      */
     @TargetApi(16)
     public void toggleLargeAlbumArt(){
-        if (isLargeAlbumArt) {
-            isLargeAlbumArt = false;
-            mainDisplay_albumArt_cardView.animate().scaleX(0.5f).scaleY(0.5f);
-            mainDisplay_albumArt_cardView_animator_round.start();
-        }
-        else{
-            isLargeAlbumArt = true;
+        if (isAlbumArtCircular) {
+            isAlbumArtCircular = false;
             mainDisplay_albumArt_cardView.animate().scaleX(1f).scaleY(1f);
             mainDisplay_albumArt_cardView_animator_square.start();
+        }
+        else{
+            isAlbumArtCircular = true;
+            mainDisplay_albumArt_cardView.animate().scaleX(0.95f).scaleY(0.95f);
+            mainDisplay_albumArt_cardView_animator_round.start();
         }
     }
 
@@ -1307,7 +1307,7 @@ public class MainActivity extends AppCompatActivity {
                 isShuffled = metadata.getIsShuffled();
                 repeat_status = metadata.getRepeatStatus();
                 boolean isMediaStorePlaylistsImported = metadata.getIsMediaStorePlaylistsImported();
-                isLargeAlbumArt = metadata.getIsLargeAlbumArt();
+                isAlbumArtCircular = metadata.getIsAlbumArtCircular();
                 random_seed = metadata.getRandom_seed();
 
                 // set current song using the song index metadata

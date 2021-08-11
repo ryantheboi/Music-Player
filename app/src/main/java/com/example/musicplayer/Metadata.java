@@ -24,7 +24,7 @@ public class Metadata {
 
     // values to determine how to init main ui components
     private int themeResourceId;
-    private boolean isLargeAlbumArt;
+    private boolean isAlbumArtCircular;
 
     // values to determine the exact songtab position where the user last was
     private int songtab_scrollindex;
@@ -39,7 +39,7 @@ public class Metadata {
     /**
      * Constructor used by database to create a metadata object
      */
-    public Metadata(int id, boolean isPlaying, int seekPosition, int songIndex, boolean isShuffled, int repeatStatus, boolean isMediaStorePlaylistsImported, int themeResourceId, int songtab_scrollindex, int songtab_scrolloffset, boolean isLargeAlbumArt, int random_seed) {
+    public Metadata(int id, boolean isPlaying, int seekPosition, int songIndex, boolean isShuffled, int repeatStatus, boolean isMediaStorePlaylistsImported, int themeResourceId, int songtab_scrollindex, int songtab_scrolloffset, boolean isAlbumArtCircular, int random_seed) {
         this.id = id;
         this.isPlaying = isPlaying;
         this.seekPosition = seekPosition;
@@ -50,7 +50,7 @@ public class Metadata {
         this.themeResourceId = themeResourceId;
         this.songtab_scrollindex = songtab_scrollindex;
         this.songtab_scrolloffset = songtab_scrolloffset;
-        this.isLargeAlbumArt = isLargeAlbumArt;
+        this.isAlbumArtCircular = isAlbumArtCircular;
         this.random_seed = random_seed;
     }
 
@@ -94,8 +94,8 @@ public class Metadata {
         return songtab_scrolloffset;
     }
 
-    public boolean getIsLargeAlbumArt() {
-        return isLargeAlbumArt;
+    public boolean getIsAlbumArtCircular() {
+        return isAlbumArtCircular;
     }
 
     public int getRandom_seed(){

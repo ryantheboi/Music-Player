@@ -65,10 +65,10 @@ public interface MetadataDao {
     void updateTheme(int id, int themeResourceId);
 
     /**
-     * Update only the isLargeAlbumArt metadata, by id
+     * Update only the isAlbumArtCircular metadata, by id
      */
-    @Query("UPDATE Metadata SET isLargeAlbumArt = :isLargeAlbumArt WHERE id =:id")
-    void updateIsLargeAlbumArt(int id, boolean isLargeAlbumArt);
+    @Query("UPDATE Metadata SET isAlbumArtCircular = :isAlbumArtCircular WHERE id =:id")
+    void updateIsAlbumArtCircular(int id, boolean isAlbumArtCircular);
 
     /**
      * Update only the random seed metadata, by id

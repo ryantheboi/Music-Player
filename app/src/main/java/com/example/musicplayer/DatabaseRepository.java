@@ -37,7 +37,7 @@ public class DatabaseRepository {
     public static final int UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED = 13;
     public static final int UPDATE_METADATA_ISPLAYING = 14;
     public static final int UPDATE_METADATA_SEEK = 15;
-    public static final int UPDATE_METADATA_ISLARGEALBUMART = 16;
+    public static final int UPDATE_METADATA_ISALBUMARTCIRCULAR = 16;
     public static final int UPDATE_METADATA_RANDOMSEED = 17;
 
     /**
@@ -204,8 +204,8 @@ public class DatabaseRepository {
                                 case UPDATE_METADATA_SEEK:
                                     metadataDao.updateSeekPosition(0, (int) query.object);
                                     break;
-                                case UPDATE_METADATA_ISLARGEALBUMART:
-                                    metadataDao.updateIsLargeAlbumArt(0, (boolean) query.object);
+                                case UPDATE_METADATA_ISALBUMARTCIRCULAR:
+                                    metadataDao.updateIsAlbumArtCircular(0, (boolean) query.object);
                                     break;
                                 case UPDATE_METADATA_RANDOMSEED:
                                     metadataDao.updateRandomSeed(0, (int) query.object);
@@ -365,11 +365,11 @@ public class DatabaseRepository {
     }
 
     /**
-     * Queues message to update the isLargeAlbumArt value in the metadata
-     * @param isLargeAlbumArt true if the main display albumart is enlarged, false otherwise
+     * Queues message to update the isAlbumArtCircular value in the metadata
+     * @param isAlbumArtCircular true if the main display albumart is circular, false otherwise
      */
-    public synchronized void updateMetadataIsLargeAlbumArt(boolean isLargeAlbumArt){
-        messageQueue.offer(new Query(UPDATE_METADATA_ISLARGEALBUMART, isLargeAlbumArt));
+    public synchronized void updateMetadataIsAlbumArtCircular(boolean isAlbumArtCircular){
+        messageQueue.offer(new Query(UPDATE_METADATA_ISALBUMARTCIRCULAR, isAlbumArtCircular));
     }
 
     /**

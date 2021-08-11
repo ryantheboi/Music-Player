@@ -133,6 +133,7 @@ public class MainActivity extends AppCompatActivity {
     private static int repeat_status;
     private GradientDrawable mainGradient;
     private SeekBar seekBar;
+    private TextView playlistHeader;
     private TextView musicPosition;
     private TextView musicDuration;
     private TextView songName;
@@ -208,6 +209,7 @@ public class MainActivity extends AppCompatActivity {
         shuffle_btn = findViewById(R.id.btn_shuffle);
         repeat_btn = findViewById(R.id.btn_repeat);
         seekBar = findViewById(R.id.seekBar);
+        playlistHeader = findViewById(R.id.playlist_header);
         musicPosition = findViewById(R.id.music_position);
         musicDuration = findViewById(R.id.music_duration);
         info_btn = findViewById(R.id.btn_info);
@@ -610,18 +612,12 @@ public class MainActivity extends AppCompatActivity {
                     slidingUp_prev_btn.setClickable(false);
                     slidingUp_pauseplay_btn.setClickable(false);
                     slidingUp_next_btn.setClickable(false);
-
-                    // enable buttons on the main display
-                    info_btn.setClickable(true);
                 }
                 if (slidingUpPanelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.COLLAPSED) {
                     // enable buttons on the menu
                     slidingUp_prev_btn.setClickable(true);
                     slidingUp_pauseplay_btn.setClickable(true);
                     slidingUp_next_btn.setClickable(true);
-
-                    // disable buttons on the main display
-                    info_btn.setClickable(false);
                 }
             }
         });
@@ -712,13 +708,29 @@ public class MainActivity extends AppCompatActivity {
                 .ofFloat(albumArt_cardView, "radius", (float)albumArt_cardView.getWidth() / 10)
                 .setDuration(350);
 
+        // if the intended album art height is greater than the actual height, resize based on screen dimensions
+        if (albumArt_cardView.getLayoutParams().height > albumArt_cardView.getHeight()) {
+            // out fields in [x,y] format
+            int[] coords1 = new int[2];
+            int[] coords2 = new int[2];
+            playlistHeader.getLocationOnScreen(coords1);
+            songName.getLocationOnScreen(coords2);
+
+            // resize album art to fit between the playlist header and song title
+            float height_position1 = (float) coords1[1] + (float) (playlistHeader.getHeight() * 2);
+            float height_position2 = coords2[1] - (songName.getHeight() * 2);
+            float height_difference = Math.abs(height_position1 - height_position2);
+            float shrink_factor = height_difference / albumArt_cardView.getLayoutParams().height;
+
+            albumArt_cardView.getLayoutParams().height *= shrink_factor;
+            albumArt_cardView.getLayoutParams().width *= shrink_factor;
+        }
+
         // init main display album art size if different from xml
         if (!isLargeAlbumArt) {
             albumArt_cardView.setScaleX(0.5f);
             albumArt_cardView.setScaleY(0.5f);
             albumArt_cardView.setRadius((float) albumArt_cardView.getWidth() / 2);
-            songName.setVisibility(View.VISIBLE);
-            artistName.setVisibility(View.VISIBLE);
         }
 
         // init album art size toggle button
@@ -875,9 +887,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
-        // initially hidden and unclickable
-        info_btn.setClickable(false);
     }
 
     @TargetApi(19)
@@ -1169,15 +1178,11 @@ public class MainActivity extends AppCompatActivity {
             isLargeAlbumArt = false;
             albumArt_cardView.animate().scaleX(0.5f).scaleY(0.5f);
             albumArt_cardView_animator_round.start();
-            songName.setVisibility(View.VISIBLE);
-            artistName.setVisibility(View.VISIBLE);
         }
         else{
             isLargeAlbumArt = true;
             albumArt_cardView.animate().scaleX(1f).scaleY(1f);
             albumArt_cardView_animator_square.start();
-            songName.setVisibility(View.INVISIBLE);
-            artistName.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -1189,19 +1194,19 @@ public class MainActivity extends AppCompatActivity {
         switch (repeatStatus){
             // disable repeat
             case 0:
-                repeat_btn.setImageResource(R.drawable.ic_repeat36dp);
+                repeat_btn.setImageResource(R.drawable.ic_repeat28dp);
                 repeat_btn.setImageAlpha(40);
                 break;
 
             // repeat playlist
             case 1:
-                repeat_btn.setImageResource(R.drawable.ic_repeat36dp);
+                repeat_btn.setImageResource(R.drawable.ic_repeat28dp);
                 repeat_btn.setImageAlpha(255);
                 break;
 
             // repeat one song
             case 2:
-                repeat_btn.setImageResource(R.drawable.ic_repeat_one36dp);
+                repeat_btn.setImageResource(R.drawable.ic_repeat_one28dp);
                 repeat_btn.setImageAlpha(255);
                 break;
         }
@@ -1449,7 +1454,7 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            pauseplay_btn.setImageResource(R.drawable.ic_play);
+                            pauseplay_btn.setImageResource(R.drawable.ic_play28dp);
                             slidingUp_pauseplay_btn.setImageResource(R.drawable.ic_play24dp);
 
                             // change sliding menu pauseplay button color
@@ -1485,7 +1490,7 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            pauseplay_btn.setImageResource(R.drawable.ic_pause);
+                            pauseplay_btn.setImageResource(R.drawable.ic_pause28dp);
                             slidingUp_pauseplay_btn.setImageResource(R.drawable.ic_pause24dp);
 
                             // change sliding menu pauseplay button color

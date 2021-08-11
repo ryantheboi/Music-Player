@@ -171,6 +171,16 @@
                 android:alpha="0"
                 tools:context=".MainActivity">
 
+                <ImageButton
+                    android:id="@+id/slidedown_btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginTop="-1dp"
+                    android:src="@drawable/ic_arrow_down24dp"
+                    android:background="?selectableItemBackgroundBorderless"/>
+
                 <TextView
                     android:id="@+id/playlist_header"
                     android:layout_width="140dp"
@@ -222,7 +232,7 @@
                     android:layout_marginStart="10dp"
                     android:layout_marginBottom="75dp"
                     android:src="@drawable/ic_info28dp"
-                    android:background="?selectableItemBackgroundBorderless" />
+                    android:background="?selectableItemBackgroundBorderless"/>
 
                 <!-- marquee texts must be within a LinearLayout to avoid visual glitch -->
                 <LinearLayout

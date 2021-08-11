@@ -121,16 +121,18 @@ public class MainActivity extends AppCompatActivity {
     private ObjectAnimator mainDisplay_albumArt_cardView_animator_square;
     private GradientDrawable mainDisplay_mainGradient;
     private SeekBar mainDisplay_seekBar;
+    private ImageButton mainDisplay_slidedown_btn;
     private ImageButton mainDisplay_info_btn;
     private ImageButton mainDisplay_pauseplay_btn;
     private ImageButton mainDisplay_next_btn;
     private ImageButton mainDisplay_prev_btn;
     private ImageButton mainDisplay_shuffle_btn;
     private ImageButton mainDisplay_repeat_btn;
+    private RippleDrawable mainDisplay_slidedown_btn_ripple;
+    private RippleDrawable mainDisplay_info_btn_ripple;
     private RippleDrawable mainDisplay_prev_btn_ripple;
     private RippleDrawable mainDisplay_pauseplay_btn_ripple;
     private RippleDrawable mainDisplay_next_btn_ripple;
-    private RippleDrawable mainDisplay_info_btn_ripple;
     private RippleDrawable mainDisplay_shuffle_btn_ripple;
     private RippleDrawable mainDisplay_repeat_btn_ripple;
     private TextView mainDisplay_playlistHeader;
@@ -204,10 +206,11 @@ public class MainActivity extends AppCompatActivity {
         mainDisplay_songTitle = findViewById(R.id.song_title);
         mainDisplay_songArtist = findViewById(R.id.song_artist);
         mainDisplay_seekBar = findViewById(R.id.seekBar);
+        mainDisplay_slidedown_btn = findViewById(R.id.slidedown_btn);
+        mainDisplay_info_btn = findViewById(R.id.btn_info);
         mainDisplay_pauseplay_btn = findViewById(R.id.btn_play);
         mainDisplay_next_btn = findViewById(R.id.btn_next);
         mainDisplay_prev_btn = findViewById(R.id.btn_prev);
-        mainDisplay_info_btn = findViewById(R.id.btn_info);
         mainDisplay_shuffle_btn = findViewById(R.id.btn_shuffle);
         mainDisplay_repeat_btn = findViewById(R.id.btn_repeat);
         mainDisplay_musicPosition = findViewById(R.id.music_position);
@@ -593,11 +596,39 @@ public class MainActivity extends AppCompatActivity {
         // init functionality for buttons on sliding menu
         initSlidingUpPanelButtons();
 
-        // set selected to be true for marquee left-right scrolling
+        // enable sliding menu text marquee left-right scrolling
         slidingUp_songName.setSelected(true);
         slidingUp_artistName.setSelected(true);
 
-        // init slide and click controls for slide panel layout
+        // init state of sliding panel views
+        if (slidingUpPanelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.EXPANDED) {
+            // set layout alphas
+            slidingUpMenuLayout.setAlpha(0);
+            mainActivityRelativeLayout.setAlpha(1);
+
+            // disable buttons in sliding menu
+            slidingUp_prev_btn.setClickable(false);
+            slidingUp_pauseplay_btn.setClickable(false);
+            slidingUp_next_btn.setClickable(false);
+
+            // enable buttons in main display
+            mainDisplay_slidedown_btn.setClickable(true);
+        }
+        else if (slidingUpPanelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.COLLAPSED) {
+            // set layout alphas
+            slidingUpMenuLayout.setAlpha(1);
+            mainActivityRelativeLayout.setAlpha(0);
+
+            // enable buttons in sliding menu
+            slidingUp_prev_btn.setClickable(true);
+            slidingUp_pauseplay_btn.setClickable(true);
+            slidingUp_next_btn.setClickable(true);
+
+            // disable buttons in main display
+            mainDisplay_slidedown_btn.setClickable(false);
+        }
+
+        // init slide listener
         slidingUpPanelLayout.addPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
             @Override
             public void onPanelSlide(View panel, float slideOffset) {
@@ -608,16 +639,22 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPanelStateChanged(View panel, SlidingUpPanelLayout.PanelState previousState, SlidingUpPanelLayout.PanelState newState) {
                 if (slidingUpPanelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.EXPANDED) {
-                    // disable buttons on the menu
+                    // disable buttons in sliding menu
                     slidingUp_prev_btn.setClickable(false);
                     slidingUp_pauseplay_btn.setClickable(false);
                     slidingUp_next_btn.setClickable(false);
+
+                    // enable buttons in main display
+                    mainDisplay_slidedown_btn.setClickable(true);
                 }
-                if (slidingUpPanelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.COLLAPSED) {
-                    // enable buttons on the menu
+                else if (slidingUpPanelLayout.getPanelState() == SlidingUpPanelLayout.PanelState.COLLAPSED) {
+                    // enable buttons in sliding menu
                     slidingUp_prev_btn.setClickable(true);
                     slidingUp_pauseplay_btn.setClickable(true);
                     slidingUp_next_btn.setClickable(true);
+
+                    // disable buttons in main display
+                    mainDisplay_slidedown_btn.setClickable(false);
                 }
             }
         });
@@ -759,6 +796,7 @@ public class MainActivity extends AppCompatActivity {
 
         // init pauseplay button click functionality and its ripple
         mainDisplay_pauseplay_btn_ripple = (RippleDrawable) mainDisplay_pauseplay_btn.getBackground();
+        mainDisplay_pauseplay_btn_ripple.setRadius(70);
         mainPausePlayIntent = new Intent(this, MusicPlayerService.class);
         mainPausePlayIntent.putExtra("pauseplay", mainMessenger);
 
@@ -771,6 +809,7 @@ public class MainActivity extends AppCompatActivity {
 
         // init next button click functionality and its ripple
         mainDisplay_next_btn_ripple = (RippleDrawable) mainDisplay_next_btn.getBackground();
+        mainDisplay_next_btn_ripple.setRadius(70);
         mainNextIntent = new Intent(this, MusicPlayerService.class);
         mainNextIntent.putExtra("next", mainMessenger);
 
@@ -783,6 +822,7 @@ public class MainActivity extends AppCompatActivity {
 
         // init prev button click functionality and its ripple
         mainDisplay_prev_btn_ripple = (RippleDrawable) mainDisplay_prev_btn.getBackground();
+        mainDisplay_prev_btn_ripple.setRadius(70);
         mainPrevIntent = new Intent(this, MusicPlayerService.class);
         mainPrevIntent.putExtra("prev", mainMessenger);
 
@@ -793,9 +833,19 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // init slidedown button functionality and its ripple
+        mainDisplay_slidedown_btn_ripple = (RippleDrawable) mainDisplay_slidedown_btn.getBackground();
+        mainDisplay_slidedown_btn_ripple.setRadius(50);
+        mainDisplay_slidedown_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                slidingUpPanelLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+            }
+        });
+
         // init shuffle button functionality and its ripple
         mainDisplay_shuffle_btn_ripple = (RippleDrawable) mainDisplay_shuffle_btn.getBackground();
-        mainDisplay_shuffle_btn_ripple.setRadius(50);
+        mainDisplay_shuffle_btn_ripple.setRadius(70);
         mainDisplay_shuffle_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -816,7 +866,7 @@ public class MainActivity extends AppCompatActivity {
 
         // init repeat button functionality and its ripple
         mainDisplay_repeat_btn_ripple = (RippleDrawable) mainDisplay_repeat_btn.getBackground();
-        mainDisplay_repeat_btn_ripple.setRadius(50);
+        mainDisplay_repeat_btn_ripple.setRadius(70);
         mainDisplay_repeat_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1042,18 +1092,21 @@ public class MainActivity extends AppCompatActivity {
         mainDisplay_mainGradient.setOrientation(GradientDrawable.Orientation.BL_TR);
 
         // update drawable vector colors
+        Drawable unwrappedDrawableSlideDown = mainDisplay_slidedown_btn.getDrawable();
         Drawable unwrappedDrawableInfo = mainDisplay_info_btn.getDrawable();
         Drawable unwrappedDrawablePauseplay = mainDisplay_pauseplay_btn.getDrawable();
         Drawable unwrappedDrawableNext = mainDisplay_next_btn.getDrawable();
         Drawable unwrappedDrawablePrev = mainDisplay_prev_btn.getDrawable();
         Drawable unwrappedDrawableShuffle = mainDisplay_shuffle_btn.getDrawable();
         Drawable unwrappedDrawableRepeat = mainDisplay_repeat_btn.getDrawable();
+        Drawable wrappedDrawableSlideDown = DrawableCompat.wrap(unwrappedDrawableSlideDown);
         Drawable wrappedDrawableInfo = DrawableCompat.wrap(unwrappedDrawableInfo);
         Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
         Drawable wrappedDrawableNext = DrawableCompat.wrap(unwrappedDrawableNext);
         Drawable wrappedDrawablePrev = DrawableCompat.wrap(unwrappedDrawablePrev);
         Drawable wrappedDrawableShuffle = DrawableCompat.wrap(unwrappedDrawableShuffle);
         Drawable wrappedDrawableRepeat = DrawableCompat.wrap(unwrappedDrawableRepeat);
+        DrawableCompat.setTint(wrappedDrawableSlideDown, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
         DrawableCompat.setTint(wrappedDrawableInfo, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
         DrawableCompat.setTint(wrappedDrawablePauseplay, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
         DrawableCompat.setTint(wrappedDrawableNext, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
@@ -1062,6 +1115,7 @@ public class MainActivity extends AppCompatActivity {
         DrawableCompat.setTint(wrappedDrawableRepeat, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
 
         // update ripple colors
+        mainDisplay_slidedown_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
         mainDisplay_info_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
         mainDisplay_pauseplay_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
         mainDisplay_next_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));

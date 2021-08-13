@@ -69,7 +69,7 @@ public class MusicPlayerService
         Song current_song = MainActivity.getCurrent_song();
         if (current_song != Song.EMPTY_SONG) {
             // prepare mediaplayer for the current song
-            int songID = current_song.getID();
+            int songID = current_song.getId();
             Uri audioURI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
             Uri songURI = ContentUris.withAppendedId(audioURI, songID);
             mediaPlayer = MediaPlayer.create(this, songURI);
@@ -388,7 +388,7 @@ public class MusicPlayerService
                             mediaPlayer.release();
 
                             // prepare mediaplayer and play the song
-                            int songID = current_song.getID();
+                            int songID = current_song.getId();
                             Uri audioURI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
                             Uri songURI = ContentUris.withAppendedId(audioURI, songID);
                             MediaPlayer mp = MediaPlayer.create(mService, songURI);
@@ -427,7 +427,7 @@ public class MusicPlayerService
                         mediaPlayer.release();
 
                         // prepare mediaplayer and play the song
-                        int songID = current_song.getID();
+                        int songID = current_song.getId();
                         Uri audioURI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
                         Uri songURI = ContentUris.withAppendedId(audioURI, songID);
                         MediaPlayer mp = MediaPlayer.create(mService, songURI);
@@ -465,7 +465,7 @@ public class MusicPlayerService
                             mediaPlayer.release();
 
                             // prepare and play prev song only if mediaplayer was playing before
-                            int songID = prev_song.getID();
+                            int songID = prev_song.getId();
                             Uri audioURI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
                             Uri songURI = ContentUris.withAppendedId(audioURI, songID);
                             MediaPlayer mp = MediaPlayer.create(mService, songURI);
@@ -496,7 +496,7 @@ public class MusicPlayerService
                             mediaPlayer.release();
 
                             // prepare and play next song only if mediaplayer was playing before
-                            int songID = next_song.getID();
+                            int songID = next_song.getId();
                             Uri audioURI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
                             Uri songURI = ContentUris.withAppendedId(audioURI, songID);
                             MediaPlayer mp = MediaPlayer.create(mService, songURI);
@@ -527,7 +527,7 @@ public class MusicPlayerService
                             mediaPlayer.release();
 
                             // prepare next song and keep it paused at seek position 0
-                            int songID = next_song.getID();
+                            int songID = next_song.getId();
                             Uri audioURI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
                             Uri songURI = ContentUris.withAppendedId(audioURI, songID);
                             MediaPlayer mp = MediaPlayer.create(mService, songURI);

@@ -4,29 +4,62 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+import androidx.room.Ignore;
 
+@Entity(tableName = "Songs")
 public class Song implements Parcelable {
+
+    // main fields for identifying a song
+    @PrimaryKey
     private int id;
     private String title;
     private String artist;
-    private String album;
-    private String albumID;
-    private int duration;
 
+    // other fields from mediastore
+    @Ignore
+    private String album;
+    @Ignore
+    private String albumID;
+    @Ignore
+    private int duration;
+    @Ignore
     private String bucketID;
+    @Ignore
     private String bucketDisplayName;
+    @Ignore
     private String dateAdded;
+    @Ignore
     private String dateModified;
+    @Ignore
     private String dataPath;
+    @Ignore
     private String displayName;
+    @Ignore
     private String documentID;
+    @Ignore
     private String instanceID;
+    @Ignore
     private String mimeType;
+    @Ignore
     private String originalDocumentID;
+    @Ignore
     private String relativePath;
+    @Ignore
     private String size;
 
     public static Song EMPTY_SONG = new Song(0, "0", "0", "0", "0", 0, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");
+
+    /**
+     * Constructor only used by database to create a Song for every row
+     * All fields other than the main three are null (or 0 for ints)
+     */
+    public Song(int id, String title, String artist){
+        this.id = id;
+        this.title = title;
+        this.artist = artist;
+    }
 
     public Song(int id, String title, String artist, String album, String albumID, int duration,
                 String bucketID, String bucketDisplayName, String dataPath, String dateAdded,
@@ -54,7 +87,7 @@ public class Song implements Parcelable {
         this.size = size;
     }
 
-    public int getID() {
+    public int getId() {
         return id;
     }
 
@@ -199,10 +232,8 @@ public class Song implements Parcelable {
     public boolean equals(Object obj) {
         try {
             return this.id == ((Song) obj).id &&
-                    this.albumID.equals(((Song) obj).albumID) &&
                     this.title.equals(((Song) obj).title) &&
-                    this.artist.equals(((Song) obj).artist) &&
-                    this.album.equals(((Song) obj).album);
+                    this.artist.equals(((Song) obj).artist);
         }catch (Exception e){
             return super.equals(obj);
         }

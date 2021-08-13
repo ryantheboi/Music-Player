@@ -5,9 +5,12 @@ import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
 // Playlist is a class annotated with @Entity.
-@Database(version = 1, entities = {Playlist.class, Metadata.class})
+@Database(version = 1, entities = {Song.class, Playlist.class, Metadata.class})
 @TypeConverters({PlaylistConverter.class})
 abstract class MusicPlayerDatabase extends RoomDatabase {
+
+    // SongDao is a class annotated with @Dao.
+    abstract public SongDao getSongDao();
 
     // PlaylistDao is a class annotated with @Dao.
     abstract public PlaylistDao getPlaylistDao();

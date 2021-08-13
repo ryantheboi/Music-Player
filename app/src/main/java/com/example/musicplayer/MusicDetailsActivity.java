@@ -65,7 +65,7 @@ public class MusicDetailsActivity extends Activity {
         heading.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
         msgWindow.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
 
-        appendDetail("ID", Integer.toString(song.getID()));
+        appendDetail("ID", Integer.toString(song.getId()));
         appendDetail("Title", song.getTitle());
         appendDetail("Artist", song.getArtist());
         appendDetail("Album", song.getAlbum());
@@ -94,7 +94,7 @@ public class MusicDetailsActivity extends Activity {
      */
     private void appendDetail(String label, String detail){
         if (detail == null) {
-            detail = "null";
+            detail = "N/A";
         }
         details.append(label + ": " + detail + "\n\n");
         int label_length = label.length() + 2; // 2 for the ": "

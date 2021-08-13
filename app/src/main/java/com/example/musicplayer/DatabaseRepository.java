@@ -12,6 +12,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class DatabaseRepository {
     private MusicPlayerDatabase musicPlayerDatabase;
+    private SongDao songDao;
     private PlaylistDao playlistDao;
     private MetadataDao metadataDao;
     private MainActivity mainActivity;
@@ -74,6 +75,7 @@ public class DatabaseRepository {
         musicPlayerDatabase = Room.databaseBuilder(context,
                 MusicPlayerDatabase.class, "musicplayer-database").build();
 
+        songDao = musicPlayerDatabase.getSongDao();
         playlistDao = musicPlayerDatabase.getPlaylistDao();
         metadataDao = musicPlayerDatabase.getMetadataDao();
 

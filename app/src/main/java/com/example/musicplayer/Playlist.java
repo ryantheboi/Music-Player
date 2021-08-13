@@ -13,7 +13,6 @@ import androidx.room.PrimaryKey;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 
 @Entity(tableName = "Playlists")
 public class Playlist implements Parcelable {

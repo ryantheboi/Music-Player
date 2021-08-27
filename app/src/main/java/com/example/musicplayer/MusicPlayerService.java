@@ -25,6 +25,10 @@ import android.os.RemoteException;
 import android.provider.MediaStore;
 import android.widget.Toast;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 public class MusicPlayerService
         extends Service
         implements OnCompletionListener, OnErrorListener {
@@ -40,6 +44,10 @@ public class MusicPlayerService
     private PlaybackHandler playerHandler;
     private static boolean playing = false;
     private static int seekbar_position;
+    private ScheduledExecutorService song_listener;
+    private Song song_currentlyListening;
+    private int song_secondsListened;
+    private boolean song_isListened;
 
     public static final Uri artURI = Uri.parse("content://media/external/audio/albumart");
 
@@ -49,23 +57,24 @@ public class MusicPlayerService
     public static final int UPDATE_SEEKBAR_PROGRESS = 3;
     public static final int UPDATE_SONG = 4;
 
-    public static final int PREPARE_INIT_PAUSED = 0;
-    public static final int PREPARE_INIT_PLAYING = 1;
-    public static final int PREPARE_SONG = 2;
-    public static final int PREPARE_PLAY = 3;
-    public static final int PREPARE_PREV = 4;
-    public static final int PREPARE_NEXT = 5;
-    public static final int PREPARE_NEXT_PAUSE = 6;
-    public static final int PREPARE_DURATION = 7;
-    public static final int PREPARE_SEEK = 8;
-    public static final int PREPARE_SEEKBAR_PROGRESS = 9;
-    public static final int PREPARE_NOTIFICATION = 10;
-
+    private static final int SECONDS_LISTENED = 30;
+    private static final int PREPARE_INIT_PAUSED = 0;
+    private static final int PREPARE_INIT_PLAYING = 1;
+    private static final int PREPARE_SONG = 2;
+    private static final int PREPARE_PLAY = 3;
+    private static final int PREPARE_PREV = 4;
+    private static final int PREPARE_NEXT = 5;
+    private static final int PREPARE_NEXT_PAUSE = 6;
+    private static final int PREPARE_DURATION = 7;
+    private static final int PREPARE_SEEK = 8;
+    private static final int PREPARE_SEEKBAR_PROGRESS = 9;
+    private static final int PREPARE_NOTIFICATION = 10;
 
 
     @Override
     @TargetApi(26)
     public void onCreate() {
+        scheduleSongListener();
         Song current_song = MainActivity.getCurrent_song();
         if (current_song != Song.EMPTY_SONG) {
             // prepare mediaplayer for the current song
@@ -223,7 +232,6 @@ public class MusicPlayerService
             case MediaPlayer.MEDIA_ERROR_UNKNOWN:
                 Toast.makeText(this, "Media Error: Unknown " + extra,
                         Toast.LENGTH_SHORT).show();
-
         }
 
         return false;
@@ -233,7 +241,7 @@ public class MusicPlayerService
      *  checks for audio focus before toggling media
      */
     @TargetApi(26)
-    protected static void audioFocusToggleMedia(){
+    protected void audioFocusToggleMedia(){
         int focusRequest = mAudioManager.requestAudioFocus(mAudioFocusRequest);
         switch (focusRequest) {
             case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
@@ -244,22 +252,84 @@ public class MusicPlayerService
         }
     }
 
-    private static void toggleMedia() {
+    private void toggleMedia() {
         if (!mediaPlayer.isPlaying()) {
             mediaPlayer.start();
             playing = true;
+
+            Song curr_song = MainActivity.getCurrent_song();
+            if (getSong_currentlyListening() != curr_song) {
+                setSong_currentlyListening(curr_song);
+                setSong_secondsListened(0);
+                setSong_isListened(false);
+            }
         }
         else if (mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
             playing = false;
         }
-
     }
 
     private void stopMedia() {
         if (mediaPlayer.isPlaying()) {
             mediaPlayer.stop();
         }
+    }
+
+    private void scheduleSongListener() {
+        // reset song listener timer to 0
+        song_listener = Executors.newSingleThreadScheduledExecutor();
+        song_listener.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                if (!getSong_isListened()) {
+                    int seconds = getSong_secondsListened();
+                    if (playing && seconds < SECONDS_LISTENED) {
+                        setSong_secondsListened(seconds + 1);
+                        System.out.println(seconds);
+                    } else if (seconds == SECONDS_LISTENED) {
+                        setSong_isListened(true);
+                    }
+                }
+            }
+        }, 0, 1000, TimeUnit.MILLISECONDS);
+    }
+
+    private synchronized Song getSong_currentlyListening(){
+        return song_currentlyListening;
+    }
+
+
+    private synchronized int getSong_secondsListened(){
+        return song_secondsListened;
+    }
+
+    private synchronized boolean getSong_isListened(){
+        return song_isListened;
+    }
+
+    /**
+     * set the current song that is being listened
+     * @param song the song currently being listened
+     */
+    private synchronized void setSong_currentlyListening(Song song){
+        this.song_currentlyListening = song;
+    }
+
+    /**
+     * set the number of seconds has the song been listened
+     * @param seconds the number of seconds the song has been listened
+     */
+    private synchronized void setSong_secondsListened(int seconds){
+        this.song_secondsListened = seconds;
+    }
+
+    /**
+     * set whether the current song been listened to already
+     * @param isListened true if already listened, false otherwise
+     */
+    private synchronized void setSong_isListened(boolean isListened){
+        this.song_isListened = isListened;
     }
 
     /**
@@ -301,7 +371,7 @@ public class MusicPlayerService
         }
     }
 
-    private static final class PlaybackHandler extends Handler {
+    private final class PlaybackHandler extends Handler {
         private MusicPlayerService mService;
 
         public PlaybackHandler(final MusicPlayerService servicer, Looper looper) {

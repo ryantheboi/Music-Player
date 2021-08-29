@@ -244,7 +244,6 @@ public class MainActivity extends AppCompatActivity {
             // init listview functionality and playlist
             initMusicList();
 
-            initNotification();
             initMainGradient();
             initMainButtons();
             initInfoButton();
@@ -563,6 +562,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public void initMusicUI(){
         // init main ui
+        initNotification();
         initMainDisplay();
         initSeekbar();
         initSlidingUpPanel();
@@ -1707,13 +1707,9 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case MusicPlayerService.UPDATE_SONG_PLAYED:
                     databaseRepository.updateSongPlayed((Song) bundle.get("song"));
-                    System.out.println("UPDATING SONG PLAYED");
-                    System.out.println(current_song.toString());
                     break;
                 case MusicPlayerService.UPDATE_SONG_LISTENED:
                     databaseRepository.updateSongListened(((Song) bundle.get("song")), Long.toString(System.currentTimeMillis() / 1000));
-                    System.out.println("UPDATING SONG LISTENED");
-                    System.out.println(((Song) bundle.get("song")).toString());
                     break;
             }
         }

@@ -17,6 +17,11 @@ public class Song implements Parcelable {
     private String title;
     private String artist;
 
+    // metadata fields
+    private int played;
+    private int listened;
+    private String dateListened;
+
     // other fields from mediastore
     @Ignore
     private String album;
@@ -55,10 +60,13 @@ public class Song implements Parcelable {
      * Constructor only used by database to create a Song for every row
      * All fields other than the main three are null (or 0 for ints)
      */
-    public Song(int id, String title, String artist){
+    public Song(int id, String title, String artist, int played, int listened, String dateListened){
         this.id = id;
         this.title = title;
         this.artist = artist;
+        this.played = played;
+        this.listened = listened;
+        this.dateListened = dateListened;
     }
 
     public Song(int id, String title, String artist, String album, String albumID, int duration,
@@ -97,6 +105,18 @@ public class Song implements Parcelable {
 
     public String getArtist() {
         return artist;
+    }
+
+    public int getPlayed(){
+        return played;
+    }
+
+    public int getListened(){
+        return listened;
+    }
+
+    public String getDateListened(){
+        return dateListened;
     }
 
     public String getAlbum() {

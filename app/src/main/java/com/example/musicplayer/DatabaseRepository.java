@@ -28,18 +28,21 @@ public class DatabaseRepository {
     public static final int ASYNC_INSERT_PLAYLIST = 3;
     public static final int ASYNC_MODIFY_PLAYLIST = 4;
     public static final int ASYNC_DELETE_PLAYLISTS_BY_ID = 5;
-    public static final int INSERT_PLAYLIST = 6;
-    public static final int INSERT_METADATA = 7;
-    public static final int UPDATE_METADATA_THEME = 8;
-    public static final int UPDATE_METADATA_SONGTAB = 9;
-    public static final int UPDATE_METADATA_SONGINDEX = 10;
-    public static final int UPDATE_METADATA_ISSHUFFLED = 11;
-    public static final int UPDATE_METADATA_REPEATSTATUS = 12;
-    public static final int UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED = 13;
-    public static final int UPDATE_METADATA_ISPLAYING = 14;
-    public static final int UPDATE_METADATA_SEEK = 15;
-    public static final int UPDATE_METADATA_ISALBUMARTCIRCULAR = 16;
-    public static final int UPDATE_METADATA_RANDOMSEED = 17;
+    public static final int INSERT_SONG = 6;
+    public static final int INSERT_PLAYLIST = 7;
+    public static final int INSERT_METADATA = 8;
+    public static final int UPDATE_METADATA_THEME = 9;
+    public static final int UPDATE_METADATA_SONGTAB = 10;
+    public static final int UPDATE_METADATA_SONGINDEX = 11;
+    public static final int UPDATE_METADATA_ISSHUFFLED = 12;
+    public static final int UPDATE_METADATA_REPEATSTATUS = 13;
+    public static final int UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED = 14;
+    public static final int UPDATE_METADATA_ISPLAYING = 15;
+    public static final int UPDATE_METADATA_SEEK = 16;
+    public static final int UPDATE_METADATA_ISALBUMARTCIRCULAR = 17;
+    public static final int UPDATE_METADATA_RANDOMSEED = 18;
+    public static final int UPDATE_SONG_PLAYED = 19;
+    public static final int UPDATE_SONG_LISTENED = 20;
 
     /**
      * Holds the query message and the object involved (if exists)
@@ -173,10 +176,16 @@ public class DatabaseRepository {
                                         }
                                     });
                                     break;
+                                case INSERT_SONG:
+                                    Song s = (Song) query.object;
+                                    if (songDao.findById(s.getId()) == null) {
+                                        songDao.insert(s);
+                                    }
+                                    break;
                                 case INSERT_PLAYLIST:
                                     Playlist p = (Playlist) query.object;
                                     if (p != null) {
-                                        playlistDao.insert((Playlist) query.object);
+                                        playlistDao.insert(p);
                                     }
                                     break;
                                 case INSERT_METADATA:
@@ -211,6 +220,18 @@ public class DatabaseRepository {
                                     break;
                                 case UPDATE_METADATA_RANDOMSEED:
                                     metadataDao.updateRandomSeed(0, (int) query.object);
+                                    break;
+                                case UPDATE_SONG_PLAYED:
+                                    int played_id = ((Song) query.object).getId();
+                                    int played = songDao.findPlayedById(played_id);
+                                    System.out.println("UPDATED SONG PLAYED: " + (played+1));
+                                    songDao.updatePlayed(played_id, played + 1);
+                                    break;
+                                case UPDATE_SONG_LISTENED:
+                                    int listened_id = ((Song) query.object).getId();
+                                    int listened = songDao.findListenedById(listened_id);
+                                    System.out.println("UPDATED SONG LISTENED: " + (listened+1));
+                                    songDao.updateListened(listened_id, listened + 1, (String) query.extra);
                                     break;
                             }
                             isModifying = false;
@@ -283,6 +304,14 @@ public class DatabaseRepository {
      */
     public synchronized void asyncRemovePlaylistByIds(int[] playlistIds){
         messageQueue.offer(new Query(ASYNC_DELETE_PLAYLISTS_BY_ID, playlistIds));
+    }
+
+    /**
+     * Queues message to insert new song into database, if it doesn't already exist
+     * @param song the song to try to insert into database
+     */
+    public synchronized void insertSongIfNotExist(Song song){
+        messageQueue.offer(new Query(INSERT_SONG, song));
     }
 
     /**
@@ -380,5 +409,22 @@ public class DatabaseRepository {
      */
     public synchronized void updateMetadataRandomSeed(int random_seed){
         messageQueue.offer(new Query(UPDATE_METADATA_RANDOMSEED, random_seed));
+    }
+
+    /**
+     * Queues message to increment by 1 the played value in a Song
+     * @param song the song that was played
+     */
+    public synchronized void updateSongPlayed(Song song){
+        messageQueue.offer(new Query(UPDATE_SONG_PLAYED, song));
+    }
+
+    /**
+     * Queues message to increment the listened value by 1 and update the date listened value in a Song
+     * @param song the song that was listened
+     * @param dateListened the last date the song was listened on, represented as number of seconds since 1970-01-01T00:00:00Z
+     */
+    public synchronized void updateSongListened(Song song, String dateListened){
+        messageQueue.offer(new Query(UPDATE_SONG_LISTENED, song, dateListened));
     }
 }

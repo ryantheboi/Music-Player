@@ -56,6 +56,8 @@ public class MusicPlayerService
     public static final int UPDATE_SEEKBAR_DURATION = 2;
     public static final int UPDATE_SEEKBAR_PROGRESS = 3;
     public static final int UPDATE_SONG = 4;
+    public static final int UPDATE_SONG_PLAYED = 5;
+    public static final int UPDATE_SONG_LISTENED = 6;
 
     private static final int SECONDS_LISTENED = 30;
     private static final int PREPARE_INIT_PAUSED = 0;
@@ -69,6 +71,8 @@ public class MusicPlayerService
     private static final int PREPARE_SEEK = 8;
     private static final int PREPARE_SEEKBAR_PROGRESS = 9;
     private static final int PREPARE_NOTIFICATION = 10;
+    private static final int PREPARE_SONG_PLAYED = 11;
+    private static final int PREPARE_SONG_LISTENED = 12;
 
 
     @Override
@@ -262,6 +266,8 @@ public class MusicPlayerService
                 setSong_currentlyListening(curr_song);
                 setSong_secondsListened(0);
                 setSong_isListened(false);
+                playerHandler.removeMessages(PREPARE_SONG_PLAYED);
+                playerHandler.obtainMessage(PREPARE_SONG_PLAYED).sendToTarget();
             }
         }
         else if (mediaPlayer.isPlaying()) {
@@ -289,6 +295,8 @@ public class MusicPlayerService
                         System.out.println(seconds);
                     } else if (seconds == SECONDS_LISTENED) {
                         setSong_isListened(true);
+                        playerHandler.removeMessages(PREPARE_SONG_LISTENED);
+                        playerHandler.obtainMessage(PREPARE_SONG_LISTENED).sendToTarget();
                     }
                 }
             }
@@ -367,6 +375,15 @@ public class MusicPlayerService
             case 2:
                 playerHandler.removeMessages(PREPARE_SONG);
                 playerHandler.obtainMessage(PREPARE_SONG).sendToTarget();
+
+                // reset song listener and consider the song played
+                setSong_currentlyListening(MainActivity.getCurrent_song());
+                playerHandler.removeMessages(PREPARE_SONG_PLAYED);
+                playerHandler.obtainMessage(PREPARE_SONG_PLAYED).sendToTarget();
+                if (getSong_secondsListened() == SECONDS_LISTENED) {
+                    setSong_secondsListened(0);
+                    setSong_isListened(false);
+                }
                 break;
         }
     }
@@ -424,13 +441,14 @@ public class MusicPlayerService
         /**
          * send a message containing a string and Song
          * @param messenger the messenger to send update to
+         * @param message the update code
          * @param song the song to update the messenger's activity with
          */
-        private void sendSongUpdateMessage(Messenger messenger, final Song song) {
+        private void sendSongUpdateMessage(Messenger messenger, int message, final Song song) {
             // find the song uri and start playing the song
             Message msg = Message.obtain();
             Bundle bundle = new Bundle();
-            bundle.putInt("update", UPDATE_SONG);
+            bundle.putInt("update", message);
             bundle.putParcelable("song", song);
             msg.setData(bundle);
             try {
@@ -452,7 +470,7 @@ public class MusicPlayerService
                         // update main ui with current song
                         Song current_song = MainActivity.getCurrent_song();
                         if (current_song != Song.EMPTY_SONG) {
-                            sendSongUpdateMessage(mainActivity_messenger, current_song);
+                            sendSongUpdateMessage(mainActivity_messenger, UPDATE_SONG, current_song);
 
                             // release current mediaplayer to allow another to be created
                             mediaPlayer.release();
@@ -477,7 +495,7 @@ public class MusicPlayerService
                         // update main ui with current song, which is still playing
                         Song current_song = MainActivity.getCurrent_song();
                         if (current_song != Song.EMPTY_SONG) {
-                            sendSongUpdateMessage(mainActivity_messenger, current_song);
+                            sendSongUpdateMessage(mainActivity_messenger, UPDATE_SONG, current_song);
                             sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE, false, -1);
                         }
                     } catch (Exception e) {
@@ -491,7 +509,7 @@ public class MusicPlayerService
 
                         // update main ui with current song
                         Song current_song = MainActivity.getCurrent_song();
-                        sendSongUpdateMessage(mainActivity_messenger, current_song);
+                        sendSongUpdateMessage(mainActivity_messenger, UPDATE_SONG, current_song);
 
                         // release current mediaplayer to allow another to be created
                         mediaPlayer.release();
@@ -529,7 +547,7 @@ public class MusicPlayerService
                         try {
                             // update main ui with prev song
                             Song prev_song = MainActivity.getCurrent_playlist().getPrevSong();
-                            sendSongUpdateMessage(mainActivity_messenger, prev_song);
+                            sendSongUpdateMessage(mainActivity_messenger, UPDATE_SONG, prev_song);
 
                             // release current mediaplayer to allow another to be created
                             mediaPlayer.release();
@@ -560,7 +578,7 @@ public class MusicPlayerService
                         try {
                             // update main ui with next song
                             Song next_song = MainActivity.getCurrent_playlist().getNextSong();
-                            sendSongUpdateMessage(mainActivity_messenger, next_song);
+                            sendSongUpdateMessage(mainActivity_messenger, UPDATE_SONG, next_song);
 
                             // release current mediaplayer to allow another to be created
                             mediaPlayer.release();
@@ -591,7 +609,7 @@ public class MusicPlayerService
                         try {
                             // update main ui with next song
                             Song next_song = MainActivity.getCurrent_playlist().getNextSong();
-                            sendSongUpdateMessage(mainActivity_messenger, next_song);
+                            sendSongUpdateMessage(mainActivity_messenger, UPDATE_SONG, next_song);
 
                             // release current mediaplayer to allow another to be created
                             mediaPlayer.release();
@@ -631,6 +649,12 @@ public class MusicPlayerService
                     break;
                 case PREPARE_NOTIFICATION:
                     notification = MainActivity.getNotification();
+                    break;
+                case PREPARE_SONG_PLAYED:
+                    sendSongUpdateMessage(mainActivity_messenger, UPDATE_SONG_PLAYED, song_currentlyListening);
+                    break;
+                case PREPARE_SONG_LISTENED:
+                    sendSongUpdateMessage(mainActivity_messenger, UPDATE_SONG_LISTENED, song_currentlyListening);
                     break;
             }
         }

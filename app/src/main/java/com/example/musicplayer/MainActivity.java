@@ -386,6 +386,7 @@ public class MainActivity extends AppCompatActivity {
 
             do {
                 Song song = SongHelper.createSong(songCursor);
+                databaseRepository.insertSongIfNotExist(song);
                 fullSongList.add(song);
             } while (songCursor.moveToNext());
 
@@ -1703,6 +1704,16 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case PlaylistTab.REMOVE_PLAYLISTS:
                     databaseRepository.asyncRemovePlaylistByIds((int[]) bundle.get("ids"));
+                    break;
+                case MusicPlayerService.UPDATE_SONG_PLAYED:
+                    databaseRepository.updateSongPlayed((Song) bundle.get("song"));
+                    System.out.println("UPDATING SONG PLAYED");
+                    System.out.println(current_song.toString());
+                    break;
+                case MusicPlayerService.UPDATE_SONG_LISTENED:
+                    databaseRepository.updateSongListened(((Song) bundle.get("song")), Long.toString(System.currentTimeMillis() / 1000));
+                    System.out.println("UPDATING SONG LISTENED");
+                    System.out.println(((Song) bundle.get("song")).toString());
                     break;
             }
         }

@@ -179,6 +179,18 @@ public class Song implements Parcelable {
         return size;
     }
 
+    public void setPlayed(int played){
+        this.played = played;
+    }
+
+    public void setListened(int listened){
+        this.listened = listened;
+    }
+
+    public void setDateListened(String dateListened){
+        this.dateListened = dateListened;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -194,6 +206,9 @@ public class Song implements Parcelable {
         dest.writeInt(this.id);
         dest.writeString(this.title);
         dest.writeString(this.artist);
+        dest.writeInt(this.played);
+        dest.writeInt(this.listened);
+        dest.writeString(this.dateListened);
         dest.writeString(this.album);
         dest.writeString(this.albumID);
         dest.writeInt(this.duration);
@@ -215,6 +230,9 @@ public class Song implements Parcelable {
         this.id = in.readInt();
         this.title = in.readString();
         this.artist = in.readString();
+        this.played = in.readInt();
+        this.listened = in.readInt();
+        this.dateListened = in.readString();
         this.album = in.readString();
         this.albumID = in.readString();
         this.duration = in.readInt();

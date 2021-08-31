@@ -69,6 +69,9 @@ public class MusicDetailsActivity extends Activity {
         appendDetail("Title", song.getTitle());
         appendDetail("Artist", song.getArtist());
         appendDetail("Album", song.getAlbum());
+        appendDetail("Times Played", Integer.toString(song.getPlayed()));
+        appendDetail("Times Listened (30s)", Integer.toString(song.getListened()));
+        appendDetail("Date Listened", convertDateTimeString(song.getDateListened()));
         appendDetail("Album ID", (song.getAlbumID()));
         appendDetail("Duration", SongHelper.convertTime(song.getDuration()));
         appendDetail("Data Path", song.getDataPath());

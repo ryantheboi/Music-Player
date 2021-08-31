@@ -25,24 +25,25 @@ public class DatabaseRepository {
     public static final int ASYNC_INIT_ALL_PLAYLISTS = 0;
     public static final int ASYNC_GET_CURRENT_PLAYLIST = 1;
     public static final int ASYNC_GET_METADATA = 2;
-    public static final int ASYNC_INSERT_PLAYLIST = 3;
-    public static final int ASYNC_MODIFY_PLAYLIST = 4;
-    public static final int ASYNC_DELETE_PLAYLISTS_BY_ID = 5;
-    public static final int INSERT_SONG = 6;
-    public static final int INSERT_PLAYLIST = 7;
-    public static final int INSERT_METADATA = 8;
-    public static final int UPDATE_METADATA_THEME = 9;
-    public static final int UPDATE_METADATA_SONGTAB = 10;
-    public static final int UPDATE_METADATA_SONGINDEX = 11;
-    public static final int UPDATE_METADATA_ISSHUFFLED = 12;
-    public static final int UPDATE_METADATA_REPEATSTATUS = 13;
-    public static final int UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED = 14;
-    public static final int UPDATE_METADATA_ISPLAYING = 15;
-    public static final int UPDATE_METADATA_SEEK = 16;
-    public static final int UPDATE_METADATA_ISALBUMARTCIRCULAR = 17;
-    public static final int UPDATE_METADATA_RANDOMSEED = 18;
-    public static final int UPDATE_SONG_PLAYED = 19;
-    public static final int UPDATE_SONG_LISTENED = 20;
+    public static final int ASYNC_GET_ALL_SONGS = 3;
+    public static final int ASYNC_INSERT_PLAYLIST = 4;
+    public static final int ASYNC_MODIFY_PLAYLIST = 5;
+    public static final int ASYNC_DELETE_PLAYLISTS_BY_ID = 6;
+    public static final int INSERT_SONG = 7;
+    public static final int INSERT_PLAYLIST = 8;
+    public static final int INSERT_METADATA = 9;
+    public static final int UPDATE_METADATA_THEME = 10;
+    public static final int UPDATE_METADATA_SONGTAB = 11;
+    public static final int UPDATE_METADATA_SONGINDEX = 12;
+    public static final int UPDATE_METADATA_ISSHUFFLED = 13;
+    public static final int UPDATE_METADATA_REPEATSTATUS = 14;
+    public static final int UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED = 15;
+    public static final int UPDATE_METADATA_ISPLAYING = 16;
+    public static final int UPDATE_METADATA_SEEK = 17;
+    public static final int UPDATE_METADATA_ISALBUMARTCIRCULAR = 18;
+    public static final int UPDATE_METADATA_RANDOMSEED = 19;
+    public static final int UPDATE_SONG_PLAYED = 20;
+    public static final int UPDATE_SONG_LISTENED = 21;
 
     /**
      * Holds the query message and the object involved (if exists)
@@ -176,6 +177,15 @@ public class DatabaseRepository {
                                         }
                                     });
                                     break;
+                                case ASYNC_GET_ALL_SONGS:
+                                    final ArrayList<Song> database_songs = (ArrayList<Song>) songDao.getAll();
+                                    mainActivity.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            mainActivity.updateMainActivity(database_songs, null, ASYNC_GET_ALL_SONGS);
+                                        }
+                                    });
+                                    break;
                                 case INSERT_SONG:
                                     Song s = (Song) query.object;
                                     if (songDao.findById(s.getId()) == null) {
@@ -276,6 +286,14 @@ public class DatabaseRepository {
      */
     public synchronized void asyncGetMetadata(){
         messageQueue.offer(new Query(ASYNC_GET_METADATA, null));
+    }
+
+    /**
+     * Queues message to get all songs stored in the database
+     * then updates main activity upon completion
+     */
+    public synchronized void asyncGetAllSongs(){
+        messageQueue.offer(new Query(ASYNC_GET_ALL_SONGS, null));
     }
 
     /**

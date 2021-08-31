@@ -4,70 +4,29 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
-import androidx.room.Entity;
-import androidx.room.PrimaryKey;
-import androidx.room.Ignore;
 
-@Entity(tableName = "Songs")
 public class Song implements Parcelable {
 
-    // main fields for identifying a song
-    @PrimaryKey
     private int id;
     private String title;
     private String artist;
-
-    // metadata fields
-    private int played;
-    private int listened;
-    private String dateListened;
-
-    // other fields from mediastore
-    @Ignore
     private String album;
-    @Ignore
     private String albumID;
-    @Ignore
     private int duration;
-    @Ignore
     private String bucketID;
-    @Ignore
     private String bucketDisplayName;
-    @Ignore
     private String dateAdded;
-    @Ignore
     private String dateModified;
-    @Ignore
     private String dataPath;
-    @Ignore
     private String displayName;
-    @Ignore
     private String documentID;
-    @Ignore
     private String instanceID;
-    @Ignore
     private String mimeType;
-    @Ignore
     private String originalDocumentID;
-    @Ignore
     private String relativePath;
-    @Ignore
     private String size;
 
     public static Song EMPTY_SONG = new Song(0, "0", "0", "0", "0", 0, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0");
-
-    /**
-     * Constructor only used by database to create a Song for every row
-     * All fields other than the main three are null (or 0 for ints)
-     */
-    public Song(int id, String title, String artist, int played, int listened, String dateListened){
-        this.id = id;
-        this.title = title;
-        this.artist = artist;
-        this.played = played;
-        this.listened = listened;
-        this.dateListened = dateListened;
-    }
 
     public Song(int id, String title, String artist, String album, String albumID, int duration,
                 String bucketID, String bucketDisplayName, String dataPath, String dateAdded,
@@ -105,18 +64,6 @@ public class Song implements Parcelable {
 
     public String getArtist() {
         return artist;
-    }
-
-    public int getPlayed(){
-        return played;
-    }
-
-    public int getListened(){
-        return listened;
-    }
-
-    public String getDateListened(){
-        return dateListened;
     }
 
     public String getAlbum() {
@@ -179,18 +126,6 @@ public class Song implements Parcelable {
         return size;
     }
 
-    public void setPlayed(int played){
-        this.played = played;
-    }
-
-    public void setListened(int listened){
-        this.listened = listened;
-    }
-
-    public void setDateListened(String dateListened){
-        this.dateListened = dateListened;
-    }
-
     @Override
     public int describeContents() {
         return 0;
@@ -206,9 +141,6 @@ public class Song implements Parcelable {
         dest.writeInt(this.id);
         dest.writeString(this.title);
         dest.writeString(this.artist);
-        dest.writeInt(this.played);
-        dest.writeInt(this.listened);
-        dest.writeString(this.dateListened);
         dest.writeString(this.album);
         dest.writeString(this.albumID);
         dest.writeInt(this.duration);
@@ -230,9 +162,6 @@ public class Song implements Parcelable {
         this.id = in.readInt();
         this.title = in.readString();
         this.artist = in.readString();
-        this.played = in.readInt();
-        this.listened = in.readInt();
-        this.dateListened = in.readString();
         this.album = in.readString();
         this.albumID = in.readString();
         this.duration = in.readInt();
@@ -256,10 +185,8 @@ public class Song implements Parcelable {
             int prime = 31;
             int result = 1;
             result = prime * result + id;
-            result = prime * result + albumID.hashCode();
             result = prime * result + title.hashCode();
             result = prime * result + artist.hashCode();
-            result = prime * result + album.hashCode();
             return result;
         }catch (Exception e){
             return super.hashCode();

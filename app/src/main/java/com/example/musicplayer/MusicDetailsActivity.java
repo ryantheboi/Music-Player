@@ -20,6 +20,7 @@ import java.util.Date;
 public class MusicDetailsActivity extends Activity {
 
     private Song song;
+    private SongMetadata songMetadata;
     private int idx;
     private SpannableStringBuilder details = new SpannableStringBuilder();
 
@@ -33,9 +34,14 @@ public class MusicDetailsActivity extends Activity {
         Bundle b = intent.getExtras();
         if (b != null) {
             for (String key : b.keySet()) {
-                if (key.equals("currentSong")) {
+                switch (key) {
+                    case "currentSong":
                         // get the song which needs its details to be displayed
                         song = intent.getParcelableExtra("currentSong");
+                        break;
+                    case "currentSongMetadata":
+                        // get the song which needs its details to be displayed
+                        songMetadata = intent.getParcelableExtra("currentSongMetadata");
                         break;
                 }
             }
@@ -69,9 +75,9 @@ public class MusicDetailsActivity extends Activity {
         appendDetail("Title", song.getTitle());
         appendDetail("Artist", song.getArtist());
         appendDetail("Album", song.getAlbum());
-        appendDetail("Times Played", Integer.toString(song.getPlayed()));
-        appendDetail("Times Listened (30s)", Integer.toString(song.getListened()));
-        appendDetail("Date Listened", convertDateTimeString(song.getDateListened()));
+        appendDetail("Times Played", Integer.toString(songMetadata.getPlayed()));
+        appendDetail("Times Listened (30s)", Integer.toString(songMetadata.getListened()));
+        appendDetail("Date Listened", convertDateTimeString(songMetadata.getDateListened()));
         appendDetail("Album ID", (song.getAlbumID()));
         appendDetail("Duration", SongHelper.convertTime(song.getDuration()));
         appendDetail("Data Path", song.getDataPath());

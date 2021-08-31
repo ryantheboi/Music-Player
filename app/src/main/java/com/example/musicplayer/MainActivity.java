@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
     private RippleDrawable theme_btn_ripple;
     private CoordinatorLayout musicListRelativeLayout;
     private ArrayList<Song> fullSongList;
-    private HashMap<Integer, Song> fullSongIdHashMap;
+    private HashMap<Integer, SongMetadata> fullSongMetadataHashMap;
     private static ArrayList<Playlist> playlistList;
     private static Playlist current_playlist;
     private static Playlist fullPlaylist;
@@ -354,7 +354,7 @@ public class MainActivity extends AppCompatActivity {
         fullPlaylist = new Playlist("FULL_PLAYLIST", fullSongList);
 
         // asynchronously gets all songs and playlists from database, then updates main activity
-        databaseRepository.asyncGetAllSongs();
+        databaseRepository.asyncGetAllSongMetadata();
         databaseRepository.asyncInitAllPlaylists();
     }
 
@@ -387,7 +387,7 @@ public class MainActivity extends AppCompatActivity {
 
             do {
                 Song song = SongHelper.createSong(songCursor);
-                databaseRepository.insertSongIfNotExist(song);
+                databaseRepository.insertSongMetadataIfNotExist(song);
                 fullSongList.add(song);
             } while (songCursor.moveToNext());
 
@@ -937,6 +937,7 @@ public class MainActivity extends AppCompatActivity {
                 if (!isInfoDisplaying) {
                     isInfoDisplaying = true;
                     infoIntent.putExtra("currentSong", current_song);
+                    infoIntent.putExtra("currentSongMetadata", fullSongMetadataHashMap.get(current_song.getId()));
                     startActivity(infoIntent);
                 }
             }
@@ -1412,24 +1413,14 @@ public class MainActivity extends AppCompatActivity {
                 theme_btn.setImageResource(ThemeColors.getThemeBtnResourceId());
                 SongListTab.setScrollSelection(songtab_scrollindex, songtab_scrolloffset);
                 break;
-            case DatabaseRepository.ASYNC_GET_ALL_SONGS:
-                ArrayList<Song> database_songs = (ArrayList<Song>) object;
+            case DatabaseRepository.ASYNC_GET_ALL_SONGMETADATA:
+                ArrayList<SongMetadata> database_songs = (ArrayList<SongMetadata>) object;
 
                 if (database_songs != null) {
-                    // create hashmap of every song id to song
-                    fullSongIdHashMap = new HashMap<>();
-                    for (Song song : fullSongList) {
-                        fullSongIdHashMap.put(song.getId(), song);
-                    }
-
-                    // update songs in memory with their metadata from database (if exist)
-                    for (Song database_song : database_songs) {
-                        Song memory_song = fullSongIdHashMap.get(database_song.getId());
-                        if (memory_song != null) {
-                            memory_song.setPlayed(database_song.getPlayed());
-                            memory_song.setListened(database_song.getListened());
-                            memory_song.setDateListened(database_song.getDateListened());
-                        }
+                    // create hashmap of every song id to song metadata
+                    fullSongMetadataHashMap = new HashMap<>();
+                    for (SongMetadata songMetadata : database_songs) {
+                        fullSongMetadataHashMap.put(songMetadata.getId(), songMetadata);
                     }
                 }
                 break;
@@ -1729,16 +1720,16 @@ public class MainActivity extends AppCompatActivity {
                     databaseRepository.asyncRemovePlaylistByIds((int[]) bundle.get("ids"));
                     break;
                 case MusicPlayerService.UPDATE_SONG_PLAYED:
-                    // increment played counter for the song in memory and for the song in database
-                    Song played_song = fullSongIdHashMap.get(((Song) bundle.get("song")).getId());
-                    played_song.setPlayed(played_song.getPlayed() + 1);
-                    databaseRepository.updateSongPlayed(played_song);
+                    // increment played counter for the song metadata in memory and in database
+                    SongMetadata played_songMetadata = fullSongMetadataHashMap.get(((Song) bundle.get("song")).getId());
+                    played_songMetadata.setPlayed(played_songMetadata.getPlayed() + 1);
+                    databaseRepository.updateSongMetadataPlayed(played_songMetadata);
                     break;
                 case MusicPlayerService.UPDATE_SONG_LISTENED:
-                    // increment listened counter for the song in memory and for the song in database
-                    Song listened_song = fullSongIdHashMap.get(((Song) bundle.get("song")).getId());
-                    listened_song.setListened(listened_song.getListened() + 1);
-                    databaseRepository.updateSongListened(listened_song, Long.toString(System.currentTimeMillis() / 1000));
+                    // increment listened counter for the song metadata in memory and in database
+                    SongMetadata listened_songMetadata = fullSongMetadataHashMap.get(((Song) bundle.get("song")).getId());
+                    listened_songMetadata.setListened(listened_songMetadata.getListened() + 1);
+                    databaseRepository.updateSongMetadataListened(listened_songMetadata, Long.toString(System.currentTimeMillis() / 1000));
                     break;
             }
         }

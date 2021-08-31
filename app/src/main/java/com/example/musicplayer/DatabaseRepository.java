@@ -12,7 +12,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class DatabaseRepository {
     private MusicPlayerDatabase musicPlayerDatabase;
-    private SongDao songDao;
+    private SongMetadataDao songMetadataDao;
     private PlaylistDao playlistDao;
     private MetadataDao metadataDao;
     private MainActivity mainActivity;
@@ -25,11 +25,11 @@ public class DatabaseRepository {
     public static final int ASYNC_INIT_ALL_PLAYLISTS = 0;
     public static final int ASYNC_GET_CURRENT_PLAYLIST = 1;
     public static final int ASYNC_GET_METADATA = 2;
-    public static final int ASYNC_GET_ALL_SONGS = 3;
+    public static final int ASYNC_GET_ALL_SONGMETADATA = 3;
     public static final int ASYNC_INSERT_PLAYLIST = 4;
     public static final int ASYNC_MODIFY_PLAYLIST = 5;
     public static final int ASYNC_DELETE_PLAYLISTS_BY_ID = 6;
-    public static final int INSERT_SONG = 7;
+    public static final int INSERT_SONGMETADATA = 7;
     public static final int INSERT_PLAYLIST = 8;
     public static final int INSERT_METADATA = 9;
     public static final int UPDATE_METADATA_THEME = 10;
@@ -42,8 +42,8 @@ public class DatabaseRepository {
     public static final int UPDATE_METADATA_SEEK = 17;
     public static final int UPDATE_METADATA_ISALBUMARTCIRCULAR = 18;
     public static final int UPDATE_METADATA_RANDOMSEED = 19;
-    public static final int UPDATE_SONG_PLAYED = 20;
-    public static final int UPDATE_SONG_LISTENED = 21;
+    public static final int UPDATE_SONGMETADATA_PLAYED = 20;
+    public static final int UPDATE_SONGMETADATA_LISTENED = 21;
 
     /**
      * Holds the query message and the object involved (if exists)
@@ -79,7 +79,7 @@ public class DatabaseRepository {
         musicPlayerDatabase = Room.databaseBuilder(context,
                 MusicPlayerDatabase.class, "musicplayer-database").build();
 
-        songDao = musicPlayerDatabase.getSongDao();
+        songMetadataDao = musicPlayerDatabase.getSongMetadataDao();
         playlistDao = musicPlayerDatabase.getPlaylistDao();
         metadataDao = musicPlayerDatabase.getMetadataDao();
 
@@ -177,19 +177,19 @@ public class DatabaseRepository {
                                         }
                                     });
                                     break;
-                                case ASYNC_GET_ALL_SONGS:
-                                    final ArrayList<Song> database_songs = (ArrayList<Song>) songDao.getAll();
+                                case ASYNC_GET_ALL_SONGMETADATA:
+                                    final ArrayList<SongMetadata> database_songs = (ArrayList<SongMetadata>) songMetadataDao.getAll();
                                     mainActivity.runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            mainActivity.updateMainActivity(database_songs, null, ASYNC_GET_ALL_SONGS);
+                                            mainActivity.updateMainActivity(database_songs, null, ASYNC_GET_ALL_SONGMETADATA);
                                         }
                                     });
                                     break;
-                                case INSERT_SONG:
-                                    Song s = (Song) query.object;
-                                    if (songDao.findById(s.getId()) == null) {
-                                        songDao.insert(s);
+                                case INSERT_SONGMETADATA:
+                                    SongMetadata sm = new SongMetadata((Song) query.object);
+                                    if (songMetadataDao.findById(sm.getId()) == null) {
+                                        songMetadataDao.insert(sm);
                                     }
                                     break;
                                 case INSERT_PLAYLIST:
@@ -231,17 +231,15 @@ public class DatabaseRepository {
                                 case UPDATE_METADATA_RANDOMSEED:
                                     metadataDao.updateRandomSeed(0, (int) query.object);
                                     break;
-                                case UPDATE_SONG_PLAYED:
-                                    int played_id = ((Song) query.object).getId();
-                                    int played = songDao.findPlayedById(played_id);
-                                    System.out.println("UPDATED SONG PLAYED: " + (played+1));
-                                    songDao.updatePlayed(played_id, played + 1);
+                                case UPDATE_SONGMETADATA_PLAYED:
+                                    int played_id = ((SongMetadata) query.object).getId();
+                                    int played = songMetadataDao.findPlayedById(played_id);
+                                    songMetadataDao.updatePlayed(played_id, played + 1);
                                     break;
-                                case UPDATE_SONG_LISTENED:
-                                    int listened_id = ((Song) query.object).getId();
-                                    int listened = songDao.findListenedById(listened_id);
-                                    System.out.println("UPDATED SONG LISTENED: " + (listened+1));
-                                    songDao.updateListened(listened_id, listened + 1, (String) query.extra);
+                                case UPDATE_SONGMETADATA_LISTENED:
+                                    int listened_id = ((SongMetadata) query.object).getId();
+                                    int listened = songMetadataDao.findListenedById(listened_id);
+                                    songMetadataDao.updateListened(listened_id, listened + 1, (String) query.extra);
                                     break;
                             }
                             isModifying = false;
@@ -289,11 +287,11 @@ public class DatabaseRepository {
     }
 
     /**
-     * Queues message to get all songs stored in the database
+     * Queues message to get all song metadata records stored in the database
      * then updates main activity upon completion
      */
-    public synchronized void asyncGetAllSongs(){
-        messageQueue.offer(new Query(ASYNC_GET_ALL_SONGS, null));
+    public synchronized void asyncGetAllSongMetadata(){
+        messageQueue.offer(new Query(ASYNC_GET_ALL_SONGMETADATA, null));
     }
 
     /**
@@ -325,11 +323,11 @@ public class DatabaseRepository {
     }
 
     /**
-     * Queues message to insert new song into database, if it doesn't already exist
-     * @param song the song to try to insert into database
+     * Queues message to insert a song's metadata into database, if it doesn't already exist
+     * @param song the song to try to insert into database to store its metadata
      */
-    public synchronized void insertSongIfNotExist(Song song){
-        messageQueue.offer(new Query(INSERT_SONG, song));
+    public synchronized void insertSongMetadataIfNotExist(Song song){
+        messageQueue.offer(new Query(INSERT_SONGMETADATA, song));
     }
 
     /**
@@ -430,19 +428,19 @@ public class DatabaseRepository {
     }
 
     /**
-     * Queues message to increment by 1 the played value in a Song
-     * @param song the song that was played
+     * Queues message to increment by 1 the played value in a SongMetadata
+     * @param songMetadata metadata corresponding to the song that was played
      */
-    public synchronized void updateSongPlayed(Song song){
-        messageQueue.offer(new Query(UPDATE_SONG_PLAYED, song));
+    public synchronized void updateSongMetadataPlayed(SongMetadata songMetadata){
+        messageQueue.offer(new Query(UPDATE_SONGMETADATA_PLAYED, songMetadata));
     }
 
     /**
-     * Queues message to increment the listened value by 1 and update the date listened value in a Song
-     * @param song the song that was listened
+     * Queues message to increment the listened value by 1 and update the date listened value in a SongMetadata
+     * @param songMetadata metadata corresponding to the song that was listened
      * @param dateListened the last date the song was listened on, represented as number of seconds since 1970-01-01T00:00:00Z
      */
-    public synchronized void updateSongListened(Song song, String dateListened){
-        messageQueue.offer(new Query(UPDATE_SONG_LISTENED, song, dateListened));
+    public synchronized void updateSongMetadataListened(SongMetadata songMetadata, String dateListened){
+        messageQueue.offer(new Query(UPDATE_SONGMETADATA_LISTENED, songMetadata, dateListened));
     }
 }

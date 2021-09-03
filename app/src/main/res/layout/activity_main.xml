@@ -100,7 +100,7 @@
 
                 <RelativeLayout
                     android:id="@+id/sliding_text"
-                    android:layout_width="170dp"
+                    android:layout_width="160dp"
                     android:layout_height="match_parent"
                     android:layout_marginTop="12dp"
                     android:layout_marginStart="10dp"
@@ -135,27 +135,28 @@
                 </RelativeLayout>
 
                 <RelativeLayout
-                    android:layout_width="170dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_alignParentEnd="true"
-                    android:layout_marginTop="2dp">
+                    android:layout_marginTop="2dp"
+                    android:layout_marginEnd="5dp">
                     <ImageButton
                         android:id="@+id/sliding_btn_prev"
-                        android:layout_width="55dp"
+                        android:layout_width="60dp"
                         android:layout_height="60dp"
                         android:src="@drawable/ic_prev24dp"
                         android:background="@drawable/button_ripple"/>
                     <ImageButton
                         android:id="@+id/sliding_btn_play"
                         android:layout_toEndOf="@id/sliding_btn_prev"
-                        android:layout_width="55dp"
+                        android:layout_width="60dp"
                         android:layout_height="60dp"
                         android:src="@drawable/ic_play24dp"
                         android:background="@drawable/button_ripple"/>
                     <ImageButton
                         android:id="@+id/sliding_btn_next"
                         android:layout_toEndOf="@id/sliding_btn_play"
-                        android:layout_width="55dp"
+                        android:layout_width="60dp"
                         android:layout_height="60dp"
                         android:src="@drawable/ic_next24dp"
                         android:background="@drawable/button_ripple"/>

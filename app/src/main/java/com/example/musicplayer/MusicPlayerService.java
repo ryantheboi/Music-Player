@@ -267,7 +267,7 @@ public class MusicPlayerService
             playing = true;
 
             Song curr_song = MainActivity.getCurrent_song();
-            if (getSong_currentlyListening() != curr_song) {
+            if (getSong_currentlyListening() == null || !getSong_currentlyListening().equals(curr_song)) {
                 setSong_currentlyListening(curr_song);
                 setSong_secondsListened(0);
                 setSong_isListened(false);
@@ -491,7 +491,6 @@ public class MusicPlayerService
                     try {
                         // update main ui with current song
                         Song current_song = MainActivity.getCurrent_song();
-                        setSong_currentlyListening(current_song);
                         if (current_song != Song.EMPTY_SONG) {
                             sendSongUpdateMessage(mainActivity_messenger, UPDATE_SONG, current_song);
 
@@ -505,7 +504,7 @@ public class MusicPlayerService
                     break;
                 case PREPARE_INIT_PLAYING:
                     try {
-                        // update main ui with current song, which is still playing
+                        // update main ui with current song, which is still playing and being listened
                         Song current_song = MainActivity.getCurrent_song();
                         setSong_currentlyListening(current_song);
                         if (current_song != Song.EMPTY_SONG) {

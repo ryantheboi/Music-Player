@@ -1726,10 +1726,12 @@ public class MainActivity extends AppCompatActivity {
                     databaseRepository.updateSongMetadataPlayed(played_songMetadata);
                     break;
                 case MusicPlayerService.UPDATE_SONG_LISTENED:
-                    // increment listened counter for the song metadata in memory and in database
+                    // update listened data for the song metadata in memory and in database
+                    String data_listened = Long.toString(System.currentTimeMillis() / 1000);
                     SongMetadata listened_songMetadata = fullSongMetadataHashMap.get(((Song) bundle.get("song")).getId());
                     listened_songMetadata.setListened(listened_songMetadata.getListened() + 1);
-                    databaseRepository.updateSongMetadataListened(listened_songMetadata, Long.toString(System.currentTimeMillis() / 1000));
+                    listened_songMetadata.setDateListened(data_listened);
+                    databaseRepository.updateSongMetadataListened(listened_songMetadata, data_listened);
                     break;
             }
         }

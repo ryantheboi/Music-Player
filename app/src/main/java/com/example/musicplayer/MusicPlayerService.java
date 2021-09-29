@@ -203,9 +203,8 @@ public class MusicPlayerService
         }
 
         // If the system kills the service after onStartCommand() returns,
-        // recreate the service and call onStartCommand(), but do not redeliver the last intent
-        return START_STICKY;
-
+        // do not recreate the service (which calls onStartCommand() with null intent)
+        return START_NOT_STICKY;
     }
 
     @Override

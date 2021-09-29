@@ -18,6 +18,8 @@ public class DatabaseRepository {
     private MainActivity mainActivity;
     private boolean isModifying = false;
     private LinkedBlockingQueue<Query> messageQueue;
+    private boolean isActive = false;
+    private boolean isDestroyed = false;
 
     // playlist objects
     private static int playlist_maxid = 0;
@@ -42,8 +44,9 @@ public class DatabaseRepository {
     public static final int UPDATE_METADATA_SEEK = 17;
     public static final int UPDATE_METADATA_ISALBUMARTCIRCULAR = 18;
     public static final int UPDATE_METADATA_RANDOMSEED = 19;
-    public static final int UPDATE_SONGMETADATA_PLAYED = 20;
-    public static final int UPDATE_SONGMETADATA_LISTENED = 21;
+    public static final int UPDATE_METADATA_ISAVAILABLE = 20;
+    public static final int UPDATE_SONGMETADATA_PLAYED = 21;
+    public static final int UPDATE_SONGMETADATA_LISTENED = 22;
 
     /**
      * Holds the query message and the object involved (if exists)
@@ -75,6 +78,12 @@ public class DatabaseRepository {
         startMessageQueueThread();
     }
 
+    /**
+     * Initializes the database and database access objects (DAOs)
+     * Database connection does not need to be manually closed
+     * because it will be cleaned up when the process ends
+     * @param context the context that will interact with the database (e.g. MainActivity)
+     */
     public void initDatabase(Context context){
         musicPlayerDatabase = Room.databaseBuilder(context,
                 MusicPlayerDatabase.class, "musicplayer-database").build();
@@ -95,7 +104,7 @@ public class DatabaseRepository {
         Thread messageQueueThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                while(true) {
+                while(!isDestroyed || !messageQueue.isEmpty()) {
                     if (!isModifying) {
                         isModifying = true;
                         try {
@@ -167,13 +176,33 @@ public class DatabaseRepository {
                                     break;
                                 case ASYNC_GET_METADATA:
                                     // there is only one row of metadata for now, with id 0
-                                    final Metadata metadata = metadataDao.findById(0);
+                                    Metadata temp_metadata = metadataDao.findById(0);
+                                    final Metadata availableMetadata;
+
+                                    // insert default metadata if none exists yet
+                                    if (temp_metadata == null){
+                                        availableMetadata = Metadata.DEFAULT_METADATA;
+                                        insertMetadata(availableMetadata);
+                                    }
+
+                                    // keep polling for the metadata until db is available
+                                    else {
+                                        while (!isActive && !temp_metadata.getIsAvailable()) {
+                                            temp_metadata = metadataDao.findById(0);
+                                        }
+                                        availableMetadata = temp_metadata;
+                                    }
+
+                                    // db is now no longer available for other processes
+                                    isActive = true;
+                                    metadataDao.updateIsAvailable(0, false);
+                                    availableMetadata.setIsAvailable(false);
 
                                     // operation complete, update viewpager in mainactivity
                                     mainActivity.runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            mainActivity.updateMainActivity(metadata, null, ASYNC_GET_METADATA);
+                                            mainActivity.updateMainActivity(availableMetadata, null, ASYNC_GET_METADATA);
                                         }
                                     });
                                     break;
@@ -230,6 +259,9 @@ public class DatabaseRepository {
                                     break;
                                 case UPDATE_METADATA_RANDOMSEED:
                                     metadataDao.updateRandomSeed(0, (int) query.object);
+                                    break;
+                                case UPDATE_METADATA_ISAVAILABLE:
+                                    metadataDao.updateIsAvailable(0, (boolean) query.object);
                                     break;
                                 case UPDATE_SONGMETADATA_PLAYED:
                                     int played_id = ((SongMetadata) query.object).getId();
@@ -442,5 +474,27 @@ public class DatabaseRepository {
      */
     public synchronized void updateSongMetadataListened(SongMetadata songMetadata, String dateListened){
         messageQueue.offer(new Query(UPDATE_SONGMETADATA_LISTENED, songMetadata, dateListened));
+    }
+
+    /**
+     * Informs message thread to finish up all remaining queries for the db in the message queue
+     * and lastly mark the database as available for read/write for the next process.
+     * It is not necessary to close the db connection because that will be handled by Android
+     */
+    public synchronized void finish(){
+        // queue message to make db available for next process and inform message queue thread to end
+        messageQueue.offer(new Query(UPDATE_METADATA_ISAVAILABLE, true));
+        isDestroyed = true;
+    }
+
+    /**
+     * Method to be used in the event of a crash to clear up all remaining queries in message queue
+     * and immediately mark the db as available for read/write for the next process.
+     * It is not necessary to close the db connection because that will be handled by Android
+     */
+    public synchronized void finishInterrupt(){
+        messageQueue.clear();
+        messageQueue.offer(new Query(UPDATE_METADATA_ISAVAILABLE, true));
+        isDestroyed = true;
     }
 }

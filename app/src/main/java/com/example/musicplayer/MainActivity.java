@@ -107,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView toolbar_title;
     private ActionBar actionBar;
     private boolean isDestroyed = false;
+    private Metadata metadata;
 
     // sliding up panel
     private static int random_seed;
@@ -242,6 +243,9 @@ public class MainActivity extends AppCompatActivity {
             mainActivityMessenger = new Messenger(messageHandler);
             musicServiceIntent = new Intent(this, MusicPlayerService.class);
 
+            // retrieve metadata values from database (blocks until db is available)
+            databaseRepository.asyncGetMetadata();
+
             // init listview functionality and playlist
             initMusicList();
 
@@ -249,14 +253,12 @@ public class MainActivity extends AppCompatActivity {
             initMainButtons();
             initInfoButton();
             initActionBar();
-        }
-        else if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+        } else if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
             // present rationale to user and then request for permissions
             ActivityCompat.requestPermissions(MainActivity.this,
                     new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
-        }
-        else {
+        } else {
             // request for permissions
             ActivityCompat.requestPermissions(MainActivity.this,
                     new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
@@ -295,7 +297,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         System.out.println("paused");
-
         if (isPermissionGranted) {
             // update current metadata values in database
             int theme_resourceid = ThemeColors.getThemeResourceId();
@@ -331,6 +332,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         System.out.println("destroyed");
         isDestroyed = true;
+        databaseRepository.finish();
         super.onDestroy();
     }
 
@@ -1227,6 +1229,69 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * Method used to initialize various app components using values stored in the metadata
+     * E.g. views, random seed, current song, etc.
+     */
+    public void setupMetadata(){
+        boolean isPlaying = metadata.getIsPlaying();
+        int seekPosition = metadata.getSeekPosition();
+        int songIndex = metadata.getSongIndex();
+        int themeResourceId = metadata.getThemeResourceId();
+        int songtab_scrollindex = metadata.getSongtab_scrollindex();
+        int songtab_scrolloffset = metadata.getSongtab_scrolloffset();
+        isShuffled = metadata.getIsShuffled();
+        repeat_status = metadata.getRepeatStatus();
+        boolean isMediaStorePlaylistsImported = metadata.getIsMediaStorePlaylistsImported();
+        isAlbumArtCircular = metadata.getIsAlbumArtCircular();
+        random_seed = metadata.getRandom_seed();
+
+        // set current song using the song index metadata
+        if (current_playlist.getSize() > 0) {
+            current_song = current_playlist.getSongList().get(songIndex);
+        }
+
+        // set shuffle button transparency using the isShuffled metadata
+        mainDisplay_shuffle_btn.setImageAlpha(isShuffled ? 255 : 40);
+
+        // set repeat button appearance using repeatStatus metadata
+        toggleRepeatButton(repeat_status);
+
+        // retrieve all playlists that exist in mediastore if this hasn't been done before
+        if (!isMediaStorePlaylistsImported){
+            getMusicPlaylistsAsync();
+        }
+
+        // music player is playing, start music service but keep playing
+        if (isPlaying) {
+            musicServiceIntent.putExtra("musicListInitPlaying", mainActivityMessenger);
+            startService(musicServiceIntent);
+
+            initMusicUI();
+        }
+        // music player is not playing, start music service for the first time
+        else {
+            musicServiceIntent.putExtra("musicListInitPaused", mainActivityMessenger);
+            startService(musicServiceIntent);
+
+            initMusicUI();
+
+            // inform the music service about the seekbar's position from the metadata
+            seekBar_seekIntent.putExtra("seekbarSeek", seekPosition);
+            startService(seekBar_seekIntent);
+            mainDisplay_seekBar.setProgress(seekPosition);
+        }
+
+        // set the current theme and generate theme values
+        setTheme(themeResourceId);
+        ThemeColors.generateThemeValues(this, themeResourceId);
+
+        // after generating theme values, update the main ui
+        updateTheme(themeResourceId);
+        theme_btn.setImageResource(ThemeColors.getThemeBtnResourceId());
+        SongListTab.setScrollSelection(songtab_scrollindex, songtab_scrolloffset);
+    }
+
+    /**
      * Helper method to enable scaling of album art and visibility of song name & artist
      * Based on largeAlbumArt boolean conditions:
      * false - album art is not large and song name & artist are visible
@@ -1307,8 +1372,8 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
 
-                // retrieve metadata values from database
-                databaseRepository.asyncGetMetadata();
+                // set up app components using the metadata already retrieved
+                setupMetadata();
                 break;
             case DatabaseRepository.ASYNC_INSERT_PLAYLIST:
                 // update current playlist adapter with the newly created playlist
@@ -1350,68 +1415,8 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             case DatabaseRepository.ASYNC_GET_METADATA:
-                if (object == null){
-                    // insert metadata row into the database for the first time
-                    databaseRepository.insertMetadata(Metadata.DEFAULT_METADATA);
-                }
-
-                Metadata metadata = object == null ? Metadata.DEFAULT_METADATA : (Metadata) object;
-                boolean isPlaying = metadata.getIsPlaying();
-                int seekPosition = metadata.getSeekPosition();
-                int songIndex = metadata.getSongIndex();
-                int themeResourceId = metadata.getThemeResourceId();
-                int songtab_scrollindex = metadata.getSongtab_scrollindex();
-                int songtab_scrolloffset = metadata.getSongtab_scrolloffset();
-                isShuffled = metadata.getIsShuffled();
-                repeat_status = metadata.getRepeatStatus();
-                boolean isMediaStorePlaylistsImported = metadata.getIsMediaStorePlaylistsImported();
-                isAlbumArtCircular = metadata.getIsAlbumArtCircular();
-                random_seed = metadata.getRandom_seed();
-
-                // set current song using the song index metadata
-                if (current_playlist.getSize() > 0) {
-                    current_song = current_playlist.getSongList().get(songIndex);
-                }
-
-                // set shuffle button transparency using the isShuffled metadata
-                mainDisplay_shuffle_btn.setImageAlpha(isShuffled ? 255 : 40);
-
-                // set repeat button appearance using repeatStatus metadata
-                toggleRepeatButton(repeat_status);
-
-                // retrieve all playlists that exist in mediastore if this hasn't been done before
-                if (!isMediaStorePlaylistsImported){
-                    getMusicPlaylistsAsync();
-                }
-
-                // music player is playing, start music service but keep playing
-                if (isPlaying) {
-                    musicServiceIntent.putExtra("musicListInitPlaying", mainActivityMessenger);
-                    startService(musicServiceIntent);
-
-                    initMusicUI();
-                }
-                // music player is not playing, start music service for the first time
-                else {
-                    musicServiceIntent.putExtra("musicListInitPaused", mainActivityMessenger);
-                    startService(musicServiceIntent);
-
-                    initMusicUI();
-
-                    // inform the music service about the seekbar's position from the metadata
-                    seekBar_seekIntent.putExtra("seekbarSeek", seekPosition);
-                    startService(seekBar_seekIntent);
-                    mainDisplay_seekBar.setProgress(seekPosition);
-                }
-
-                // set the current theme and generate theme values
-                setTheme(themeResourceId);
-                ThemeColors.generateThemeValues(this, themeResourceId);
-
-                // after generating theme values, update the main ui
-                updateTheme(themeResourceId);
-                theme_btn.setImageResource(ThemeColors.getThemeBtnResourceId());
-                SongListTab.setScrollSelection(songtab_scrollindex, songtab_scrolloffset);
+                // metadata object guaranteed not null
+                metadata = (Metadata) object;
                 break;
             case DatabaseRepository.ASYNC_GET_ALL_SONGMETADATA:
                 ArrayList<SongMetadata> database_songs = (ArrayList<SongMetadata>) object;

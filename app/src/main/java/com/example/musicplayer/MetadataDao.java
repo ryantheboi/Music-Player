@@ -76,6 +76,12 @@ public interface MetadataDao {
     @Query("UPDATE Metadata SET random_seed = :random_seed WHERE id =:id")
     void updateRandomSeed(int id, int random_seed);
 
+    /**
+     * Update only the isAvailable metadata, by id
+     */
+    @Query("UPDATE Metadata SET isAvailable = :isAvailable WHERE id =:id")
+    void updateIsAvailable(int id, boolean isAvailable);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(Metadata metadata);
 

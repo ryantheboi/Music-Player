@@ -33,13 +33,16 @@ public class Metadata {
     // value to store the last seed used for randomization
     private int random_seed;
 
+    // value to determine if database is allowing read/write access (for other processes)
+    private boolean isAvailable;
+
     @Ignore
-    public static Metadata DEFAULT_METADATA = new Metadata(0, false, 0, 0, false, 0, false, R.style.ThemeOverlay_AppCompat_MusicLight, 0, 0, false, 0);
+    public static Metadata DEFAULT_METADATA = new Metadata(0, false, 0, 0, false, 0, false, R.style.ThemeOverlay_AppCompat_MusicLight, 0, 0, false, 0, true);
 
     /**
      * Constructor used by database to create a metadata object
      */
-    public Metadata(int id, boolean isPlaying, int seekPosition, int songIndex, boolean isShuffled, int repeatStatus, boolean isMediaStorePlaylistsImported, int themeResourceId, int songtab_scrollindex, int songtab_scrolloffset, boolean isAlbumArtCircular, int random_seed) {
+    public Metadata(int id, boolean isPlaying, int seekPosition, int songIndex, boolean isShuffled, int repeatStatus, boolean isMediaStorePlaylistsImported, int themeResourceId, int songtab_scrollindex, int songtab_scrolloffset, boolean isAlbumArtCircular, int random_seed, boolean isAvailable) {
         this.id = id;
         this.isPlaying = isPlaying;
         this.seekPosition = seekPosition;
@@ -52,6 +55,7 @@ public class Metadata {
         this.songtab_scrolloffset = songtab_scrolloffset;
         this.isAlbumArtCircular = isAlbumArtCircular;
         this.random_seed = random_seed;
+        this.isAvailable = isAvailable;
     }
 
     public int getId() {
@@ -100,5 +104,12 @@ public class Metadata {
 
     public int getRandom_seed(){
         return random_seed;
+    }
+
+    public boolean getIsAvailable(){
+        return isAvailable;
+    }
+    public void setIsAvailable(boolean isAvailable){
+        this.isAvailable = isAvailable;
     }
 }

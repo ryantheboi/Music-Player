@@ -108,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
     private ActionBar actionBar;
     private boolean isDestroyed = false;
     private Metadata metadata;
+    private boolean isMetadataLoaded = false;
 
     // sliding up panel
     private static int random_seed;
@@ -298,23 +299,25 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         System.out.println("paused");
         if (isPermissionGranted) {
-            // update current metadata values in database
-            int theme_resourceid = ThemeColors.getThemeResourceId();
-            int songtab_scrollindex = SongListTab.getScrollIndex();
-            int songtab_scrolloffset = SongListTab.getScrollOffset();
-            databaseRepository.updateMetadataTheme(theme_resourceid);
-            databaseRepository.updateMetadataSongtab(songtab_scrollindex, songtab_scrolloffset);
+            if (isMetadataLoaded) {
+                // update current metadata values in database
+                int theme_resourceid = ThemeColors.getThemeResourceId();
+                int songtab_scrollindex = SongListTab.getScrollIndex();
+                int songtab_scrolloffset = SongListTab.getScrollOffset();
+                databaseRepository.updateMetadataTheme(theme_resourceid);
+                databaseRepository.updateMetadataSongtab(songtab_scrollindex, songtab_scrolloffset);
 
-            // save the current random seed
-            databaseRepository.updateMetadataRandomSeed(random_seed);
+                // save the current random seed
+                databaseRepository.updateMetadataRandomSeed(random_seed);
 
-            // save the current shuffle and repeat option
-            databaseRepository.updateMetadataIsShuffled(isShuffled);
-            databaseRepository.updateMetadataRepeatStatus(repeat_status);
+                // save the current shuffle and repeat option
+                databaseRepository.updateMetadataIsShuffled(isShuffled);
+                databaseRepository.updateMetadataRepeatStatus(repeat_status);
 
-            // save current song index and playlist to database
-            databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
-            databaseRepository.insertPlaylist(current_playlist);
+                // save current song index and playlist to database
+                databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
+                databaseRepository.insertPlaylist(current_playlist);
+            }
         }
         super.onPause();
     }
@@ -323,7 +326,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         System.out.println("stopped");
         if (isPermissionGranted) {
-
+            databaseRepository.finish();
         }
         super.onStop();
     }
@@ -332,7 +335,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         System.out.println("destroyed");
         isDestroyed = true;
-        databaseRepository.finish();
         super.onDestroy();
     }
 
@@ -1289,6 +1291,7 @@ public class MainActivity extends AppCompatActivity {
         updateTheme(themeResourceId);
         theme_btn.setImageResource(ThemeColors.getThemeBtnResourceId());
         SongListTab.setScrollSelection(songtab_scrollindex, songtab_scrolloffset);
+        isMetadataLoaded = true;
     }
 
     /**

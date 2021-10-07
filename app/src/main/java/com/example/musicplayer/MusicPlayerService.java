@@ -34,15 +34,15 @@ public class MusicPlayerService
         implements OnCompletionListener, OnErrorListener {
 
     private static MediaPlayer mediaPlayer;
-    static AudioManager mAudioManager;
-    static AudioAttributes mAudioAttributes;
-    static AudioFocusRequest mAudioFocusRequest;
-    boolean mPlayOnAudioFocus;
+    private static AudioManager mAudioManager;
+    private static AudioAttributes mAudioAttributes;
+    private static AudioFocusRequest mAudioFocusRequest;
+    private boolean mPlayOnAudioFocus;
     private static Messenger mainActivity_messenger;
     private static Notification notification;
     private HandlerThread musicPlayerHandlerThread;
     private PlaybackHandler playerHandler;
-    private static boolean playing = false;
+    private static boolean continuePlaying = false;
     private static int seekbar_position;
     private ScheduledExecutorService song_listener;
     private Song song_currentlyListening;
@@ -210,7 +210,6 @@ public class MusicPlayerService
     @Override
     @TargetApi(26)
     public void onDestroy() {
-        super.onDestroy();
         if (mediaPlayer != null) {
             if (mediaPlayer.isPlaying()) {
                 mediaPlayer.stop();
@@ -220,6 +219,7 @@ public class MusicPlayerService
         mAudioManager.abandonAudioFocusRequest(mAudioFocusRequest);
         song_listener.shutdownNow();
         stopSelf();
+        super.onDestroy();
     }
 
     @Override
@@ -263,7 +263,7 @@ public class MusicPlayerService
     private void toggleMedia() {
         if (!mediaPlayer.isPlaying()) {
             mediaPlayer.start();
-            playing = true;
+            continuePlaying = true;
 
             Song curr_song = MainActivity.getCurrent_song();
             if (getSong_currentlyListening() == null || !getSong_currentlyListening().equals(curr_song)) {
@@ -276,7 +276,7 @@ public class MusicPlayerService
         }
         else if (mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
-            playing = false;
+            continuePlaying = false;
         }
     }
 
@@ -294,7 +294,7 @@ public class MusicPlayerService
             public void run() {
                 if (!getSong_isListened()) {
                     int seconds = getSong_secondsListened();
-                    if (playing && seconds < SECONDS_LISTENED) {
+                    if (continuePlaying && seconds < SECONDS_LISTENED) {
                         setSong_secondsListened(seconds + 1);
                     } else if (seconds == SECONDS_LISTENED) {
                         setSong_isListened(true);
@@ -532,7 +532,7 @@ public class MusicPlayerService
                     }
                     break;
                 case PREPARE_PLAY:
-                    if (playing) {
+                    if (continuePlaying) {
                         // disable playback in background and update with current position
                         sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY, true, mediaPlayer.getCurrentPosition());
                         mService.stopForeground(false);
@@ -553,7 +553,7 @@ public class MusicPlayerService
 
                             // recreate mp and play prev song only if mediaplayer was playing before
                             recreateMediaPlayer(prev_song.getId());
-                            if (playing) {
+                            if (continuePlaying) {
                                 sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE, true, -1);
                                 audioFocusToggleMedia();
                             } else {
@@ -573,7 +573,7 @@ public class MusicPlayerService
 
                             // recreate mp and play next song only if mediaplayer was playing before
                             recreateMediaPlayer(next_song.getId());
-                            if (playing) {
+                            if (continuePlaying) {
                                 sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE, true, -1);
                                 audioFocusToggleMedia();
                             } else {
@@ -593,7 +593,7 @@ public class MusicPlayerService
 
                             // recreate mp for next song and keep it paused at seek position 0
                             recreateMediaPlayer(next_song.getId());
-                            playing = false;
+                            continuePlaying = false;
                             sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY, true, 0);
                         } catch (Exception e) {
                             e.printStackTrace();

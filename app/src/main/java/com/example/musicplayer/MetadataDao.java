@@ -77,10 +77,10 @@ public interface MetadataDao {
     void updateRandomSeed(int id, int random_seed);
 
     /**
-     * Update only the isAvailable metadata, by id
+     * Update only the numQueries metadata, by id
      */
-    @Query("UPDATE Metadata SET isAvailable = :isAvailable WHERE id =:id")
-    void updateIsAvailable(int id, boolean isAvailable);
+    @Query("UPDATE Metadata SET numQueries = :numQueries WHERE id =:id")
+    void updateNumQueries(int id, int numQueries);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(Metadata metadata);

@@ -372,7 +372,7 @@ public class MainActivity extends AppCompatActivity {
         theme_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!isThemeSelecting) {
+                if (!isThemeSelecting && isMetadataLoaded) {
                     isThemeSelecting = true;
                     theme_btn.startAnimation(rotate);
                     startActivity(chooseThemeIntent);
@@ -1369,9 +1369,12 @@ public class MainActivity extends AppCompatActivity {
 
                 // if a playlist wasn't retrieved from the database
                 if (current_playlist == null) {
+                    current_playlist = fullPlaylist;
                     if (fullSongList.size() > 0) {
-                        current_playlist = fullPlaylist;
                         current_song = fullSongList.get(0);
+                    }
+                    else{
+                        break;
                     }
                 }
 
@@ -1632,6 +1635,7 @@ public class MainActivity extends AppCompatActivity {
                 case MusicPlayerService.UPDATE_SONG:
                     // update main activity with the selected song from music list
                     current_song = (Song) bundle.get("song");
+                    System.out.println(current_playlist.getName());
 
                     // grab song album art and duration
                     String albumID = current_song.getAlbumID();

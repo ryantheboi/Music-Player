@@ -18,8 +18,6 @@
         android:theme="@style/AppTheme"
         android:requestLegacyExternalStorage="true"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".PlaylistActivity"
-            android:theme="@style/ToolbarAppTheme.Playlist"/>
         <activity android:name=".AddPlaylistActivity"
             android:theme="@style/ToolbarAppTheme.Playlist"/>
         <activity android:name=".MusicDetailsActivity"

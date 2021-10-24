@@ -53,17 +53,15 @@ public class PlaylistFragment extends Fragment {
     private TextView m_playlist_divider_tv;
     private TextView m_playlist_time_tv;
     private int m_total_time;
-
     private static ArrayList<Song> m_userSelection = new ArrayList<>();
 
-    public PlaylistFragment() {
+    public PlaylistFragment(Playlist playlist) {
         super(R.layout.activity_playlist);
+        m_playlist = playlist;
     }
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-        m_playlist = requireArguments().getParcelable("playlist");
-
         initViews(view);
         initObjects();
         initListeners();
@@ -73,6 +71,7 @@ public class PlaylistFragment extends Fragment {
     }
 
     private void initViews(View view) {
+        decorView = (ViewGroup) getActivity().getWindow().getDecorView();
         m_playlist_layout = view.findViewById(R.id.layout_playlist);
         m_playlist_toolbar = view.findViewById(R.id.toolbar_playlist);
         m_playlist_name_tv = view.findViewById(R.id.textview_playlist_name);
@@ -308,10 +307,7 @@ public class PlaylistFragment extends Fragment {
         m_back_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getActivity().getSupportFragmentManager().beginTransaction()
-                        .setReorderingAllowed(true)
-                        .replace(R.id.fragment_playlist, SongListTab.class, null)
-                        .commit();
+                getActivity().getSupportFragmentManager().popBackStackImmediate();
             }
         });
     }

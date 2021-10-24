@@ -130,13 +130,15 @@ public class PlaylistTab extends Fragment {
         m_listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                // obtain the selected playlist object
+                // obtain the selected playlist object and launch playlist fragment
                 Playlist playlist = (Playlist) m_listView.getItemAtPosition(position);
 
-                Intent playlistIntent = new Intent(m_mainActivity, PlaylistActivity.class);
-                playlistIntent.putExtra("playlist", playlist);
-                playlistIntent.putExtra("mainMessenger", m_mainMessenger);
-                m_mainActivity.startActivity(playlistIntent);
+                PlaylistFragment playlistFragment = new PlaylistFragment(playlist);
+                getActivity().getSupportFragmentManager().beginTransaction()
+                        .setReorderingAllowed(true)
+                        .add(R.id.fragment_playlist, playlistFragment)
+                        .addToBackStack("playlistTabFragment")
+                        .commit();
             }
         });
 

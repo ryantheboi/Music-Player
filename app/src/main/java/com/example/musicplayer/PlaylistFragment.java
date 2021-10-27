@@ -55,9 +55,10 @@ public class PlaylistFragment extends Fragment {
     private int m_total_time;
     private static ArrayList<Song> m_userSelection = new ArrayList<>();
 
-    public PlaylistFragment(Playlist playlist) {
+    public PlaylistFragment(Playlist playlist, Messenger messenger) {
         super(R.layout.activity_playlist);
         m_playlist = playlist;
+        m_mainMessenger = messenger;
     }
 
     @Override
@@ -66,7 +67,6 @@ public class PlaylistFragment extends Fragment {
         initObjects();
         initListeners();
         setTextViews();
-        // adjust activity colors for the current theme
         setThemeColors();
     }
 
@@ -226,6 +226,7 @@ public class PlaylistFragment extends Fragment {
                         // construct named playlist
                         Playlist playlist = new Playlist(getString(R.string.Favorites), m_userSelection);
                         addPlaylistIntent.putExtra("addPlaylist", playlist);
+                        addPlaylistIntent.putExtra("messenger", m_mainMessenger);
                         startActivity(addPlaylistIntent);
 
                         mode.finish(); // Action picked, so close the CAB

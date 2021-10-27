@@ -133,7 +133,7 @@ public class PlaylistTab extends Fragment {
                 // obtain the selected playlist object and launch playlist fragment
                 Playlist playlist = (Playlist) m_listView.getItemAtPosition(position);
 
-                PlaylistFragment playlistFragment = new PlaylistFragment(playlist);
+                PlaylistFragment playlistFragment = new PlaylistFragment(playlist, m_mainMessenger);
                 getActivity().getSupportFragmentManager().beginTransaction()
                         .setReorderingAllowed(true)
                         .add(R.id.fragment_playlist, playlistFragment)

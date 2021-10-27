@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/layout_mainfragment"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorPrimary">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:layout_scrollFlags="scroll|enterAlways"
+            android:paddingEnd="10dp">
+
+            <TextView
+                android:id="@+id/toolbar_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:singleLine="true"
+                android:text="@string/app_name"
+                android:textStyle="bold"
+                android:textColor="?attr/titleTextColor"
+                android:textSize="20sp" />
+            <EditText
+                android:id="@+id/toolbar_searchFilter"
+                android:theme="@style/EditTextHint"
+                android:layout_width="150dp"
+                android:layout_height="50dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginStart="10dp"
+                android:hint="@string/Search"
+                android:textColor="?attr/itemTextColor"
+                android:visibility="invisible"/>
+        </androidx.appcompat.widget.Toolbar>
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabLayout"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:minHeight="30dp"
+            android:background="?attr/colorPrimary"
+            app:tabTextColor="?attr/tabTextColor"
+            app:tabIndicatorColor="?attr/titleTextColor"
+            app:tabGravity="fill"/>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <com.example.musicplayer.DynamicViewPager
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+    </com.example.musicplayer.DynamicViewPager>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

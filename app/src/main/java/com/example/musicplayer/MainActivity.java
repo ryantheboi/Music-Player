@@ -1,24 +1,18 @@
 package com.example.musicplayer;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.graphics.drawable.DrawableCompat;
-import androidx.viewpager.widget.ViewPager;
 
 import android.Manifest;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -43,27 +37,15 @@ import android.os.Message;
 import android.os.Messenger;
 import android.provider.MediaStore;
 import android.support.v4.media.session.MediaSessionCompat;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.ActionMode;
-import android.view.Menu;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.google.android.material.tabs.TabLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.io.InputStream;
@@ -81,31 +63,16 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSION_REQUEST = 1;
     private boolean isPermissionGranted = false;
-    private boolean isThemeSelecting;
     private boolean isInfoDisplaying;
-    private ImageView theme_btn;
-    private RippleDrawable theme_btn_ripple;
-    private CoordinatorLayout musicListRelativeLayout;
     private ArrayList<Song> fullSongList;
     private HashMap<Integer, SongMetadata> fullSongMetadataHashMap;
     private static ArrayList<Playlist> playlistList;
     private static Playlist current_playlist;
     private static Playlist fullPlaylist;
-    private SongListAdapter songListadapter;
-    private PlaylistAdapter playlistAdapter;
-    private PagerAdapter pagerAdapter;
     private Messenger mainActivityMessenger;
     private Intent musicServiceIntent;
     public static boolean isActionMode = false;
     public static ActionMode actionMode = null;
-    private EditText searchFilter_editText;
-    private ImageView searchFilter_btn;
-    private RippleDrawable searchFilter_btn_ripple;
-    private TabLayout tabLayout;
-    private DynamicViewPager viewPager;
-    private Toolbar toolbar;
-    private TextView toolbar_title;
-    private ActionBar actionBar;
     private boolean isDestroyed = false;
     private Metadata metadata;
     private boolean isMetadataLoaded = false;
@@ -179,6 +146,9 @@ public class MainActivity extends AppCompatActivity {
     // database
     private DatabaseRepository databaseRepository;
 
+    //fragments
+    private MainFragment mainFragment;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -190,10 +160,23 @@ public class MainActivity extends AppCompatActivity {
         // initialize database repository to handle all retrievals and transactions
         databaseRepository = new DatabaseRepository(this, this);
 
+        // init thread for message handling
+        HandlerThread messageHandlerThread = new HandlerThread("MessageHandler");
+        messageHandlerThread.start();
+        messageHandler = new MessageHandler(messageHandlerThread.getLooper());
+        mainActivityMessenger = new Messenger(messageHandler);
+
+        // when a configuration change occurs and activity is recreated, fragment is auto restored
+        if (savedInstanceState == null) {
+            mainFragment = new MainFragment(mainActivityMessenger);
+            getSupportFragmentManager().beginTransaction()
+                    .setReorderingAllowed(true)
+                    .add(R.id.fragment_playlist, mainFragment)
+                    .commit();
+        }
+
         // initialize all views
         setContentView(R.layout.activity_main);
-        musicListRelativeLayout = findViewById(R.id.activity_musiclist);
-        searchFilter_editText = findViewById(R.id.toolbar_searchFilter);
         slidingUpMenuLayout = findViewById(R.id.sliding_menu);
         slidingUp_albumArt = findViewById(R.id.sliding_albumart);
         slidingUp_songName = findViewById(R.id.sliding_title);
@@ -219,10 +202,6 @@ public class MainActivity extends AppCompatActivity {
         mainDisplay_musicPosition = findViewById(R.id.music_position);
         mainDisplay_musicDuration = findViewById(R.id.music_duration);
         mainDisplay_playlistHeader = findViewById(R.id.playlist_header);
-        tabLayout = findViewById(R.id.tabLayout);
-        viewPager = findViewById(R.id.viewPager);
-        toolbar = findViewById(R.id.toolbar);
-        toolbar_title = findViewById(R.id.toolbar_title);
     }
 
     @Override
@@ -237,11 +216,6 @@ public class MainActivity extends AppCompatActivity {
         if (isPermissionGranted) {
             setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
-            // init thread for message handling
-            HandlerThread messageHandlerThread = new HandlerThread("MessageHandler");
-            messageHandlerThread.start();
-            messageHandler = new MessageHandler(messageHandlerThread.getLooper());
-            mainActivityMessenger = new Messenger(messageHandler);
             musicServiceIntent = new Intent(this, MusicPlayerService.class);
 
             // retrieve metadata values from database (blocks until db is available)
@@ -253,7 +227,6 @@ public class MainActivity extends AppCompatActivity {
             initMainGradient();
             initMainButtons();
             initInfoButton();
-            initActionBar();
         } else if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
             // present rationale to user and then request for permissions
@@ -273,26 +246,6 @@ public class MainActivity extends AppCompatActivity {
             isInfoDisplaying = false;
         }
         super.onResume();
-    }
-
-    @Override
-    @TargetApi(23)
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // inflate the menu for the actionbar, if it is present.
-        getMenuInflater().inflate(R.menu.toolbar_menu, menu);
-
-        // theme button menu item
-        FrameLayout menuitem_theme_layout = (FrameLayout) menu.findItem(R.id.menuitem_theme).getActionView();
-        theme_btn = menuitem_theme_layout.findViewById(R.id.icon);
-        theme_btn_ripple = (RippleDrawable) theme_btn.getBackground();
-        theme_btn_ripple.setRadius((int) getResources().getDimension(R.dimen.theme_button_ripple));
-        initThemeButton();
-
-        // search filter button menu item and its corresponding edittext
-        FrameLayout menuitem_searchfilter_layout = (FrameLayout) menu.findItem(R.id.menuitem_searchfilter).getActionView();
-        searchFilter_btn = menuitem_searchfilter_layout.findViewById(R.id.icon);
-        searchFilter_btn_ripple = (RippleDrawable) searchFilter_btn.getBackground();
-        return true;
     }
 
     @Override
@@ -360,25 +313,6 @@ public class MainActivity extends AppCompatActivity {
         // asynchronously gets all songs and playlists from database, then updates main activity
         databaseRepository.asyncGetAllSongMetadata();
         databaseRepository.asyncInitAllPlaylists();
-    }
-
-    public void initThemeButton() {
-        isThemeSelecting = false;
-        Messenger themeMessenger = new Messenger(messageHandler);
-        final Intent chooseThemeIntent = new Intent(this, ChooseThemeActivity.class);
-        chooseThemeIntent.putExtra("mainActivityMessenger", themeMessenger);
-        final Animation rotate = AnimationUtils.loadAnimation(this, R.anim.rotate_themebtn_animation);
-
-        theme_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!isThemeSelecting && isMetadataLoaded) {
-                    isThemeSelecting = true;
-                    theme_btn.startAnimation(rotate);
-                    startActivity(chooseThemeIntent);
-                }
-            }
-        });
     }
 
     public void getMusic() {
@@ -467,7 +401,7 @@ public class MainActivity extends AppCompatActivity {
                     public void run() {
                         for (Playlist mediastorePlaylist : arr){
                             // update the viewpager adapter with the mediastore playlists
-                            playlistAdapter.add(mediastorePlaylist);
+                            mainFragment.addPlaylist(mediastorePlaylist);
                         }
                     }
                 });
@@ -475,92 +409,6 @@ public class MainActivity extends AppCompatActivity {
                 databaseRepository.updateMetadataIsMediaStorePlaylistsImported(true);
             }
         });
-    }
-
-    /**
-     * Sets the action bar as the toolbar, which can be overlaid by an actionmode
-     */
-    public void initActionBar(){
-        // using toolbar as ActionBar without title
-        setSupportActionBar(toolbar);
-        actionBar = getSupportActionBar();
-        actionBar.setDisplayShowTitleEnabled(false);
-    }
-
-    @TargetApi(23)
-    @SuppressLint("ClickableViewAccessibility")
-    public void initFilterSearch() {
-        // set this click listener to manually call the action mode's click listener
-        searchFilter_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (searchFilter_editText.hasFocus()){
-                    // hide keyboard and clear focus and text from searchfilter
-                    InputMethodManager inputMethodManager =
-                            (InputMethodManager) MainActivity.this.getSystemService(
-                                    Activity.INPUT_METHOD_SERVICE);
-                    inputMethodManager.hideSoftInputFromWindow(
-                            MainActivity.this.getCurrentFocus().getWindowToken(), 0);
-                    searchFilter_editText.clearFocus();
-                    searchFilter_editText.getText().clear();
-                    searchFilter_editText.setVisibility(View.INVISIBLE);
-                }
-                else {
-                    // show keyboard and focus on the searchfilter
-                    searchFilter_editText.setVisibility(View.VISIBLE);
-                    if (searchFilter_editText.requestFocus()) {
-                        InputMethodManager inputMethodManager = (InputMethodManager)
-                                getSystemService(Activity.INPUT_METHOD_SERVICE);
-                        inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-                    }
-                }
-            }
-        });
-
-        // init searchfilter text usage functionality
-        searchFilter_editText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void onTextChanged(CharSequence cs, int arg1, int arg2, int arg3) {
-                // filter based on song name
-                songListadapter.getFilter().filter(cs);
-            }
-
-            @Override
-            public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable arg0) {
-            }
-        });
-
-        // init arraylist of all views under the sliding up panel layout
-        ArrayList<View> views = getAllChildren(slidingUpPanelLayout);
-
-        // theme btn is a menu item (not a child view of this layout), so manually add to arraylist
-        views.add(theme_btn);
-
-        // set touch listener for all views to hide the keyboard when touched
-        for (View innerView : views){
-            // excluding the searchfilter and its button
-            if (innerView != searchFilter_editText && innerView != searchFilter_btn) {
-                innerView.setOnTouchListener(new View.OnTouchListener() {
-                    @Override
-                    public boolean onTouch(View v, MotionEvent event) {
-                        // only attempt to hide keyboard if the list filter is in focus
-                        if (searchFilter_editText.hasFocus()) {
-                            InputMethodManager inputMethodManager =
-                                    (InputMethodManager) MainActivity.this.getSystemService(
-                                            Activity.INPUT_METHOD_SERVICE);
-                            inputMethodManager.hideSoftInputFromWindow(
-                                    MainActivity.this.getCurrentFocus().getWindowToken(), 0);
-                        }
-                        searchFilter_editText.clearFocus();
-                        return false;
-                    }
-                });
-            }
-        }
     }
 
     /**
@@ -572,10 +420,6 @@ public class MainActivity extends AppCompatActivity {
         initMainDisplay();
         initSeekbar();
         initSlidingUpPanel();
-        initViewPager();
-
-        // should be initialized last to set the touch listener for all views
-        initFilterSearch();
     }
 
     @Override
@@ -989,94 +833,16 @@ public class MainActivity extends AppCompatActivity {
         startService(notificationIntent);
     }
 
-    public void initViewPager(){
-        // remove any existing tabs prior to activity pause and re-add
-        tabLayout.removeAllTabs();
-        tabLayout.addTab(tabLayout.newTab().setText("Songs"));
-        tabLayout.addTab(tabLayout.newTab().setText("Playlists"));
-
-        pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, this);
-
-        // set dynamic viewpager
-        viewPager.setMaxPages(pagerAdapter.getCount());
-        viewPager.setBackgroundAsset(ThemeColors.getThemeBackgroundAssetResourceId());
-        viewPager.setAdapter(pagerAdapter);
-
-        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener(){
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                viewPager.setCurrentItem(tab.getPosition());
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-
-            }
-        });
-
-        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
-        viewPager.setPageTransformer(true, new ViewPager.PageTransformer() {
-            private static final float MIN_SCALE = 0.85f;
-            private static final float MIN_ALPHA = 0.5f;
-
-            @Override
-            public void transformPage(@NonNull View view, float position) {
-                int pageWidth = view.getWidth();
-                int pageHeight = view.getHeight();
-
-                if (position < -1) { // [-Infinity,-1)
-                    // This page is way off-screen to the left.
-                    view.setAlpha(0f);
-
-                } else if (position <= 1) { // [-1,1]
-                    // Modify the default slide transition to shrink the page as well
-                    float scaleFactor = Math.max(MIN_SCALE, 1 - Math.abs(position));
-                    float vertMargin = pageHeight * (1 - scaleFactor) / 2;
-                    float horzMargin = pageWidth * (1 - scaleFactor) / 2;
-                    if (position < 0) {
-                        view.setTranslationX(horzMargin - vertMargin / 2);
-                    } else {
-                        view.setTranslationX(-horzMargin + vertMargin / 2);
-                    }
-
-                    // Scale the page down (between MIN_SCALE and 1)
-                    view.setScaleX(scaleFactor);
-                    view.setScaleY(scaleFactor);
-
-                    // Fade the page relative to its size.
-                    view.setAlpha(MIN_ALPHA +
-                            (scaleFactor - MIN_SCALE) /
-                                    (1 - MIN_SCALE) * (1 - MIN_ALPHA));
-
-                } else { // (1,+Infinity]
-                    // This page is way off-screen to the right.
-                    view.setAlpha(0f);
-                }
-            }
-        });
-    }
-
     /**
      * Set the theme to the resource id provided and apply its colors to this activity
      * @param theme_resid the resource id of the theme to apply
      */
     public void updateTheme(int theme_resid) {
         setTheme(theme_resid);
-        musicListRelativeLayout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
-        SongListTab.toggleTabColor();
-        PlaylistTab.toggleTabColor();
+        mainFragment.updateFragmentColors();
         updateSeekBarColors();
-        updateTabLayoutColors();
-        updateViewPager();
-        updateSearchFilterColors();
         updateMainColors();
         updateSlidingMenuColors();
-        updateActionBarColors();
     }
 
     /**
@@ -1168,41 +934,6 @@ public class MainActivity extends AppCompatActivity {
         ((RippleDrawable) mainDisplay_seekBar.getBackground()).setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
     }
 
-    private void updateTabLayoutColors(){
-        tabLayout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
-        tabLayout.setTabTextColors(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.TAB_TEXT_COLOR)));
-        tabLayout.setSelectedTabIndicatorColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
-    }
-
-    private void updateViewPager(){
-        viewPager.setBackgroundAsset(ThemeColors.getThemeBackgroundAssetResourceId());
-    }
-
-    @TargetApi(21)
-    private void updateSearchFilterColors(){
-        searchFilter_editText.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
-        searchFilter_editText.setHintTextColor(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
-        searchFilter_editText.setBackgroundTintList(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
-
-        // update the drawable vector color
-        Drawable unwrappedDrawableSearchFilter = searchFilter_btn.getDrawable();
-        Drawable wrappedDrawableSearchFilter = DrawableCompat.wrap(unwrappedDrawableSearchFilter);
-        DrawableCompat.setTint(wrappedDrawableSearchFilter, getResources().getColor(ThemeColors.getDrawableVectorColorId()));
-
-        // update the ripple color
-        searchFilter_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
-    }
-
-    @TargetApi(21)
-    private void updateActionBarColors(){
-        // set color of the toolbar, which is the support action bar, and its title
-        toolbar.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
-        toolbar_title.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
-
-        // update ripple color of theme button
-        theme_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getRippleDrawableColorId())));
-    }
-
     /**
      * Cleans playlist database of any songs that can no longer be found in the full list of songs
      */
@@ -1289,7 +1020,6 @@ public class MainActivity extends AppCompatActivity {
 
         // after generating theme values, update the main ui
         updateTheme(themeResourceId);
-        theme_btn.setImageResource(ThemeColors.getThemeBtnResourceId());
         SongListTab.setScrollSelection(songtab_scrollindex, songtab_scrolloffset);
         isMetadataLoaded = true;
     }
@@ -1358,8 +1088,9 @@ public class MainActivity extends AppCompatActivity {
                 // remove any songs that were not able to be found in the device
                 playlistList = (ArrayList<Playlist>) object;
                 cleanPlaylistDatabase();
-                songListadapter = new SongListAdapter(this, R.layout.adapter_song_layout, fullSongList, this);
-                playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this);
+                SongListAdapter songListadapter = new SongListAdapter(this, R.layout.adapter_song_layout, fullSongList, this);
+                PlaylistAdapter playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this);
+                mainFragment.setAdapters(songListadapter, playlistAdapter);
 
                 // initialize current playlist from database, if possible
                 databaseRepository.asyncGetCurrentPlaylist();
@@ -1382,43 +1113,13 @@ public class MainActivity extends AppCompatActivity {
                 setupMetadata();
                 break;
             case DatabaseRepository.ASYNC_INSERT_PLAYLIST:
-                // update current playlist adapter with the newly created playlist
-                playlistAdapter.add((Playlist) object);
-
-                // move to playlist tab
-                viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
+                mainFragment.updateMainFragment(object, DatabaseRepository.ASYNC_INSERT_PLAYLIST);
                 break;
             case DatabaseRepository.ASYNC_MODIFY_PLAYLIST:
-                Playlist temp_playlist = (Playlist) object;
-                Playlist original_playlist = (Playlist) playlistAdapter.getItem(playlistAdapter.getPosition(temp_playlist));
-
-                // check if songs were removed from existing playlist
-                if (original_playlist.getSize() > temp_playlist.getSize()) {
-                    // modify the original playlist to adopt the changes
-                    original_playlist.adoptSongList(temp_playlist);
-
-                    // reconstruct viewpager adapter to reflect changes to individual playlist
-                    pagerAdapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount(), songListadapter, playlistAdapter, mainActivityMessenger, mainActivity);
-                    viewPager.setAdapter(pagerAdapter);
-
-                    // adjust tab colors
-                    SongListTab.toggleTabColor();
-                    PlaylistTab.toggleTabColor();
-
-                    // move to playlist tab
-                    viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
-                }
-
-                // playlist was simply renamed, or extended, notify playlist adapter
-                else{
-                    playlistAdapter.notifyDataSetChanged();
-                }
+                mainFragment.updateMainFragment(object, DatabaseRepository.ASYNC_MODIFY_PLAYLIST);
                 break;
             case DatabaseRepository.ASYNC_DELETE_PLAYLISTS_BY_ID:
-                ArrayList<Playlist> playlists = (ArrayList<Playlist>) object;
-                for (Playlist playlist : playlists){
-                    playlistAdapter.remove(playlist);
-                }
+                mainFragment.updateMainFragment(object, DatabaseRepository.ASYNC_DELETE_PLAYLISTS_BY_ID);
                 break;
             case DatabaseRepository.ASYNC_GET_METADATA:
                 // metadata object guaranteed not null
@@ -1451,6 +1152,9 @@ public class MainActivity extends AppCompatActivity {
             }
     }
 
+    public View getMainActivityLayout(){
+        return slidingUpPanelLayout;
+    }
     public static int getRepeat_status(){
         return repeat_status;
     }
@@ -1480,37 +1184,6 @@ public class MainActivity extends AppCompatActivity {
 
     public static Notification getNotification(){
         return notificationChannel1;
-    }
-
-    /**
-     * Recursively find all child views (if any) from a view
-     * @param v the view to find all children from
-     * @return an arraylist of all child views under v
-     */
-    private ArrayList<View> getAllChildren(View v) {
-
-        // base case for when the view is not a ViewGroup or is a ListView
-        if (!(v instanceof ViewGroup) || (v instanceof ListView)) {
-            ArrayList<View> viewArrayList = new ArrayList();
-            viewArrayList.add(v);
-            return viewArrayList;
-        }
-
-        // recursive case to add all child views from the ViewGroup, including the ViewGroup
-        ArrayList<View> children = new ArrayList();
-
-        ViewGroup viewGroup = (ViewGroup) v;
-        for (int i = 0; i < viewGroup.getChildCount(); i++) {
-
-            View child = viewGroup.getChildAt(i);
-
-            ArrayList<View> viewArrayList = new ArrayList();
-            viewArrayList.add(v);
-            viewArrayList.addAll(getAllChildren(child));
-
-            children.addAll(viewArrayList);
-        }
-        return children;
     }
 
     /**
@@ -1635,7 +1308,6 @@ public class MainActivity extends AppCompatActivity {
                 case MusicPlayerService.UPDATE_SONG:
                     // update main activity with the selected song from music list
                     current_song = (Song) bundle.get("song");
-                    System.out.println(current_playlist.getName());
 
                     // grab song album art and duration
                     String albumID = current_song.getAlbumID();
@@ -1699,26 +1371,21 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case ChooseThemeActivity.THEME_SELECTED:
                     final int theme_resid = ThemeColors.getThemeResourceId();
-                    final int theme_btn_resid = ThemeColors.getThemeBtnResourceId();
 
                     // change theme colors and button image to match the current theme
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            theme_btn.setImageResource(theme_btn_resid);
                             updateTheme(theme_resid);
+                            mainFragment.updateFragmentColors();
                         }
                     });
                     break;
                 case ChooseThemeActivity.THEME_DONE:
-                    // user is finished selecting a theme
-                    isThemeSelecting = false;
-
-                    // rotate theme btn back to original orientation
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            theme_btn.startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_themebtn_reverse_animation));
+                            mainFragment.rotateThemeButton();
                         }
                     });
                     break;

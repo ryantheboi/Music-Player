@@ -134,7 +134,6 @@ public class DatabaseRepository {
                                 // the current playlist always has an id of 0
                                 final Playlist currentPlaylist = playlistDao.findById(0);
 
-                                // operation complete, update viewpager in mainactivity
                                 mainActivity.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -144,7 +143,6 @@ public class DatabaseRepository {
                                 break;
                             case ASYNC_INSERT_PLAYLIST:
                                 playlistDao.insert((Playlist) query.object);
-                                // operation complete, update viewpager in mainactivity
                                 mainActivity.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -154,8 +152,6 @@ public class DatabaseRepository {
                                 break;
                             case ASYNC_MODIFY_PLAYLIST:
                                 playlistDao.insert((Playlist) query.object);
-
-                                // operation complete, update viewpager in mainactivity
                                 mainActivity.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -168,8 +164,6 @@ public class DatabaseRepository {
                                 for (Playlist playlist : selectPlaylists) {
                                     playlistDao.delete(playlist);
                                 }
-
-                                // operation complete, update viewpager in mainactivity
                                 mainActivity.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -204,7 +198,6 @@ public class DatabaseRepository {
                                 // remain active while app is still paused
                                 isActive = true;
 
-                                // operation complete, update viewpager in mainactivity
                                 mainActivity.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {

@@ -254,6 +254,10 @@ public class PlaylistTab extends Fragment {
                                     else{
                                         modify_playlist.setName(renamePlaylist_input.getText().toString() + " (" + i + ")");
                                     }
+
+                                    // renamed playlists will not be transient
+                                    modify_playlist.setTransientId(0);
+
                                     // notify MainActivity about modified playlist
                                     Message msg = Message.obtain();
                                     Bundle bundle = new Bundle();

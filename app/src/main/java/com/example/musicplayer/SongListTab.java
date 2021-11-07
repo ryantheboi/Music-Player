@@ -7,7 +7,9 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Bundle;
 
+import android.os.Message;
 import android.os.Messenger;
+import android.os.RemoteException;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
@@ -219,9 +221,56 @@ public class SongListTab extends Fragment {
             public boolean onActionItemClicked(android.view.ActionMode mode, MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.menuitem_createqueue:
-                        // construct new current playlist, given the user selections
-                        MainActivity.setCurrent_playlist(new Playlist("USER_SELECTION", userSelection));
-                        MainActivity.setCurrent_song(userSelection.get(0));
+                        // count the current number of temporary (transient) queues
+                        int num_transients = 0;
+                        int[] transient_ids = new int[Playlist.MAX_TRANSIENTS + 1];
+                        Playlist oldest_transient_playlist = null;
+                        ArrayList<Playlist> allPlaylists = MainActivity.getPlaylists();
+                        for (Playlist p : allPlaylists){
+                            int p_transientId = p.getTransientId();
+                            if (p_transientId > 0){
+                                transient_ids[p_transientId] = 1;
+                                num_transients++;
+                                if (oldest_transient_playlist == null){
+                                    oldest_transient_playlist = p;
+                                }
+                                else{
+                                    if (p.getDateAdded() < oldest_transient_playlist.getDateAdded()){
+                                        oldest_transient_playlist = p;
+                                    }
+                                }
+                            }
+
+                            // maximum transient playlists reached, stop counting
+                            if (num_transients == Playlist.MAX_TRANSIENTS){
+                                break;
+                            }
+                        }
+
+                        // replace existing transient playlist with new current playlist, given the user selections
+                        if (num_transients == Playlist.MAX_TRANSIENTS){
+                            Playlist transient_playlist = new Playlist(oldest_transient_playlist.getId(), oldest_transient_playlist.getName(), userSelection, oldest_transient_playlist.getTransientId());
+                            MainActivity.setCurrent_playlist(transient_playlist);
+                            MainActivity.setCurrent_song(userSelection.get(0));
+                            sendPlaylistUpdateMessage(transient_playlist, AddPlaylistActivity.MODIFY_PLAYLIST);
+                        }
+
+                        // construct new transient and current playlist, given the user selections
+                        else {
+                            // create transient id (less than or equal to MAX_TRANSIENTS)
+                            for (int curr_transient_id = 1; curr_transient_id < Playlist.MAX_TRANSIENTS + 1; curr_transient_id++){
+                                int transient_id = transient_ids[curr_transient_id];
+                                if (transient_id == 0){
+                                    // transient id currently does not exist and may be used
+                                    Playlist transient_playlist = new Playlist(DatabaseRepository.generatePlaylistId(), "TEMP_QUEUE_" + curr_transient_id, userSelection, curr_transient_id);
+                                    MainActivity.setCurrent_playlist(transient_playlist);
+                                    MainActivity.setCurrent_song(userSelection.get(0));
+
+                                    sendPlaylistUpdateMessage(transient_playlist, AddPlaylistActivity.ADD_PLAYLIST);
+                                    break;
+                                }
+                            }
+                        }
 
                         // notify music player service to start the new song in the new playlist (queue)
                         musicListQueueIntent.putExtra("musicListSong", mainActivityMessenger);
@@ -250,6 +299,21 @@ public class SongListTab extends Fragment {
                 userSelection.clear();
             }
         });
+    }
+
+    private void sendPlaylistUpdateMessage(Playlist playlist, int operation){
+        // send message
+        Message msg = Message.obtain();
+        Bundle bundle = new Bundle();
+        bundle.putInt("update", operation);
+        bundle.putParcelable("playlist", playlist);
+        bundle.putParcelable("messenger", null);
+        msg.setData(bundle);
+        try {
+            mainActivityMessenger.send(msg);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void toggleTabColor(){

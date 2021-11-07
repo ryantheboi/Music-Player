@@ -68,7 +68,7 @@ public class M3U {
 
         String[] temp_arraySplit = filepath.split("/");
         String playlistName = temp_arraySplit[temp_arraySplit.length - 1].replaceAll(M3U_EXTENSION, "");
-        return new Playlist(DatabaseRepository.generatePlaylistId(), playlistName, m3uSongs);
+        return new Playlist(DatabaseRepository.generatePlaylistId(), playlistName, m3uSongs, 0);
     }
 
     /**

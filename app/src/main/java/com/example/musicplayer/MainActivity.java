@@ -377,7 +377,7 @@ public class MainActivity extends AppCompatActivity {
                                 } while (playlistMembersCursor.moveToNext());
 
                                 // add the playlist and its songs to the async return
-                                Playlist current_playlist = new Playlist(DatabaseRepository.generatePlaylistId(), current_playlistName, current_playlistSongs);
+                                Playlist current_playlist = new Playlist(DatabaseRepository.generatePlaylistId(), current_playlistName, current_playlistSongs, 0);
                                 mediastorePlaylists.add(current_playlist);
 
                                 // add the playlist and its songs to the database
@@ -955,7 +955,7 @@ public class MainActivity extends AppCompatActivity {
                     // removes song from the playlist reference
                     playlist_songs.remove(removed_song);
                 }
-                Playlist updated_playlist = new Playlist(playlist.getId(), playlist.getName(), playlist_songs);
+                Playlist updated_playlist = new Playlist(playlist.getId(), playlist.getName(), playlist_songs, 0);
                 databaseRepository.insertPlaylist(updated_playlist);
             }
         }

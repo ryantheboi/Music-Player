@@ -1181,6 +1181,10 @@ public class MainActivity extends AppCompatActivity {
             current_playlist = playlist.shufflePlaylist(random_seed);
         }
     }
+    public static void setCurrent_transientPlaylist(Playlist transient_playlist){
+        Playlist current_playlist = new Playlist(transient_playlist.getName(), transient_playlist.getSongList());
+        setCurrent_playlist(current_playlist);
+    }
 
     public static Notification getNotification(){
         return notificationChannel1;

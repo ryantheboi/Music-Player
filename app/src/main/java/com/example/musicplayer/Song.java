@@ -6,13 +6,13 @@ import android.os.Parcelable;
 import androidx.annotation.NonNull;
 
 public class Song implements Parcelable {
+
     private int id;
     private String title;
     private String artist;
     private String album;
     private String albumID;
     private int duration;
-
     private String bucketID;
     private String bucketDisplayName;
     private String dateAdded;
@@ -54,7 +54,7 @@ public class Song implements Parcelable {
         this.size = size;
     }
 
-    public int getID() {
+    public int getId() {
         return id;
     }
 
@@ -179,26 +179,14 @@ public class Song implements Parcelable {
         this.size = in.readString();
     }
 
-    public static Creator<Song> CREATOR = new Creator<Song>() {
-        public Song createFromParcel(Parcel source) {
-            return new Song(source);
-        }
-
-        public Song[] newArray(int size) {
-            return new Song[size];
-        }
-    };
-
     @Override
     public int hashCode() {
         try {
             int prime = 31;
             int result = 1;
             result = prime * result + id;
-            result = prime * result + albumID.hashCode();
             result = prime * result + title.hashCode();
             result = prime * result + artist.hashCode();
-            result = prime * result + album.hashCode();
             return result;
         }catch (Exception e){
             return super.hashCode();
@@ -209,10 +197,8 @@ public class Song implements Parcelable {
     public boolean equals(Object obj) {
         try {
             return this.id == ((Song) obj).id &&
-                    this.albumID.equals(((Song) obj).albumID) &&
                     this.title.equals(((Song) obj).title) &&
-                    this.artist.equals(((Song) obj).artist) &&
-                    this.album.equals(((Song) obj).album);
+                    this.artist.equals(((Song) obj).artist);
         }catch (Exception e){
             return super.equals(obj);
         }
@@ -224,28 +210,13 @@ public class Song implements Parcelable {
         return title;
     }
 
-    /**
-     * helper function to convert time in milliseconds to HH:MM:SS format
-     */
-    public static String convertTime(int timeInMS){
-        int timeInSeconds = timeInMS / 1000;
-
-        int seconds = timeInSeconds % 3600 % 60;
-        int minutes = timeInSeconds % 3600 / 60;
-        int hours = timeInSeconds / 3600;
-
-        String HH, MM, SS;
-        if (hours == 0){
-            MM = ((minutes  < 10) ? "" : "") + minutes;
-            SS = ((seconds  < 10) ? "0" : "") + seconds;
-            return MM + ":" + SS;
-        }
-        else {
-            HH = ((hours    < 10) ? "0" : "") + hours;
-            MM = ((minutes  < 10) ? "0" : "") + minutes;
-            SS = ((seconds  < 10) ? "0" : "") + seconds;
+    public static Creator<Song> CREATOR = new Creator<Song>() {
+        public Song createFromParcel(Parcel source) {
+            return new Song(source);
         }
 
-        return HH + ":" + MM + ":" + SS;
-    }
+        public Song[] newArray(int size) {
+            return new Song[size];
+        }
+    };
 }

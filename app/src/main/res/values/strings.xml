@@ -24,6 +24,8 @@
     <string name="RemovePlaylist">Remove Playlist</string>
     <string name="Rename">Rename</string>
     <string name="RenamePlaylist">Rename Playlist</string>
+    <string name="Export">Export</string>
+    <string name="ExportPlaylist">Export Playlist</string>
     <string name="Divider">•</string>
 
 </resources>

@@ -13,7 +13,6 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
-import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -28,14 +27,14 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
 import androidx.core.graphics.drawable.DrawableCompat;
+import androidx.fragment.app.Fragment;
 
 import java.util.ArrayList;
 
-public class PlaylistActivity extends AppCompatActivity {
+public class PlaylistFragment extends Fragment {
 
     private Messenger m_mainMessenger;
     private Playlist m_playlist;
@@ -54,75 +53,43 @@ public class PlaylistActivity extends AppCompatActivity {
     private TextView m_playlist_divider_tv;
     private TextView m_playlist_time_tv;
     private int m_total_time;
-
     private static ArrayList<Song> m_userSelection = new ArrayList<>();
 
+    public PlaylistFragment(Playlist playlist, Messenger messenger) {
+        super(R.layout.activity_playlist);
+        m_playlist = playlist;
+        m_mainMessenger = messenger;
+    }
+
     @Override
-    @TargetApi(21)
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        setContentView(R.layout.activity_playlist);
-
-        // obtain the intent that started this activity (should contain an extra with a Playlist)
-        Intent intent = this.getIntent();
-        Bundle b = intent.getExtras();
-        if (b != null) {
-            for (String key : b.keySet()) {
-                switch (key) {
-                    case "playlist":
-                        // get the song which needs its details to be displayed
-                        m_playlist = intent.getParcelableExtra("playlist");
-                        break;
-                    case "mainMessenger":
-                        m_mainMessenger = intent.getParcelableExtra("mainMessenger");
-                        break;
-                }
-            }
-        }
-
-        initViews();
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        initViews(view);
         initObjects();
         initListeners();
-        initWindowLayout();
         setTextViews();
-
-        // adjust activity colors for the current theme
         setThemeColors();
     }
 
-    @Override
-    @TargetApi(23)
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // using toolbar as ActionBar without title
-        setSupportActionBar(m_playlist_toolbar);
-        m_playlist_actionBar = getSupportActionBar();
-        m_playlist_actionBar.setDisplayShowTitleEnabled(false);
-        return true;
-    }
-
-    private void initViews() {
-        // init decorView (Action Mode toolbar)
-        decorView = (ViewGroup) this.getWindow().getDecorView();
-
-        m_playlist_layout = findViewById(R.id.layout_playlist);
-        m_playlist_toolbar = findViewById(R.id.toolbar_playlist);
-        m_playlist_name_tv = findViewById(R.id.textview_playlist_name);
-        m_playlist_size_tv = findViewById(R.id.textview_playlist_size);
-        m_playlist_divider_tv = findViewById(R.id.textview_playlist_divider);
-        m_playlist_time_tv = findViewById(R.id.textview_playlist_time);
-        m_back_btn = findViewById(R.id.ibtn_playlist_back);
-        m_listView = findViewById(R.id.listview_playlist_songs);
-        m_playlist_cardview = findViewById(R.id.cardview_playlist);
-        m_playlist_background_layer = findViewById(R.id.imageview_playlist_background_layer);
-        m_playlist_background_image = findViewById(R.id.imageview_playlist_background_image);
+    private void initViews(View view) {
+        decorView = (ViewGroup) getActivity().getWindow().getDecorView();
+        m_playlist_layout = view.findViewById(R.id.layout_playlist);
+        m_playlist_toolbar = view.findViewById(R.id.toolbar_playlist);
+        m_playlist_name_tv = view.findViewById(R.id.textview_playlist_name);
+        m_playlist_size_tv = view.findViewById(R.id.textview_playlist_size);
+        m_playlist_divider_tv = view.findViewById(R.id.textview_playlist_divider);
+        m_playlist_time_tv = view.findViewById(R.id.textview_playlist_time);
+        m_back_btn = view.findViewById(R.id.ibtn_playlist_back);
+        m_listView = view.findViewById(R.id.listview_playlist_songs);
+        m_playlist_cardview = view.findViewById(R.id.cardview_playlist);
+        m_playlist_background_layer = view.findViewById(R.id.imageview_playlist_background_layer);
+        m_playlist_background_image = view.findViewById(R.id.imageview_playlist_background_image);
     }
 
     /**
      * Initializes new instances of objects that cannot be found by views
      */
     private void initObjects() {
-        m_songListAdapter = new SongListAdapter(this, R.layout.adapter_song_layout, m_playlist.getSongList(), this);
+        m_songListAdapter = new SongListAdapter(getContext(), R.layout.adapter_song_layout, m_playlist.getSongList(), getActivity());
     }
 
     /**
@@ -132,9 +99,9 @@ public class PlaylistActivity extends AppCompatActivity {
      */
     private void initListeners(){
         // init intents and attributes for listview listeners
-        final Intent musicListSelectIntent = new Intent(this, MusicPlayerService.class);
-        final Intent musicListQueueIntent = new Intent(this, MusicPlayerService.class);
-        final Intent addPlaylistIntent = new Intent(this, AddPlaylistActivity.class);
+        final Intent musicListSelectIntent = new Intent(getContext(), MusicPlayerService.class);
+        final Intent musicListQueueIntent = new Intent(getContext(), MusicPlayerService.class);
+        final Intent addPlaylistIntent = new Intent(getContext(), AddPlaylistActivity.class);
         m_listView.setAdapter(m_songListAdapter);
         m_listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
 
@@ -153,7 +120,7 @@ public class PlaylistActivity extends AppCompatActivity {
 
                 // notify music player service about the current song change
                 musicListSelectIntent.putExtra("musicListSong", "");
-                startService(musicListSelectIntent);
+                getActivity().startService(musicListSelectIntent);
             }
         });
 
@@ -245,13 +212,61 @@ public class PlaylistActivity extends AppCompatActivity {
             public boolean onActionItemClicked(final android.view.ActionMode mode, MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.menuitem_createqueue:
-                        // construct new current playlist, given the user selections
-                        MainActivity.setCurrent_playlist(new Playlist("USER_SELECTION", m_userSelection));
-                        MainActivity.setCurrent_song(m_userSelection.get(0));
+                        // count the current number of temporary (transient) queues
+                        int num_transients = 0;
+                        int[] transient_ids = new int[Playlist.MAX_TRANSIENTS + 1];
+                        Playlist oldest_transient_playlist = null;
+                        ArrayList<Playlist> allPlaylists = MainActivity.getPlaylists();
+                        for (Playlist p : allPlaylists){
+                            int p_transientId = p.getTransientId();
+                            if (p_transientId > 0){
+                                transient_ids[p_transientId] = 1;
+                                num_transients++;
+                                if (oldest_transient_playlist == null){
+                                    oldest_transient_playlist = p;
+                                }
+                                else{
+                                    if (p.getDateAdded() < oldest_transient_playlist.getDateAdded()){
+                                        oldest_transient_playlist = p;
+                                    }
+                                }
+                            }
+
+                            // maximum transient playlists reached, stop counting
+                            if (num_transients == Playlist.MAX_TRANSIENTS){
+                                break;
+                            }
+                        }
+
+                        // replace existing transient playlist with new current playlist, given the user selections
+                        if (num_transients == Playlist.MAX_TRANSIENTS){
+                            Playlist transient_playlist = new Playlist(oldest_transient_playlist.getId(), oldest_transient_playlist.getName(), m_userSelection, oldest_transient_playlist.getTransientId());
+                            MainActivity.setCurrent_transientPlaylist(transient_playlist);
+                            MainActivity.setCurrent_song(m_userSelection.get(0));
+
+                            AddPlaylistActivity.sendPlaylistUpdateMessage(transient_playlist, m_mainMessenger, AddPlaylistActivity.MODIFY_PLAYLIST);
+                        }
+
+                        // construct new transient and current playlist, given the user selections
+                        else {
+                            // create transient id (less than or equal to MAX_TRANSIENTS)
+                            for (int curr_transient_id = 1; curr_transient_id < Playlist.MAX_TRANSIENTS + 1; curr_transient_id++){
+                                int transient_id_flag = transient_ids[curr_transient_id];
+                                if (transient_id_flag == 0){
+                                    // transient id currently does not exist and may be used
+                                    Playlist transient_playlist = new Playlist(DatabaseRepository.generatePlaylistId(), "TEMP_QUEUE_" + curr_transient_id, m_userSelection, curr_transient_id);
+                                    MainActivity.setCurrent_transientPlaylist(transient_playlist);
+                                    MainActivity.setCurrent_song(m_userSelection.get(0));
+
+                                    AddPlaylistActivity.sendPlaylistUpdateMessage(transient_playlist, m_mainMessenger, AddPlaylistActivity.ADD_PLAYLIST);
+                                    break;
+                                }
+                            }
+                        }
 
                         // notify music player service to start the new song in the new playlist (queue)
                         musicListQueueIntent.putExtra("musicListSong", "");
-                        startService(musicListQueueIntent);
+                        getActivity().startService(musicListQueueIntent);
 
                         mode.finish(); // Action picked, so close the CAB
                         return true;
@@ -259,6 +274,7 @@ public class PlaylistActivity extends AppCompatActivity {
                         // construct named playlist
                         Playlist playlist = new Playlist(getString(R.string.Favorites), m_userSelection);
                         addPlaylistIntent.putExtra("addPlaylist", playlist);
+                        addPlaylistIntent.putExtra("messenger", m_mainMessenger);
                         startActivity(addPlaylistIntent);
 
                         mode.finish(); // Action picked, so close the CAB
@@ -266,7 +282,7 @@ public class PlaylistActivity extends AppCompatActivity {
 
                     case R.id.menuitem_removesong:
                         // construct alert dialog for removing playlist
-                        AlertDialog.Builder removeSong_dialogBuilder = new AlertDialog.Builder(PlaylistActivity.this, ThemeColors.getAlertDialogStyleResourceId());
+                        AlertDialog.Builder removeSong_dialogBuilder = new AlertDialog.Builder(getActivity(), ThemeColors.getAlertDialogStyleResourceId());
                         if (m_userSelection.size() == 1) {
                             Song song = m_userSelection.get(0);
                             removeSong_dialogBuilder.setTitle("Remove Song " + song.getTitle() + "?");
@@ -306,7 +322,7 @@ public class PlaylistActivity extends AppCompatActivity {
                                     remove_time += playlist_song.getDuration();
                                 }
                                 m_total_time -= remove_time;
-                                m_playlist_time_tv.setText(Song.convertTime(m_total_time));
+                                m_playlist_time_tv.setText(SongHelper.convertTime(m_total_time));
 
                                 mode.finish(); // Action picked, so close the CAB
                             }
@@ -340,18 +356,26 @@ public class PlaylistActivity extends AppCompatActivity {
         m_back_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+                getActivity().getSupportFragmentManager().popBackStackImmediate();
             }
         });
     }
 
-    private void initWindowLayout() {
-        // set the window layout for a clean look
-        DisplayMetrics dm = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(dm);
-        int width = dm.widthPixels;
-        int height = dm.heightPixels;
-        getWindow().setLayout((int) (width), (int) (height));
+    /**
+     * sets the text for every textview in this activity appropriate to this playlist
+     */
+    private void setTextViews(){
+        // calculate playlist total time
+        ArrayList<Song> playlists_songs = m_playlist.getSongList();
+        m_total_time = 0;
+        for (Song playlist_song : playlists_songs){
+            m_total_time += playlist_song.getDuration();
+        }
+        String playlist_size = m_playlist.getSize() + " Songs";
+
+        m_playlist_name_tv.setText(m_playlist.getName());
+        m_playlist_size_tv.setText(playlist_size);
+        m_playlist_time_tv.setText(SongHelper.convertTime(m_total_time));
     }
 
     /**
@@ -382,22 +406,5 @@ public class PlaylistActivity extends AppCompatActivity {
 
         RippleDrawable back_btn_ripple = (RippleDrawable) m_back_btn.getBackground();
         back_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
-    }
-
-    /**
-     * sets the text for every textview in this activity appropriate to this playlist
-     */
-    private void setTextViews(){
-        // calculate playlist total time
-        ArrayList<Song> playlists_songs = m_playlist.getSongList();
-        m_total_time = 0;
-        for (Song playlist_song : playlists_songs){
-            m_total_time += playlist_song.getDuration();
-        }
-        String playlist_size = m_playlist.getSize() + " Songs";
-
-        m_playlist_name_tv.setText(m_playlist.getName());
-        m_playlist_size_tv.setText(playlist_size);
-        m_playlist_time_tv.setText(Song.convertTime(m_total_time));
     }
 }

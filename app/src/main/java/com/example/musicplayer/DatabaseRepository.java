@@ -12,32 +12,42 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class DatabaseRepository {
     private MusicPlayerDatabase musicPlayerDatabase;
+    private SongMetadataDao songMetadataDao;
     private PlaylistDao playlistDao;
     private MetadataDao metadataDao;
     private MainActivity mainActivity;
-    private boolean isModifying = false;
     private LinkedBlockingQueue<Query> messageQueue;
+    private boolean isActive = false;
 
     // playlist objects
     private static int playlist_maxid = 0;
 
+    // TODO: not optimal for queries from previous process that take longer than 3 sec
+    private static final int MAX_SECONDS_POLLING = 3;
+
     public static final int ASYNC_INIT_ALL_PLAYLISTS = 0;
     public static final int ASYNC_GET_CURRENT_PLAYLIST = 1;
     public static final int ASYNC_GET_METADATA = 2;
-    public static final int ASYNC_INSERT_PLAYLIST = 3;
-    public static final int ASYNC_MODIFY_PLAYLIST = 4;
-    public static final int ASYNC_DELETE_PLAYLISTS_BY_ID = 5;
-    public static final int INSERT_PLAYLIST = 6;
-    public static final int INSERT_METADATA = 7;
-    public static final int UPDATE_METADATA_THEME = 8;
-    public static final int UPDATE_METADATA_SONGTAB = 9;
-    public static final int UPDATE_METADATA_SONGINDEX = 10;
-    public static final int UPDATE_METADATA_ISSHUFFLED = 11;
-    public static final int UPDATE_METADATA_REPEATSTATUS = 12;
-    public static final int UPDATE_METADATA_ISPLAYING = 13;
-    public static final int UPDATE_METADATA_SEEK = 14;
-    public static final int UPDATE_METADATA_ISLARGEALBUMART = 15;
-    public static final int UPDATE_METADATA_RANDOMSEED = 16;
+    public static final int ASYNC_GET_ALL_SONGMETADATA = 3;
+    public static final int ASYNC_INSERT_PLAYLIST = 4;
+    public static final int ASYNC_MODIFY_PLAYLIST = 5;
+    public static final int ASYNC_DELETE_PLAYLISTS_BY_ID = 6;
+    public static final int INSERT_SONGMETADATA = 7;
+    public static final int INSERT_PLAYLIST = 8;
+    public static final int INSERT_METADATA = 9;
+    public static final int UPDATE_METADATA_THEME = 10;
+    public static final int UPDATE_METADATA_SONGTAB = 11;
+    public static final int UPDATE_METADATA_SONGINDEX = 12;
+    public static final int UPDATE_METADATA_ISSHUFFLED = 13;
+    public static final int UPDATE_METADATA_REPEATSTATUS = 14;
+    public static final int UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED = 15;
+    public static final int UPDATE_METADATA_ISPLAYING = 16;
+    public static final int UPDATE_METADATA_SEEK = 17;
+    public static final int UPDATE_METADATA_ISALBUMARTCIRCULAR = 18;
+    public static final int UPDATE_METADATA_RANDOMSEED = 19;
+    public static final int UPDATE_METADATA_NUMQUERIES = 20;
+    public static final int UPDATE_SONGMETADATA_PLAYED = 21;
+    public static final int UPDATE_SONGMETADATA_LISTENED = 22;
 
     /**
      * Holds the query message and the object involved (if exists)
@@ -69,10 +79,17 @@ public class DatabaseRepository {
         startMessageQueueThread();
     }
 
+    /**
+     * Initializes the database and database access objects (DAOs)
+     * Database connection does not need to be manually closed
+     * because it will be cleaned up when the process ends
+     * @param context the context that will interact with the database (e.g. MainActivity)
+     */
     public void initDatabase(Context context){
         musicPlayerDatabase = Room.databaseBuilder(context,
                 MusicPlayerDatabase.class, "musicplayer-database").build();
 
+        songMetadataDao = musicPlayerDatabase.getSongMetadataDao();
         playlistDao = musicPlayerDatabase.getPlaylistDao();
         metadataDao = musicPlayerDatabase.getMetadataDao();
 
@@ -88,129 +105,177 @@ public class DatabaseRepository {
         Thread messageQueueThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                while(true) {
-                    if (!isModifying) {
-                        isModifying = true;
-                        try {
-                            final Query query = messageQueue.take();
+                while (true) {
+                    try {
+                        final Query query = messageQueue.take();
 
-                            int message = query.message;
-                            switch (message) {
-                                case ASYNC_INIT_ALL_PLAYLISTS:
-                                    final ArrayList<Playlist> allPlaylists = new ArrayList<>(playlistDao.getAll());
-
-                                    // store the current highest id value in memory
-                                    playlist_maxid = playlistDao.getMaxId();
-
-                                    // operation complete, update viewpager in mainactivity
-                                    mainActivity.runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            mainActivity.updateMainActivity(allPlaylists, null, ASYNC_INIT_ALL_PLAYLISTS);
-                                        }
-                                    });
-                                    break;
-                                case ASYNC_GET_CURRENT_PLAYLIST:
-                                    // the current playlist always has an id of 0
-                                    final Playlist currentPlaylist = playlistDao.findById(0);
-
-                                    // operation complete, update viewpager in mainactivity
-                                    mainActivity.runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            mainActivity.updateMainActivity(currentPlaylist, null, ASYNC_GET_CURRENT_PLAYLIST);
-                                        }
-                                    });
-                                    break;
-                                case ASYNC_INSERT_PLAYLIST:
-                                    playlistDao.insert((Playlist) query.object);
-
-                                    // operation complete, update viewpager in mainactivity
-                                    mainActivity.runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            mainActivity.updateMainActivity((Playlist) query.object, (Messenger) query.extra, ASYNC_INSERT_PLAYLIST);
-                                        }
-                                    });
-                                    break;
-                                case ASYNC_MODIFY_PLAYLIST:
-                                    playlistDao.insert((Playlist) query.object);
-
-                                    // operation complete, update viewpager in mainactivity
-                                    mainActivity.runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            mainActivity.updateMainActivity((Playlist) query.object, (Messenger) query.extra, ASYNC_MODIFY_PLAYLIST);
-                                        }
-                                    });
-                                    break;
-                                case ASYNC_DELETE_PLAYLISTS_BY_ID:
-                                    final ArrayList<Playlist> selectPlaylists = new ArrayList<>(playlistDao.getAllByIds((int[]) query.object));
-                                    for (Playlist playlist : selectPlaylists){
-                                        playlistDao.delete(playlist);
-                                    }
-
-                                    // operation complete, update viewpager in mainactivity
-                                    mainActivity.runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            mainActivity.updateMainActivity(selectPlaylists, null, ASYNC_DELETE_PLAYLISTS_BY_ID);
-                                        }
-                                    });
-                                    break;
-                                case ASYNC_GET_METADATA:
-                                    // there is only one row of metadata for now, with id 0
-                                    final Metadata metadata = metadataDao.findById(0);
-
-                                    // operation complete, update viewpager in mainactivity
-                                    mainActivity.runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            mainActivity.updateMainActivity(metadata, null, ASYNC_GET_METADATA);
-                                        }
-                                    });
-                                    break;
-                                case INSERT_PLAYLIST:
-                                    Playlist p = (Playlist) query.object;
-                                    if (p != null) {
-                                        playlistDao.insert((Playlist) query.object);
-                                    }
-                                    break;
-                                case INSERT_METADATA:
-                                    metadataDao.insert((Metadata) query.object);
-                                    break;
-                                case UPDATE_METADATA_THEME:
-                                    metadataDao.updateTheme(0, (int) query.object);
-                                    break;
-                                case UPDATE_METADATA_SONGTAB:
-                                    metadataDao.updateSongTab(0, (int) query.object, (int) query.extra);
-                                    break;
-                                case UPDATE_METADATA_SONGINDEX:
-                                    metadataDao.updateSongIndex(0, (int) query.object);
-                                    break;
-                                case UPDATE_METADATA_ISSHUFFLED:
-                                    metadataDao.updateIsShuffled(0, (boolean) query.object);
-                                    break;
-                                case UPDATE_METADATA_REPEATSTATUS:
-                                    metadataDao.updateRepeatStatus(0, (int) query.object);
-                                    break;
-                                case UPDATE_METADATA_ISPLAYING:
-                                    metadataDao.updateIsPlaying(0, (boolean) query.object);
-                                    break;
-                                case UPDATE_METADATA_SEEK:
-                                    metadataDao.updateSeekPosition(0, (int) query.object);
-                                    break;
-                                case UPDATE_METADATA_ISLARGEALBUMART:
-                                    metadataDao.updateIsLargeAlbumArt(0, (boolean) query.object);
-                                    break;
-                                case UPDATE_METADATA_RANDOMSEED:
-                                    metadataDao.updateRandomSeed(0, (int) query.object);
-                                    break;
-                            }
-                            isModifying = false;
-                        }catch (InterruptedException e){
-                            System.out.println("Taking from db query queue was interrupted");
+                        // update metadata with the current size of the query queue
+                        // current size includes current query, unless it is to get the metadata
+                        int message = query.message;
+                        if (message != ASYNC_GET_METADATA && message != UPDATE_METADATA_NUMQUERIES) {
+                            metadataDao.updateNumQueries(0, messageQueue.size() + 1);
                         }
+                        switch (message) {
+                            case ASYNC_INIT_ALL_PLAYLISTS:
+                                final ArrayList<Playlist> allPlaylists = new ArrayList<>(playlistDao.getAll());
+
+                                // store the current highest id value in memory
+                                playlist_maxid = playlistDao.getMaxId();
+
+                                // operation complete, update viewpager in mainactivity
+                                mainActivity.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mainActivity.updateMainActivity(allPlaylists, null, ASYNC_INIT_ALL_PLAYLISTS);
+                                    }
+                                });
+                                break;
+                            case ASYNC_GET_CURRENT_PLAYLIST:
+                                // the current playlist always has an id of 0
+                                final Playlist currentPlaylist = playlistDao.findById(0);
+
+                                mainActivity.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mainActivity.updateMainActivity(currentPlaylist, null, ASYNC_GET_CURRENT_PLAYLIST);
+                                    }
+                                });
+                                break;
+                            case ASYNC_INSERT_PLAYLIST:
+                                playlistDao.insert((Playlist) query.object);
+                                mainActivity.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mainActivity.updateMainActivity((Playlist) query.object, (Messenger) query.extra, ASYNC_INSERT_PLAYLIST);
+                                    }
+                                });
+                                break;
+                            case ASYNC_MODIFY_PLAYLIST:
+                                playlistDao.insert((Playlist) query.object);
+                                mainActivity.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mainActivity.updateMainActivity((Playlist) query.object, (Messenger) query.extra, ASYNC_MODIFY_PLAYLIST);
+                                    }
+                                });
+                                break;
+                            case ASYNC_DELETE_PLAYLISTS_BY_ID:
+                                final ArrayList<Playlist> selectPlaylists = new ArrayList<>(playlistDao.getAllByIds((int[]) query.object));
+                                for (Playlist playlist : selectPlaylists) {
+                                    playlistDao.delete(playlist);
+                                }
+                                mainActivity.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mainActivity.updateMainActivity(selectPlaylists, null, ASYNC_DELETE_PLAYLISTS_BY_ID);
+                                    }
+                                });
+                                break;
+                            case ASYNC_GET_METADATA:
+                                // there is only one row of metadata for now, with id 0
+                                Metadata temp_metadata = metadataDao.findById(0);
+                                final Metadata availableMetadata;
+
+                                // insert default metadata if none exists yet
+                                if (temp_metadata == null) {
+                                    availableMetadata = Metadata.DEFAULT_METADATA;
+                                    insertMetadata(availableMetadata);
+                                }
+
+                                // keep polling every second for metadata until db is available or until a fixed time passes
+                                else {
+                                    if (!isActive) {
+                                        int seconds_waited = 0;
+                                        while ( (seconds_waited < MAX_SECONDS_POLLING) && (temp_metadata.getNumQueries() > 0) ) {
+                                            temp_metadata = metadataDao.findById(0);
+                                            Thread.sleep(1000);
+                                            seconds_waited += 1;
+                                        }
+                                    }
+                                    availableMetadata = temp_metadata;
+                                }
+
+                                // remain active while app is still paused
+                                isActive = true;
+
+                                mainActivity.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mainActivity.updateMainActivity(availableMetadata, null, ASYNC_GET_METADATA);
+                                    }
+                                });
+                                break;
+                            case ASYNC_GET_ALL_SONGMETADATA:
+                                final ArrayList<SongMetadata> database_songs = (ArrayList<SongMetadata>) songMetadataDao.getAll();
+                                mainActivity.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mainActivity.updateMainActivity(database_songs, null, ASYNC_GET_ALL_SONGMETADATA);
+                                    }
+                                });
+                                break;
+                            case INSERT_SONGMETADATA:
+                                SongMetadata sm = new SongMetadata((Song) query.object);
+                                if (songMetadataDao.findById(sm.getId()) == null) {
+                                    songMetadataDao.insert(sm);
+                                }
+                                break;
+                            case INSERT_PLAYLIST:
+                                Playlist p = (Playlist) query.object;
+                                if (p != null) {
+                                    playlistDao.insert(p);
+                                }
+                                break;
+                            case INSERT_METADATA:
+                                metadataDao.insert((Metadata) query.object);
+                                break;
+                            case UPDATE_METADATA_THEME:
+                                metadataDao.updateTheme(0, (int) query.object);
+                                break;
+                            case UPDATE_METADATA_SONGTAB:
+                                metadataDao.updateSongTab(0, (int) query.object, (int) query.extra);
+                                break;
+                            case UPDATE_METADATA_SONGINDEX:
+                                metadataDao.updateSongIndex(0, (int) query.object);
+                                break;
+                            case UPDATE_METADATA_ISSHUFFLED:
+                                metadataDao.updateIsShuffled(0, (boolean) query.object);
+                                break;
+                            case UPDATE_METADATA_REPEATSTATUS:
+                                metadataDao.updateRepeatStatus(0, (int) query.object);
+                                break;
+                            case UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED:
+                                metadataDao.updateIsMediaStorePlaylistsImported(0, (boolean) query.object);
+                                break;
+                            case UPDATE_METADATA_ISPLAYING:
+                                metadataDao.updateIsPlaying(0, (boolean) query.object);
+                                break;
+                            case UPDATE_METADATA_SEEK:
+                                metadataDao.updateSeekPosition(0, (int) query.object);
+                                break;
+                            case UPDATE_METADATA_ISALBUMARTCIRCULAR:
+                                metadataDao.updateIsAlbumArtCircular(0, (boolean) query.object);
+                                break;
+                            case UPDATE_METADATA_RANDOMSEED:
+                                metadataDao.updateRandomSeed(0, (int) query.object);
+                                break;
+                            case UPDATE_METADATA_NUMQUERIES:
+                                metadataDao.updateNumQueries(0, (int) query.object);
+                                break;
+                            case UPDATE_SONGMETADATA_PLAYED:
+                                int played_id = ((SongMetadata) query.object).getId();
+                                int played = songMetadataDao.findPlayedById(played_id);
+                                songMetadataDao.updatePlayed(played_id, played + 1);
+                                break;
+                            case UPDATE_SONGMETADATA_LISTENED:
+                                int listened_id = ((SongMetadata) query.object).getId();
+                                int listened = songMetadataDao.findListenedById(listened_id);
+                                songMetadataDao.updateListened(listened_id, listened + 1, (String) query.extra);
+                                break;
+                        }
+                        metadataDao.updateNumQueries(0, messageQueue.size());
+                    } catch (InterruptedException e) {
+                        System.out.println("Taking from db query queue was interrupted");
                     }
                 }
             }
@@ -252,6 +317,14 @@ public class DatabaseRepository {
     }
 
     /**
+     * Queues message to get all song metadata records stored in the database
+     * then updates main activity upon completion
+     */
+    public synchronized void asyncGetAllSongMetadata(){
+        messageQueue.offer(new Query(ASYNC_GET_ALL_SONGMETADATA, null));
+    }
+
+    /**
      * Queues message to insert new playlist into database,
      * then updates main ui and notifies a messenger upon completion
      * @param playlist the new playlist to insert into database
@@ -277,6 +350,14 @@ public class DatabaseRepository {
      */
     public synchronized void asyncRemovePlaylistByIds(int[] playlistIds){
         messageQueue.offer(new Query(ASYNC_DELETE_PLAYLISTS_BY_ID, playlistIds));
+    }
+
+    /**
+     * Queues message to insert a song's metadata into database, if it doesn't already exist
+     * @param song the song to try to insert into database to store its metadata
+     */
+    public synchronized void insertSongMetadataIfNotExist(Song song){
+        messageQueue.offer(new Query(INSERT_SONGMETADATA, song));
     }
 
     /**
@@ -337,6 +418,14 @@ public class DatabaseRepository {
     }
 
     /**
+     * Queues message to update the isMediaStorePlaylistsImported value in the metadata
+     * @param isMediaStorePlaylistsImported true if MediaStore playlists have been imported, false otherwise
+     */
+    public synchronized void updateMetadataIsMediaStorePlaylistsImported(boolean isMediaStorePlaylistsImported){
+        messageQueue.offer(new Query(UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED, isMediaStorePlaylistsImported));
+    }
+
+    /**
      * Queues message to update the isPlaying value in the metadata
      * @param isPlaying true if the mediaplayer is playing, false otherwise
      */
@@ -353,11 +442,11 @@ public class DatabaseRepository {
     }
 
     /**
-     * Queues message to update the isLargeAlbumArt value in the metadata
-     * @param isLargeAlbumArt true if the main display albumart is enlarged, false otherwise
+     * Queues message to update the isAlbumArtCircular value in the metadata
+     * @param isAlbumArtCircular true if the main display albumart is circular, false otherwise
      */
-    public synchronized void updateMetadataIsLargeAlbumArt(boolean isLargeAlbumArt){
-        messageQueue.offer(new Query(UPDATE_METADATA_ISLARGEALBUMART, isLargeAlbumArt));
+    public synchronized void updateMetadataIsAlbumArtCircular(boolean isAlbumArtCircular){
+        messageQueue.offer(new Query(UPDATE_METADATA_ISALBUMARTCIRCULAR, isAlbumArtCircular));
     }
 
     /**
@@ -366,5 +455,33 @@ public class DatabaseRepository {
      */
     public synchronized void updateMetadataRandomSeed(int random_seed){
         messageQueue.offer(new Query(UPDATE_METADATA_RANDOMSEED, random_seed));
+    }
+
+    /**
+     * Queues message to increment by 1 the played value in a SongMetadata
+     * @param songMetadata metadata corresponding to the song that was played
+     */
+    public synchronized void updateSongMetadataPlayed(SongMetadata songMetadata){
+        messageQueue.offer(new Query(UPDATE_SONGMETADATA_PLAYED, songMetadata));
+    }
+
+    /**
+     * Queues message to increment the listened value by 1 and update the date listened value in a SongMetadata
+     * @param songMetadata metadata corresponding to the song that was listened
+     * @param dateListened the last date the song was listened on, represented as number of seconds since 1970-01-01T00:00:00Z
+     */
+    public synchronized void updateSongMetadataListened(SongMetadata songMetadata, String dateListened){
+        messageQueue.offer(new Query(UPDATE_SONGMETADATA_LISTENED, songMetadata, dateListened));
+    }
+
+    /**
+     * Informs message thread to clear up all remaining queries for the db in the message queue
+     * Then lastly indicate that there are no pending queries for the db
+     * It is not necessary to close the db connection because that will be handled by Android
+     */
+    public synchronized void finish(){
+        // last query being offered, numqueries will be 0 after completion
+        messageQueue.clear();
+        messageQueue.offer(new Query(UPDATE_METADATA_NUMQUERIES, 0));
     }
 }

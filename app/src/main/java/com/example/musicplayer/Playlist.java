@@ -13,7 +13,6 @@ import androidx.room.PrimaryKey;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 
 @Entity(tableName = "Playlists")
 public class Playlist implements Parcelable {
@@ -22,24 +21,30 @@ public class Playlist implements Parcelable {
 
     private String name;
     private ArrayList<Song> songList;
+    private int transientId;
+    private long dateAdded;
 
     @Ignore
     private HashMap<Song, SongNode> songHashMap;
 
+    public static final int MAX_TRANSIENTS = 3;
+
     /**
      * Constructor used by database to create a playlist for every row
      */
-    public Playlist(int id, String name, ArrayList<Song> songList) {
+    public Playlist(int id, String name, ArrayList<Song> songList, int transientId, long dateAdded) {
         this.id = id;
         this.name = name;
         this.songList = new ArrayList<>(songList);
         this.songHashMap = createHashMap(songList);
+        this.transientId = transientId;
+        this.dateAdded = dateAdded;
     }
 
     /**
-     * Overloaded Constructor which does not need id field parameter
-     * id is manually generated when the playlist is expected to persist in database storage
-     * otherwise, id is 0 for temporary playlists (e.g. queues)
+     * Overloaded Constructor which does not need id
+     * id is generated when the playlist is expected to persist in database storage
+     * otherwise, id is 0 for current playlist
      */
     @Ignore
     public Playlist(String name, ArrayList<Song> songList) {
@@ -47,35 +52,68 @@ public class Playlist implements Parcelable {
         this.name = name;
         this.songList = new ArrayList<>(songList);
         this.songHashMap = createHashMap(songList);
+        this.dateAdded = System.currentTimeMillis();
+    }
+
+    /**
+     * Overloaded Constructor which does not need dateAdded
+     */
+    @Ignore
+    public Playlist(int id, String name, ArrayList<Song> songList, int transientId) {
+        this.id = id;
+        this.name = name;
+        this.songList = new ArrayList<>(songList);
+        this.songHashMap = createHashMap(songList);
+        this.transientId = transientId;
+        this.dateAdded = System.currentTimeMillis();
     }
 
     public int getId() {
         return id;
     }
-    public void setId(int id) {
-        this.id = id;
-    }
 
     public String getName() {
         return name;
-    }
-    public void setName(String name) {
-        this.name = name;
     }
 
     public ArrayList<Song> getSongList() {
         return songList;
     }
 
+    public int getTransientId() {
+        return transientId;
+    }
+
+    public long getDateAdded(){
+        return dateAdded;
+    }
+
     public HashMap<Song, SongNode> getSongHashMap(){
         return songHashMap;
+    }
+
+    public int getSize(){
+        return songList.size();
     }
 
     public String getSizeString() {
         return Long.toString(songList.size());
     }
-    public int getSize(){
-        return songList.size();
+
+    public String getDateAddedString(){
+        return MusicDetailsActivity.convertDateTimeString(String.valueOf(dateAdded));
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setTransientId(int transientId){
+        this.transientId = transientId;
     }
 
     /**

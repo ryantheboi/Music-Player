@@ -16,14 +16,15 @@ public class Metadata {
     private boolean isPlaying;
     private int seekPosition;
 
-    // values related to the behavior of the current playlist
+    // values related to the behavior of playlists
     private int songIndex;
     private boolean isShuffled;
     private int repeatStatus;
+    private boolean isMediaStorePlaylistsImported;
 
     // values to determine how to init main ui components
     private int themeResourceId;
-    private boolean isLargeAlbumArt;
+    private boolean isAlbumArtCircular;
 
     // values to determine the exact songtab position where the user last was
     private int songtab_scrollindex;
@@ -32,24 +33,29 @@ public class Metadata {
     // value to store the last seed used for randomization
     private int random_seed;
 
+    // value to determine if database is allowing read/write access (for other processes)
+    private int numQueries;
+
     @Ignore
-    public static Metadata DEFAULT_METADATA = new Metadata(0, false, 0, 0, false, 0, R.style.ThemeOverlay_AppCompat_MusicLight, 0, 0, false, 0);
+    public static Metadata DEFAULT_METADATA = new Metadata(0, false, 0, 0, false, 0, false, R.style.ThemeOverlay_AppCompat_MusicLight, 0, 0, false, 0, 0);
 
     /**
      * Constructor used by database to create a metadata object
      */
-    public Metadata(int id, boolean isPlaying, int seekPosition, int songIndex, boolean isShuffled, int repeatStatus, int themeResourceId, int songtab_scrollindex, int songtab_scrolloffset, boolean isLargeAlbumArt, int random_seed) {
+    public Metadata(int id, boolean isPlaying, int seekPosition, int songIndex, boolean isShuffled, int repeatStatus, boolean isMediaStorePlaylistsImported, int themeResourceId, int songtab_scrollindex, int songtab_scrolloffset, boolean isAlbumArtCircular, int random_seed, int numQueries) {
         this.id = id;
         this.isPlaying = isPlaying;
         this.seekPosition = seekPosition;
         this.songIndex = songIndex;
-        this.repeatStatus = repeatStatus;
         this.isShuffled = isShuffled;
+        this.repeatStatus = repeatStatus;
+        this.isMediaStorePlaylistsImported = isMediaStorePlaylistsImported;
         this.themeResourceId = themeResourceId;
         this.songtab_scrollindex = songtab_scrollindex;
         this.songtab_scrolloffset = songtab_scrolloffset;
-        this.isLargeAlbumArt = isLargeAlbumArt;
+        this.isAlbumArtCircular = isAlbumArtCircular;
         this.random_seed = random_seed;
+        this.numQueries = numQueries;
     }
 
     public int getId() {
@@ -76,6 +82,10 @@ public class Metadata {
         return repeatStatus;
     }
 
+    public boolean getIsMediaStorePlaylistsImported(){
+        return isMediaStorePlaylistsImported;
+    }
+
     public int getThemeResourceId() {
         return themeResourceId;
     }
@@ -88,11 +98,15 @@ public class Metadata {
         return songtab_scrolloffset;
     }
 
-    public boolean getIsLargeAlbumArt() {
-        return isLargeAlbumArt;
+    public boolean getIsAlbumArtCircular() {
+        return isAlbumArtCircular;
     }
 
     public int getRandom_seed(){
         return random_seed;
+    }
+
+    public int getNumQueries(){
+        return numQueries;
     }
 }

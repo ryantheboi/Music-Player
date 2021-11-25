@@ -47,6 +47,12 @@ public interface MetadataDao {
     void updateRepeatStatus(int id, int repeatStatus);
 
     /**
+     * Update only the isMediaStorePlaylistsImported metadata, by id
+     */
+    @Query("UPDATE Metadata SET isMediaStorePlaylistsImported = :isMediaStorePlaylistsImported WHERE id =:id")
+    void updateIsMediaStorePlaylistsImported(int id, boolean isMediaStorePlaylistsImported);
+
+    /**
      * Update only the values associated with Songtab listview position (scroll index and scroll offset), by id
      */
     @Query("UPDATE Metadata SET songtab_scrollindex = :songtab_scrollindex, songtab_scrolloffset = :songtab_scrolloffset WHERE id =:id")
@@ -59,16 +65,22 @@ public interface MetadataDao {
     void updateTheme(int id, int themeResourceId);
 
     /**
-     * Update only the isLargeAlbumArt metadata, by id
+     * Update only the isAlbumArtCircular metadata, by id
      */
-    @Query("UPDATE Metadata SET isLargeAlbumArt = :isLargeAlbumArt WHERE id =:id")
-    void updateIsLargeAlbumArt(int id, boolean isLargeAlbumArt);
+    @Query("UPDATE Metadata SET isAlbumArtCircular = :isAlbumArtCircular WHERE id =:id")
+    void updateIsAlbumArtCircular(int id, boolean isAlbumArtCircular);
 
     /**
      * Update only the random seed metadata, by id
      */
     @Query("UPDATE Metadata SET random_seed = :random_seed WHERE id =:id")
     void updateRandomSeed(int id, int random_seed);
+
+    /**
+     * Update only the numQueries metadata, by id
+     */
+    @Query("UPDATE Metadata SET numQueries = :numQueries WHERE id =:id")
+    void updateNumQueries(int id, int numQueries);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(Metadata metadata);

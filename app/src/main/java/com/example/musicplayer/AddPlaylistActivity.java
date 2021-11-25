@@ -278,6 +278,21 @@ public class AddPlaylistActivity extends Activity {
         }
     }
 
+    public static void sendPlaylistUpdateMessage(Playlist playlist, Messenger messenger, int operation){
+        // send message
+        Message msg = Message.obtain();
+        Bundle bundle = new Bundle();
+        bundle.putInt("update", operation);
+        bundle.putParcelable("playlist", playlist);
+        bundle.putParcelable("messenger", null);
+        msg.setData(bundle);
+        try {
+            messenger.send(msg);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
     private final class AddPlaylistMessenger extends Handler {
 
         @Override

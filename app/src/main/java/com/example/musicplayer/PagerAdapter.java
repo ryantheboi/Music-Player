@@ -1,6 +1,7 @@
 package com.example.musicplayer;
 
 import android.os.Messenger;
+import android.os.Parcelable;
 
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -39,6 +40,12 @@ public class PagerAdapter extends FragmentStatePagerAdapter {
             default:
                 return null;
         }
+    }
+
+    @Override
+    public Parcelable saveState() {
+        // fragments may be destroyed without state being saved, so adapter doesn't auto create
+        return null;
     }
 
     @Override

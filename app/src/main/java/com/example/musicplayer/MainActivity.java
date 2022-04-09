@@ -151,144 +151,168 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setTheme(R.style.ThemeOverlay_AppCompat_MusicLight);
-        ThemeColors.generateThemeValues(this, R.style.ThemeOverlay_AppCompat_MusicLight);
+        try {
+            super.onCreate(savedInstanceState);
+            setTheme(R.style.ThemeOverlay_AppCompat_MusicLight);
+            ThemeColors.generateThemeValues(this, R.style.ThemeOverlay_AppCompat_MusicLight);
 
-        System.out.println("created");
+            System.out.println("created");
 
-        // initialize database repository to handle all retrievals and transactions
-        databaseRepository = new DatabaseRepository(this, this);
+            // initialize database repository to handle all retrievals and transactions
+            databaseRepository = new DatabaseRepository(this, this);
 
-        // init thread for message handling
-        HandlerThread messageHandlerThread = new HandlerThread("MessageHandler");
-        messageHandlerThread.start();
-        messageHandler = new MessageHandler(messageHandlerThread.getLooper());
-        mainActivityMessenger = new Messenger(messageHandler);
+            // init thread for message handling
+            HandlerThread messageHandlerThread = new HandlerThread("MessageHandler");
+            messageHandlerThread.start();
+            messageHandler = new MessageHandler(messageHandlerThread.getLooper());
+            mainActivityMessenger = new Messenger(messageHandler);
 
-        // when a configuration change occurs and activity is recreated, fragment is auto restored
-        if (savedInstanceState == null) {
-            mainFragment = new MainFragment(mainActivityMessenger);
-            getSupportFragmentManager().beginTransaction()
-                    .setReorderingAllowed(true)
-                    .add(R.id.fragment_playlist, mainFragment)
-                    .commit();
+            // when a configuration change occurs and activity is recreated, fragment is auto restored
+            if (savedInstanceState == null) {
+                mainFragment = new MainFragment(mainActivityMessenger);
+                getSupportFragmentManager().beginTransaction()
+                        .setReorderingAllowed(true)
+                        .add(R.id.fragment_playlist, mainFragment)
+                        .commit();
+            }
+
+            // initialize all views
+            setContentView(R.layout.activity_main);
+            slidingUpMenuLayout = findViewById(R.id.sliding_menu);
+            slidingUp_albumArt = findViewById(R.id.sliding_albumart);
+            slidingUp_songName = findViewById(R.id.sliding_title);
+            slidingUp_artistName = findViewById(R.id.sliding_artist);
+            slidingUpPanelLayout = findViewById(R.id.slidingPanel);
+            slidingUp_pauseplay_btn = findViewById(R.id.sliding_btn_play);
+            slidingUp_next_btn = findViewById(R.id.sliding_btn_next);
+            slidingUp_prev_btn = findViewById(R.id.sliding_btn_prev);
+            mainActivityRelativeLayout = findViewById(R.id.mainlayout);
+            mainDisplay_albumArt = findViewById(R.id.song_albumart);
+            mainDisplay_albumArt_cardView = findViewById(R.id.song_cardview);
+            mainDisplay_albumArt_btn = findViewById(R.id.toggle_largeAlbumArt);
+            mainDisplay_songTitle = findViewById(R.id.song_title);
+            mainDisplay_songArtist = findViewById(R.id.song_artist);
+            mainDisplay_seekBar = findViewById(R.id.seekBar);
+            mainDisplay_slidedown_btn = findViewById(R.id.slidedown_btn);
+            mainDisplay_info_btn = findViewById(R.id.btn_info);
+            mainDisplay_pauseplay_btn = findViewById(R.id.btn_play);
+            mainDisplay_next_btn = findViewById(R.id.btn_next);
+            mainDisplay_prev_btn = findViewById(R.id.btn_prev);
+            mainDisplay_shuffle_btn = findViewById(R.id.btn_shuffle);
+            mainDisplay_repeat_btn = findViewById(R.id.btn_repeat);
+            mainDisplay_musicPosition = findViewById(R.id.music_position);
+            mainDisplay_musicDuration = findViewById(R.id.music_duration);
+            mainDisplay_playlistHeader = findViewById(R.id.playlist_header);
+        }catch (Exception e){
+            Logger.logException(e);
         }
-
-        // initialize all views
-        setContentView(R.layout.activity_main);
-        slidingUpMenuLayout = findViewById(R.id.sliding_menu);
-        slidingUp_albumArt = findViewById(R.id.sliding_albumart);
-        slidingUp_songName = findViewById(R.id.sliding_title);
-        slidingUp_artistName = findViewById(R.id.sliding_artist);
-        slidingUpPanelLayout = findViewById(R.id.slidingPanel);
-        slidingUp_pauseplay_btn = findViewById(R.id.sliding_btn_play);
-        slidingUp_next_btn = findViewById(R.id.sliding_btn_next);
-        slidingUp_prev_btn = findViewById(R.id.sliding_btn_prev);
-        mainActivityRelativeLayout = findViewById(R.id.mainlayout);
-        mainDisplay_albumArt = findViewById(R.id.song_albumart);
-        mainDisplay_albumArt_cardView = findViewById(R.id.song_cardview);
-        mainDisplay_albumArt_btn = findViewById(R.id.toggle_largeAlbumArt);
-        mainDisplay_songTitle = findViewById(R.id.song_title);
-        mainDisplay_songArtist = findViewById(R.id.song_artist);
-        mainDisplay_seekBar = findViewById(R.id.seekBar);
-        mainDisplay_slidedown_btn = findViewById(R.id.slidedown_btn);
-        mainDisplay_info_btn = findViewById(R.id.btn_info);
-        mainDisplay_pauseplay_btn = findViewById(R.id.btn_play);
-        mainDisplay_next_btn = findViewById(R.id.btn_next);
-        mainDisplay_prev_btn = findViewById(R.id.btn_prev);
-        mainDisplay_shuffle_btn = findViewById(R.id.btn_shuffle);
-        mainDisplay_repeat_btn = findViewById(R.id.btn_repeat);
-        mainDisplay_musicPosition = findViewById(R.id.music_position);
-        mainDisplay_musicDuration = findViewById(R.id.music_duration);
-        mainDisplay_playlistHeader = findViewById(R.id.playlist_header);
     }
 
     @Override
     @TargetApi(16)
     protected void onStart() {
-        super.onStart();
-        System.out.println("started");
+        try {
+            super.onStart();
+            System.out.println("started");
 
-        isPermissionGranted = ContextCompat.checkSelfPermission(MainActivity.this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
-        // check and request for read permissions
-        if (isPermissionGranted) {
-            setVolumeControlStream(AudioManager.STREAM_MUSIC);
+            isPermissionGranted = ContextCompat.checkSelfPermission(MainActivity.this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+            // check and request for read permissions
+            if (isPermissionGranted) {
+                setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
-            musicServiceIntent = new Intent(this, MusicPlayerService.class);
+                musicServiceIntent = new Intent(this, MusicPlayerService.class);
 
-            // retrieve metadata values from database (blocks until db is available)
-            databaseRepository.asyncGetMetadata();
+                // retrieve metadata values from database (blocks until db is available)
+                databaseRepository.asyncGetMetadata();
 
-            // init listview functionality and playlist
-            initMusicList();
+                // init listview functionality and playlist
+                initMusicList();
 
-            initMainGradient();
-            initMainButtons();
-            initInfoButton();
-        } else if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-            // present rationale to user and then request for permissions
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
-        } else {
-            // request for permissions
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
+                initMainGradient();
+                initMainButtons();
+                initInfoButton();
+            } else if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                // present rationale to user and then request for permissions
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
+            } else {
+                // request for permissions
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
+            }
+        }catch (Exception e){
+            Logger.logException(e);
         }
     }
 
     @Override
     protected void onResume() {
-        System.out.println("resumed");
-        if (isPermissionGranted) {
-            isInfoDisplaying = false;
+        try {
+            System.out.println("resumed");
+            if (isPermissionGranted) {
+                isInfoDisplaying = false;
+            }
+            super.onResume();
+        }catch (Exception e){
+            Logger.logException(e);
         }
-        super.onResume();
     }
 
     @Override
     protected void onPause() {
-        System.out.println("paused");
-        if (isPermissionGranted) {
-            if (isMetadataLoaded) {
-                // update current metadata values in database
-                int theme_resourceid = ThemeColors.getThemeResourceId();
-                int songtab_scrollindex = SongListTab.getScrollIndex();
-                int songtab_scrolloffset = SongListTab.getScrollOffset();
-                databaseRepository.updateMetadataTheme(theme_resourceid);
-                databaseRepository.updateMetadataSongtab(songtab_scrollindex, songtab_scrolloffset);
+        try {
+            System.out.println("paused");
+            if (isPermissionGranted) {
+                if (isMetadataLoaded) {
+                    // update current metadata values in database
+                    int theme_resourceid = ThemeColors.getThemeResourceId();
+                    int songtab_scrollindex = SongListTab.getScrollIndex();
+                    int songtab_scrolloffset = SongListTab.getScrollOffset();
+                    databaseRepository.updateMetadataTheme(theme_resourceid);
+                    databaseRepository.updateMetadataSongtab(songtab_scrollindex, songtab_scrolloffset);
 
-                // save the current random seed
-                databaseRepository.updateMetadataRandomSeed(random_seed);
+                    // save the current random seed
+                    databaseRepository.updateMetadataRandomSeed(random_seed);
 
-                // save the current shuffle and repeat option
-                databaseRepository.updateMetadataIsShuffled(isShuffled);
-                databaseRepository.updateMetadataRepeatStatus(repeat_status);
+                    // save the current shuffle and repeat option
+                    databaseRepository.updateMetadataIsShuffled(isShuffled);
+                    databaseRepository.updateMetadataRepeatStatus(repeat_status);
 
-                // save current song index and playlist to database
-                databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
-                databaseRepository.insertPlaylist(current_playlist);
+                    // save current song index and playlist to database
+                    databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
+                    databaseRepository.insertPlaylist(current_playlist);
+                }
             }
+            super.onPause();
+        }catch (Exception e){
+            Logger.logException(e);
         }
-        super.onPause();
     }
 
     @Override
     protected void onStop() {
-        System.out.println("stopped");
-        if (isPermissionGranted) {
-            databaseRepository.finish();
+        try {
+            System.out.println("stopped");
+            if (isPermissionGranted) {
+                databaseRepository.finish();
+            }
+            super.onStop();
+        }catch (Exception e){
+            Logger.logException(e);
         }
-        super.onStop();
     }
 
     @Override
     protected void onDestroy() {
-        System.out.println("destroyed");
-        isDestroyed = true;
-        super.onDestroy();
+        try {
+            System.out.println("destroyed");
+            isDestroyed = true;
+            super.onDestroy();
+        }catch (Exception e){
+            Logger.logException(e);
+        }
     }
 
     /**

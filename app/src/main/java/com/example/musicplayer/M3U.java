@@ -44,6 +44,7 @@ public class M3U {
             br.close();
         }catch (Exception e){
             e.printStackTrace();
+            Logger.logException(e, "M3U");
         }
 
         // construct mapping of filepath to song using the current full list of songs
@@ -64,6 +65,7 @@ public class M3U {
             }
         }catch (Exception e){
             e.printStackTrace();
+            Logger.logException(e, "M3U");
         }
 
         String[] temp_arraySplit = filepath.split("/");
@@ -103,6 +105,7 @@ public class M3U {
             return true;
         }catch (Exception e){
             e.printStackTrace();
+            Logger.logException(e, "M3U");
             return false;
         }
     }

@@ -72,11 +72,15 @@ public class DatabaseRepository {
     public DatabaseRepository(Context context, MainActivity activity){
         this.mainActivity = activity;
 
-        // init database and corresponding DAOs
-        initDatabase(context);
+        try {
+            // init database and corresponding DAOs
+            initDatabase(context);
 
-        // init message queue and begin thread to pull from the queue
-        startMessageQueueThread();
+            // init message queue and begin thread to pull from the queue
+            startMessageQueueThread();
+        }catch (Exception e){
+            Logger.logException(e, "DatabaseRepository");
+        }
     }
 
     /**
@@ -276,6 +280,7 @@ public class DatabaseRepository {
                         metadataDao.updateNumQueries(0, messageQueue.size());
                     } catch (InterruptedException e) {
                         System.out.println("Taking from db query queue was interrupted");
+                        Logger.logException(e, "DatabaseRepository");
                     }
                 }
             }

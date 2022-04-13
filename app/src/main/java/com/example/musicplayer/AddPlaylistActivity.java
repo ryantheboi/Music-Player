@@ -275,6 +275,7 @@ public class AddPlaylistActivity extends Activity {
             mainActivityMessenger.send(msg);
         } catch (RemoteException e) {
             e.printStackTrace();
+            Logger.logException(e, "AddPlaylistActivity");
         }
     }
 
@@ -290,6 +291,7 @@ public class AddPlaylistActivity extends Activity {
             messenger.send(msg);
         } catch (RemoteException e) {
             e.printStackTrace();
+            Logger.logException(e, "AddPlaylistActivity");
         }
     }
 

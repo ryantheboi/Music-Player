@@ -310,6 +310,7 @@ public class PlaylistFragment extends Fragment {
                                     m_mainMessenger.send(msg);
                                 } catch (RemoteException e) {
                                     e.printStackTrace();
+                                    Logger.logException(e, "PlaylistFragment");
                                 }
 
                                 // update playlist size textview with new songs count

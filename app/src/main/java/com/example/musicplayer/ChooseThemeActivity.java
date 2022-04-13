@@ -176,6 +176,7 @@ public class ChooseThemeActivity extends Activity {
             mainActivity_messenger.send(msg);
         } catch (RemoteException e) {
             e.printStackTrace();
+            Logger.logException(e, "ChooseThemeActivity");
         }
     }
 
@@ -190,6 +191,7 @@ public class ChooseThemeActivity extends Activity {
             mainActivity_messenger.send(msg);
         } catch (RemoteException e) {
             e.printStackTrace();
+            Logger.logException(e, "ChooseThemeActivity");
         }
 
         super.finish();

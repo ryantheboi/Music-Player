@@ -1106,60 +1106,60 @@ public class MainActivity extends AppCompatActivity {
      * @param operation the operation being performed with the playlist
      */
     public void updateMainActivity(Object object, final Messenger messenger, final int operation){
-        final MainActivity mainActivity = this;
-        switch (operation) {
-            case DatabaseRepository.ASYNC_INIT_ALL_PLAYLISTS:
-                // remove any songs that were not able to be found in the device
-                playlistList = (ArrayList<Playlist>) object;
-                cleanPlaylistDatabase();
-                SongListAdapter songListadapter = new SongListAdapter(this, R.layout.adapter_song_layout, fullSongList, this);
-                PlaylistAdapter playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this);
-                mainFragment.setAdapters(songListadapter, playlistAdapter);
+        try {
+            final MainActivity mainActivity = this;
+            switch (operation) {
+                case DatabaseRepository.ASYNC_INIT_ALL_PLAYLISTS:
+                    // remove any songs that were not able to be found in the device
+                    playlistList = (ArrayList<Playlist>) object;
+                    cleanPlaylistDatabase();
+                    SongListAdapter songListadapter = new SongListAdapter(this, R.layout.adapter_song_layout, fullSongList, this);
+                    PlaylistAdapter playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this);
+                    mainFragment.setAdapters(songListadapter, playlistAdapter);
 
-                // initialize current playlist from database, if possible
-                databaseRepository.asyncGetCurrentPlaylist();
-                break;
-            case DatabaseRepository.ASYNC_GET_CURRENT_PLAYLIST:
-                current_playlist = (Playlist) object;
+                    // initialize current playlist from database, if possible
+                    databaseRepository.asyncGetCurrentPlaylist();
+                    break;
+                case DatabaseRepository.ASYNC_GET_CURRENT_PLAYLIST:
+                    current_playlist = (Playlist) object;
 
-                // if a playlist wasn't retrieved from the database
-                if (current_playlist == null) {
-                    current_playlist = fullPlaylist;
-                    if (fullSongList.size() > 0) {
-                        current_song = fullSongList.get(0);
+                    // if a playlist wasn't retrieved from the database
+                    if (current_playlist == null) {
+                        current_playlist = fullPlaylist;
+                        if (fullSongList.size() > 0) {
+                            current_song = fullSongList.get(0);
+                        } else {
+                            break;
+                        }
                     }
-                    else{
-                        break;
-                    }
-                }
 
-                // set up app components using the metadata already retrieved
-                setupMetadata();
-                break;
-            case DatabaseRepository.ASYNC_INSERT_PLAYLIST:
-                mainFragment.updateMainFragment(object, DatabaseRepository.ASYNC_INSERT_PLAYLIST);
-                break;
-            case DatabaseRepository.ASYNC_MODIFY_PLAYLIST:
-                mainFragment.updateMainFragment(object, DatabaseRepository.ASYNC_MODIFY_PLAYLIST);
-                break;
-            case DatabaseRepository.ASYNC_DELETE_PLAYLISTS_BY_ID:
-                mainFragment.updateMainFragment(object, DatabaseRepository.ASYNC_DELETE_PLAYLISTS_BY_ID);
-                break;
-            case DatabaseRepository.ASYNC_GET_METADATA:
-                // metadata object guaranteed not null
-                metadata = (Metadata) object;
-                break;
-            case DatabaseRepository.ASYNC_GET_ALL_SONGMETADATA:
-                ArrayList<SongMetadata> database_songs = (ArrayList<SongMetadata>) object;
+                    // set up app components using the metadata already retrieved
+                    setupMetadata();
+                    break;
+                case DatabaseRepository.ASYNC_INSERT_PLAYLIST:
+                    mainFragment.updateMainFragment(object, DatabaseRepository.ASYNC_INSERT_PLAYLIST);
+                    break;
+                case DatabaseRepository.ASYNC_MODIFY_PLAYLIST:
+                    mainFragment.updateMainFragment(object, DatabaseRepository.ASYNC_MODIFY_PLAYLIST);
+                    break;
+                case DatabaseRepository.ASYNC_DELETE_PLAYLISTS_BY_ID:
+                    mainFragment.updateMainFragment(object, DatabaseRepository.ASYNC_DELETE_PLAYLISTS_BY_ID);
+                    break;
+                case DatabaseRepository.ASYNC_GET_METADATA:
+                    // metadata object guaranteed not null
+                    metadata = (Metadata) object;
+                    break;
+                case DatabaseRepository.ASYNC_GET_ALL_SONGMETADATA:
+                    ArrayList<SongMetadata> database_songs = (ArrayList<SongMetadata>) object;
 
-                if (database_songs != null) {
-                    // create hashmap of every song id to song metadata
-                    fullSongMetadataHashMap = new HashMap<>();
-                    for (SongMetadata songMetadata : database_songs) {
-                        fullSongMetadataHashMap.put(songMetadata.getId(), songMetadata);
+                    if (database_songs != null) {
+                        // create hashmap of every song id to song metadata
+                        fullSongMetadataHashMap = new HashMap<>();
+                        for (SongMetadata songMetadata : database_songs) {
+                            fullSongMetadataHashMap.put(songMetadata.getId(), songMetadata);
+                        }
                     }
-                }
-                break;
+                    break;
             }
 
             if (messenger != null) {
@@ -1168,12 +1168,11 @@ public class MainActivity extends AppCompatActivity {
                 Bundle bundle = new Bundle();
                 bundle.putInt("msg", AddPlaylistActivity.FINISH);
                 msg.setData(bundle);
-                try {
-                    messenger.send(msg);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                messenger.send(msg);
             }
+        }catch (Exception e){
+            Logger.logException(e);
+        }
     }
 
     public View getMainActivityLayout(){
@@ -1323,6 +1322,7 @@ public class MainActivity extends AppCompatActivity {
                                     Thread.sleep(100);
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
+                                    Logger.logException(e, "MainActivity");
                                 }
                             }
                         }

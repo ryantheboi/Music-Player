@@ -270,6 +270,7 @@ public class PlaylistTab extends Fragment {
                                         m_mainMessenger.send(msg);
                                     } catch (RemoteException e) {
                                         e.printStackTrace();
+                                        Logger.logException(e, "PlaylistTab");
                                     }
                                 }
                                 renamePlaylist_input.getText().clear();
@@ -368,6 +369,7 @@ public class PlaylistTab extends Fragment {
                                     m_mainMessenger.send(msg);
                                 } catch (RemoteException e) {
                                     e.printStackTrace();
+                                    Logger.logException(e, "PlaylistTab");
                                 }
 
                                 mode.finish(); // Action picked, so close the CAB

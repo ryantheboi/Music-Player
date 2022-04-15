@@ -26,6 +26,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -39,6 +40,9 @@ import com.google.android.material.tabs.TabLayout;
 import java.util.ArrayList;
 
 public class MainFragment extends Fragment {
+
+    private static final String MESSENGER_TAG = "Messenger";
+
     private Messenger mainActivityMessenger;
     private MainActivity mainActivity;
 
@@ -59,9 +63,24 @@ public class MainFragment extends Fragment {
     private PagerAdapter pagerAdapter;
     private boolean isCreated = false;
 
-    public MainFragment(Messenger mainActivityMessenger) {
+    public MainFragment() {
         super(R.layout.fragment_main);
-        this.mainActivityMessenger = mainActivityMessenger;
+    }
+
+    public static MainFragment getInstance(Messenger messenger) {
+        MainFragment fragment = new MainFragment();
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(MESSENGER_TAG, messenger);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            this.mainActivityMessenger = getArguments().getParcelable(MESSENGER_TAG);
+        }
     }
 
     @Override

@@ -26,6 +26,7 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
@@ -35,6 +36,9 @@ import androidx.fragment.app.Fragment;
 import java.util.ArrayList;
 
 public class PlaylistFragment extends Fragment {
+
+    private static final String MESSENGER_TAG = "Messenger";
+    private static final String PLAYLIST_TAG = "Playlist";
 
     private Messenger m_mainMessenger;
     private Playlist m_playlist;
@@ -55,10 +59,26 @@ public class PlaylistFragment extends Fragment {
     private int m_total_time;
     private static ArrayList<Song> m_userSelection = new ArrayList<>();
 
-    public PlaylistFragment(Playlist playlist, Messenger messenger) {
+    public PlaylistFragment() {
         super(R.layout.activity_playlist);
-        m_playlist = playlist;
-        m_mainMessenger = messenger;
+    }
+
+    public static PlaylistFragment getInstance(Playlist playlist, Messenger messenger) {
+        PlaylistFragment fragment = new PlaylistFragment();
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(MESSENGER_TAG, messenger);
+        bundle.putParcelable(PLAYLIST_TAG, playlist);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            this.m_playlist = getArguments().getParcelable(PLAYLIST_TAG);
+            this.m_mainMessenger = getArguments().getParcelable(MESSENGER_TAG);
+        }
     }
 
     @Override

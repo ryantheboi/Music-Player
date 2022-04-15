@@ -169,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
 
             // when a configuration change occurs and activity is recreated, fragment is auto restored
             if (savedInstanceState == null) {
-                mainFragment = new MainFragment(mainActivityMessenger);
+                mainFragment = MainFragment.getInstance(mainActivityMessenger);
                 getSupportFragmentManager().beginTransaction()
                         .setReorderingAllowed(true)
                         .add(R.id.fragment_playlist, mainFragment)

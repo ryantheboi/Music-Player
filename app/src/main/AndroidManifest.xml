@@ -22,8 +22,6 @@
             android:theme="@style/ToolbarAppTheme.Playlist"/>
         <activity android:name=".MusicDetailsActivity"
             android:theme="@style/AppTheme.MusicPopup"/>
-        <activity android:name=".ChooseThemeActivity"
-            android:theme="@style/AppTheme.MusicPopup"/>
 
         <service
             android:name=".MusicPlayerService"

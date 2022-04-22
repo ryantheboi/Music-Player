@@ -216,18 +216,21 @@ public class MainFragment extends Fragment {
 
     public void initThemeButton() {
         isThemeSelecting = false;
-        final Intent chooseThemeIntent = new Intent(getContext(), ChooseThemeActivity.class);
-        chooseThemeIntent.putExtra("mainActivityMessenger", mainActivityMessenger);
         final Animation rotate = AnimationUtils.loadAnimation(getContext(), R.anim.rotate_themebtn_animation);
 
-        final MainFragment mainFragment = this;
         theme_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (!isThemeSelecting) {
                     isThemeSelecting = true;
                     theme_btn.startAnimation(rotate);
-                    startActivity(chooseThemeIntent);
+
+                    ChooseThemeFragment chooseThemeFragment = ChooseThemeFragment.getInstance(mainActivityMessenger);
+                    getActivity().getSupportFragmentManager().beginTransaction()
+                            .setReorderingAllowed(true)
+                            .add(R.id.fragment_playlist, chooseThemeFragment)
+                            .addToBackStack("chooseThemeFragment")
+                            .commit();
                 }
             }
         });

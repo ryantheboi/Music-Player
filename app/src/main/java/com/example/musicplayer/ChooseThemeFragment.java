@@ -1,20 +1,25 @@
 package com.example.musicplayer;
 
-import android.app.Activity;
-import android.content.Intent;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
 import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.view.Gravity;
 import android.view.View;
-import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 
-public class ChooseThemeActivity extends Activity {
+public class ChooseThemeFragment extends Fragment {
+
+    private static final String MESSENGER_TAG = "Messenger";
+
     private Messenger mainActivity_messenger;
     private ImageView palette_background;
+    private ImageView exit_background;
     private ImageButton light_btn;
     private ImageButton night_btn;
     private ImageButton ram_btn;
@@ -24,56 +29,88 @@ public class ChooseThemeActivity extends Activity {
     private ImageButton sucrose_btn;
     private ImageButton bronya_btn;
     private ImageButton noelle_btn;
+    private Animation slide_in_palette_anim;
+    private Animation slide_out_palette_anim;
 
     public static final int THEME_SELECTED = 99;
     public static final int THEME_DONE = 98;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        // override the enter animation for this activity
-        overridePendingTransition(R.anim.slide_in_palette_animation, R.anim.slide_out_palette_animation);
-
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_choosetheme);
-
-        // obtain the intent that started this activity (should contain an extra with a messenger)
-        Intent intent = this.getIntent();
-        Bundle b = intent.getExtras();
-        if (b != null) {
-            for (String key : b.keySet()) {
-                if (key.equals("mainActivityMessenger")) {
-                    // get the song which needs its details to be displayed
-                    mainActivity_messenger = intent.getParcelableExtra("mainActivityMessenger");
-                    break;
-                }
-            }
-        }
-
-        initViews();
-        initBackgroundClickListener();
-        initThemeBtnClickListeners();
-        setWindowLayout();
+    public ChooseThemeFragment() {
+        super(R.layout.activity_choosetheme);
     }
 
-    private void initViews() {
-        palette_background = findViewById(R.id.palette_background);
-        light_btn = findViewById(R.id.btn_light);
-        night_btn = findViewById(R.id.btn_night);
-        ram_btn = findViewById(R.id.btn_ram);
-        rem_btn = findViewById(R.id.btn_rem);
-        subaru_btn = findViewById(R.id.btn_subaru);
-        puck_btn = findViewById(R.id.btn_puck);
-        sucrose_btn = findViewById(R.id.btn_sucrose);
-        bronya_btn = findViewById(R.id.btn_bronya);
-        noelle_btn = findViewById(R.id.btn_noelle);
+    public static ChooseThemeFragment getInstance(Messenger messenger) {
+        ChooseThemeFragment fragment = new ChooseThemeFragment();
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(MESSENGER_TAG, messenger);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            this.mainActivity_messenger = getArguments().getParcelable(MESSENGER_TAG);
+        }
+
+        initAnimations();
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        view.startAnimation(slide_in_palette_anim);
+        initViews(view);
+        initBackgroundClickListener();
+        initThemeBtnClickListeners();
+    }
+
+    private void initViews(View view) {
+        palette_background = view.findViewById(R.id.palette_background);
+        exit_background = view.findViewById(R.id.exit_background);
+        light_btn = view.findViewById(R.id.btn_light);
+        night_btn = view.findViewById(R.id.btn_night);
+        ram_btn = view.findViewById(R.id.btn_ram);
+        rem_btn = view.findViewById(R.id.btn_rem);
+        subaru_btn = view.findViewById(R.id.btn_subaru);
+        puck_btn = view.findViewById(R.id.btn_puck);
+        sucrose_btn = view.findViewById(R.id.btn_sucrose);
+        bronya_btn = view.findViewById(R.id.btn_bronya);
+        noelle_btn = view.findViewById(R.id.btn_noelle);
+    }
+
+    private void initAnimations(){
+        slide_in_palette_anim = AnimationUtils.loadAnimation(getContext(), R.anim.slide_in_palette_animation);
+        slide_out_palette_anim = AnimationUtils.loadAnimation(getContext(), R.anim.slide_out_palette_animation);
+
+        final MainActivity mainActivity = (MainActivity) getActivity();
+        slide_out_palette_anim.setAnimationListener(new Animation.AnimationListener(){
+            @Override
+            public void onAnimationStart(Animation arg0) {
+            }
+            @Override
+            public void onAnimationRepeat(Animation arg0) {
+            }
+            @Override
+            public void onAnimationEnd(Animation arg0) {
+                finish(mainActivity);
+            }
+        });
     }
 
     private void initBackgroundClickListener(){
-        // set background image to finish activity on click
+        // set background images to finish activity on click
         palette_background.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+                getView().startAnimation(slide_out_palette_anim);
+            }
+        });
+
+        exit_background.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getView().startAnimation(slide_out_palette_anim);
             }
         });
     }
@@ -145,27 +182,13 @@ public class ChooseThemeActivity extends Activity {
         });
     }
 
-    private void setWindowLayout() {
-        float width = getResources().getDimension(R.dimen.palette_width);
-        float height = getResources().getDimension(R.dimen.palette_height);
-
-        getWindow().setLayout((int) (width), (int) (height));
-
-        WindowManager.LayoutParams params = getWindow().getAttributes();
-        params.gravity = Gravity.TOP;
-        params.x = (int) getResources().getDimension(R.dimen.palette_offset_x);
-        params.y = (int) getResources().getDimension(R.dimen.palette_offset_y);
-
-        getWindow().setAttributes(params);
-    }
-
     /**
      * Set the theme, update ThemeColors to utilize current theme values, and inform main activity
      * @param resid the resource id of the theme that was selected by the user
      */
     private void updateTheme(int resid) {
-        setTheme(resid);
-        ThemeColors.generateThemeValues(this, resid);
+        getActivity().setTheme(resid);
+        ThemeColors.generateThemeValues(getContext(), resid);
 
         // inform the main activity that a theme was selected
         Message msg = Message.obtain();
@@ -180,8 +203,7 @@ public class ChooseThemeActivity extends Activity {
         }
     }
 
-    @Override
-    public void finish() {
+    public void finish(MainActivity activity) {
         // inform main activity that the user is done choosing a theme
         Message msg = Message.obtain();
         Bundle bundle = new Bundle();
@@ -194,9 +216,6 @@ public class ChooseThemeActivity extends Activity {
             Logger.logException(e, "ChooseThemeActivity");
         }
 
-        super.finish();
-
-        // override the exit animation for this activity
-        overridePendingTransition(0, R.anim.slide_out_palette_animation);
+        activity.getSupportFragmentManager().popBackStackImmediate();
     }
 }

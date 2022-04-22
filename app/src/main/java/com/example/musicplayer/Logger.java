@@ -14,7 +14,7 @@ public class Logger {
     private static final String LOGGING_DIRECTORY = "/storage/emulated/0/Playlists";
     private static final String LOG_EXTENSION = ".txt";
     private static final String LOG_PREFIX = "crashlog";
-    private static final boolean enableLogging = false; // set true to enable error logging, false to disable
+    private static final boolean enableLogging = true; // set true to enable error logging, false to disable
 
     public static void logException(Exception exception){
         logException(exception, null);

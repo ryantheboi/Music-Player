@@ -1397,7 +1397,7 @@ public class MainActivity extends AppCompatActivity {
                     // song can be updated within or outside of the app
                     databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
                     break;
-                case ChooseThemeActivity.THEME_SELECTED:
+                case ChooseThemeFragment.THEME_SELECTED:
                     final int theme_resid = ThemeColors.getThemeResourceId();
 
                     // change theme colors and button image to match the current theme
@@ -1409,7 +1409,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
                     break;
-                case ChooseThemeActivity.THEME_DONE:
+                case ChooseThemeFragment.THEME_DONE:
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {

@@ -6,10 +6,7 @@ import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Bundle;
-
-import android.os.Message;
 import android.os.Messenger;
-import android.os.RemoteException;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
@@ -112,7 +109,6 @@ public class SongListTab extends Fragment {
         // init intents for the listeners
         final Intent musicListSelectIntent = new Intent(mainActivity, MusicPlayerService.class);
         final Intent musicListQueueIntent = new Intent(mainActivity, MusicPlayerService.class);
-        final Intent addPlaylistIntent = new Intent(mainActivity, AddPlaylistActivity.class);
 
         // init listview listeners
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -253,7 +249,7 @@ public class SongListTab extends Fragment {
                             MainActivity.setCurrent_transientPlaylist(transient_playlist);
                             MainActivity.setCurrent_song(userSelection.get(0));
 
-                            AddPlaylistActivity.sendPlaylistUpdateMessage(transient_playlist, mainActivityMessenger, AddPlaylistActivity.MODIFY_PLAYLIST);
+                            AddPlaylistFragment.sendPlaylistUpdateMessage(transient_playlist, mainActivityMessenger, AddPlaylistFragment.MODIFY_PLAYLIST);
                         }
 
                         // construct new transient and current playlist, given the user selections
@@ -267,7 +263,7 @@ public class SongListTab extends Fragment {
                                     MainActivity.setCurrent_transientPlaylist(transient_playlist);
                                     MainActivity.setCurrent_song(userSelection.get(0));
 
-                                    AddPlaylistActivity.sendPlaylistUpdateMessage(transient_playlist, mainActivityMessenger, AddPlaylistActivity.ADD_PLAYLIST);
+                                    AddPlaylistFragment.sendPlaylistUpdateMessage(transient_playlist, mainActivityMessenger, AddPlaylistFragment.ADD_PLAYLIST);
                                     break;
                                 }
                             }
@@ -282,9 +278,13 @@ public class SongListTab extends Fragment {
                     case R.id.menuitem_createplaylist:
                         // construct named playlist and send it to addPlaylist activity
                         Playlist playlist = new Playlist(getString(R.string.Favorites), userSelection);
-                        addPlaylistIntent.putExtra("addPlaylist", playlist);
-                        addPlaylistIntent.putExtra("messenger", mainActivityMessenger);
-                        startActivity(addPlaylistIntent);
+
+                        AddPlaylistFragment addPlaylistFragment = AddPlaylistFragment.getInstance(playlist, mainActivityMessenger);
+                        getActivity().getSupportFragmentManager().beginTransaction()
+                                .setReorderingAllowed(true)
+                                .add(R.id.fragment_playlist, addPlaylistFragment)
+                                .addToBackStack("addPlaylistFragment")
+                                .commit();
 
                         mode.finish(); // Action picked, so close the CAB
                         return true;

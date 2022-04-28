@@ -3,7 +3,6 @@ package com.example.musicplayer;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.RippleDrawable;
@@ -261,7 +260,7 @@ public class PlaylistTab extends Fragment {
                                     // notify MainActivity about modified playlist
                                     Message msg = Message.obtain();
                                     Bundle bundle = new Bundle();
-                                    bundle.putInt("update", AddPlaylistActivity.MODIFY_PLAYLIST);
+                                    bundle.putInt("update", AddPlaylistFragment.MODIFY_PLAYLIST);
                                     bundle.putParcelable("playlist", modify_playlist);
                                     bundle.putParcelable("messenger", null);
                                     msg.setData(bundle);

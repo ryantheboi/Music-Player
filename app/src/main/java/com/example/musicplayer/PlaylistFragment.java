@@ -121,7 +121,7 @@ public class PlaylistFragment extends Fragment {
         // init intents and attributes for listview listeners
         final Intent musicListSelectIntent = new Intent(getContext(), MusicPlayerService.class);
         final Intent musicListQueueIntent = new Intent(getContext(), MusicPlayerService.class);
-        final Intent addPlaylistIntent = new Intent(getContext(), AddPlaylistActivity.class);
+        final Intent addPlaylistIntent = new Intent(getContext(), AddPlaylistFragment.class);
         m_listView.setAdapter(m_songListAdapter);
         m_listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
 
@@ -264,7 +264,7 @@ public class PlaylistFragment extends Fragment {
                             MainActivity.setCurrent_transientPlaylist(transient_playlist);
                             MainActivity.setCurrent_song(m_userSelection.get(0));
 
-                            AddPlaylistActivity.sendPlaylistUpdateMessage(transient_playlist, m_mainMessenger, AddPlaylistActivity.MODIFY_PLAYLIST);
+                            AddPlaylistFragment.sendPlaylistUpdateMessage(transient_playlist, m_mainMessenger, AddPlaylistFragment.MODIFY_PLAYLIST);
                         }
 
                         // construct new transient and current playlist, given the user selections
@@ -278,7 +278,7 @@ public class PlaylistFragment extends Fragment {
                                     MainActivity.setCurrent_transientPlaylist(transient_playlist);
                                     MainActivity.setCurrent_song(m_userSelection.get(0));
 
-                                    AddPlaylistActivity.sendPlaylistUpdateMessage(transient_playlist, m_mainMessenger, AddPlaylistActivity.ADD_PLAYLIST);
+                                    AddPlaylistFragment.sendPlaylistUpdateMessage(transient_playlist, m_mainMessenger, AddPlaylistFragment.ADD_PLAYLIST);
                                     break;
                                 }
                             }
@@ -323,7 +323,7 @@ public class PlaylistFragment extends Fragment {
                                 // send message to update mainactivity
                                 Message msg = Message.obtain();
                                 Bundle bundle = new Bundle();
-                                bundle.putInt("update", AddPlaylistActivity.MODIFY_PLAYLIST);
+                                bundle.putInt("update", AddPlaylistFragment.MODIFY_PLAYLIST);
                                 bundle.putParcelable("playlist", m_playlist);
                                 msg.setData(bundle);
                                 try {

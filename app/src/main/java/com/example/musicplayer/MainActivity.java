@@ -281,8 +281,8 @@ public class MainActivity extends AppCompatActivity {
                     databaseRepository.updateMetadataRepeatStatus(repeat_status);
 
                     // save current song index and playlist to database
-                    databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
                     databaseRepository.insertPlaylist(current_playlist);
+                    databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
                 }
             }
             super.onPause();
@@ -1166,7 +1166,7 @@ public class MainActivity extends AppCompatActivity {
                 // send message to end the addplaylistactivity, as the views are now updated
                 Message msg = Message.obtain();
                 Bundle bundle = new Bundle();
-                bundle.putInt("msg", AddPlaylistActivity.FINISH);
+                bundle.putInt("msg", AddPlaylistFragment.FINISH);
                 msg.setData(bundle);
                 messenger.send(msg);
             }
@@ -1417,10 +1417,10 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
                     break;
-                case AddPlaylistActivity.ADD_PLAYLIST:
+                case AddPlaylistFragment.ADD_PLAYLIST:
                     databaseRepository.asyncInsertPlaylist((Playlist) bundle.get("playlist"), (Messenger) bundle.get("messenger"));
                     break;
-                case AddPlaylistActivity.MODIFY_PLAYLIST:
+                case AddPlaylistFragment.MODIFY_PLAYLIST:
                     databaseRepository.asyncModifyPlaylist((Playlist) bundle.get("playlist"), (Messenger) bundle.get("messenger"));
                     break;
                 case PlaylistTab.REMOVE_PLAYLISTS:

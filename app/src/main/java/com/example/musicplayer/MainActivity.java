@@ -251,9 +251,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         try {
             System.out.println("resumed");
-            if (isPermissionGranted) {
-                isInfoDisplaying = false;
-            }
             super.onResume();
         }catch (Exception e){
             Logger.logException(e);
@@ -802,15 +799,18 @@ public class MainActivity extends AppCompatActivity {
      */
     public void initInfoButton() {
         mainDisplay_info_btn_ripple = (RippleDrawable) mainDisplay_info_btn.getBackground();
-        infoIntent = new Intent(this, MusicDetailsActivity.class);
         mainDisplay_info_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (!isInfoDisplaying) {
                     isInfoDisplaying = true;
-                    infoIntent.putExtra("currentSong", current_song);
-                    infoIntent.putExtra("currentSongMetadata", fullSongMetadataHashMap.get(current_song.getId()));
-                    startActivity(infoIntent);
+
+                    MusicDetailsFragment musicDetailsFragment = MusicDetailsFragment.getInstance(current_song, fullSongMetadataHashMap.get(current_song.getId()));
+                    getSupportFragmentManager().beginTransaction()
+                            .setReorderingAllowed(true)
+                            .add(R.id.fragment_playlist, musicDetailsFragment)
+                            .addToBackStack("musicDetailsFragment")
+                            .commit();
                 }
             }
         });
@@ -1193,6 +1193,10 @@ public class MainActivity extends AppCompatActivity {
     public static Playlist getFullPlaylist(){
         return fullPlaylist;
     }
+    public static Notification getNotification(){
+        return notificationChannel1;
+    }
+
     public static void setCurrent_song(Song song){
         current_song = song;
     }
@@ -1208,9 +1212,8 @@ public class MainActivity extends AppCompatActivity {
         Playlist current_playlist = new Playlist(transient_playlist.getName(), transient_playlist.getSongList());
         setCurrent_playlist(current_playlist);
     }
-
-    public static Notification getNotification(){
-        return notificationChannel1;
+    public void setIsInfoDisplaying(boolean isInfoDisplaying){
+        this.isInfoDisplaying = isInfoDisplaying;
     }
 
     /**

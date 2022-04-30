@@ -1,7 +1,7 @@
 package com.example.musicplayer;
 
-import android.app.Activity;
-import android.content.Intent;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 import android.graphics.Typeface;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
@@ -9,9 +9,7 @@ import android.os.Bundle;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.RelativeSizeSpan;
-import android.util.DisplayMetrics;
-import android.view.Gravity;
-import android.view.WindowManager;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -20,60 +18,81 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class MusicDetailsActivity extends Activity {
+public class MusicDetailsFragment extends Fragment {
+
+    private static final String SONG_TAG = "Song";
+    private static final String SONGMETADATA_TAG = "SongMetadata";
 
     private Song song;
     private SongMetadata songMetadata;
     private int idx;
+    private TextView heading;
+    private TextView msgWindow;
+    private ImageView details_background;
     private SpannableStringBuilder details = new SpannableStringBuilder();
+    private MainActivity mainActivity;
+
+    public MusicDetailsFragment() {
+        super(R.layout.activity_details);
+    }
+
+    public static MusicDetailsFragment getInstance(Song song, SongMetadata songMetadata) {
+        MusicDetailsFragment fragment = new MusicDetailsFragment();
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(SONG_TAG, song);
+        bundle.putParcelable(SONGMETADATA_TAG, songMetadata);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState){
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_details);
-
-        // obtain the intent that started this activity (should contain an extra with a Song)
-        Intent intent = this.getIntent();
-        Bundle b = intent.getExtras();
-        if (b != null) {
-            for (String key : b.keySet()) {
-                switch (key) {
-                    case "currentSong":
-                        // get the song which needs its details to be displayed
-                        song = intent.getParcelableExtra("currentSong");
-                        break;
-                    case "currentSongMetadata":
-                        // get the song which needs its details to be displayed
-                        songMetadata = intent.getParcelableExtra("currentSongMetadata");
-                        break;
-                }
-            }
+        if (getArguments() != null) {
+            this.song = getArguments().getParcelable(SONG_TAG);
+            this.songMetadata = getArguments().getParcelable(SONGMETADATA_TAG);
         }
+        this.mainActivity = (MainActivity) getActivity();
+    }
 
-        DisplayMetrics dm = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(dm);
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        initViews(view);
+        initObjects();
+        setThemeColors();
+    }
 
-        int width = dm.widthPixels;
-        int height = dm.heightPixels;
+    @Override
+    public void onDetach() {
+        mainActivity.setIsInfoDisplaying(false);
+        super.onDetach();
+    }
 
-        getWindow().setLayout((int) (width*.7), (int) (height*.5));
+    /**
+     * Appends to the SpannableStringBuilder object with the label and the detail for that label
+     * Will bold the label and append two newlines
+     * @param label The label of the detail, e.g. Title, Artist, Album, etc.
+     * @param detail The description of the label
+     */
+    private void appendDetail(String label, String detail){
+        if (detail == null) {
+            detail = "N/A";
+        }
+        details.append(label + ": " + detail + "\n\n");
+        int label_length = label.length() + 2; // 2 for the ": "
+        details.setSpan(new android.text.style.StyleSpan(Typeface.BOLD), idx, idx + label_length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        details.setSpan(new RelativeSizeSpan(1.2f), idx, idx + label_length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        int total_length = label_length + detail.length() + 2; // 2 for the "\n\n"
+        idx += total_length;
+    }
 
-        WindowManager.LayoutParams params = getWindow().getAttributes();
-        params.gravity = Gravity.CENTER;
-        params.x = 30;
-        params.y = -220;
+    public void initViews(View view) {
+        heading = view.findViewById(R.id.music_details_heading);
+        msgWindow = view.findViewById(R.id.music_details);
+        details_background = view.findViewById(R.id.music_details_background);
+    }
 
-        getWindow().setAttributes(params);
-
-        TextView heading = findViewById(R.id.music_details_heading);
-        TextView msgWindow = findViewById(R.id.music_details);
-        ImageView details_background = findViewById(R.id.music_details_background);
-
-        // set theme colors
-        details_background.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_SECONDARY));
-        heading.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
-        msgWindow.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
-
+    public void initObjects() {
         // init mediaextractor to obtain further media details from song
         MediaExtractor mex = new MediaExtractor();
         try {
@@ -110,22 +129,11 @@ public class MusicDetailsActivity extends Activity {
         msgWindow.setText(details);
     }
 
-    /**
-     * Appends to the SpannableStringBuilder object with the label and the detail for that label
-     * Will bold the label and append two newlines
-     * @param label The label of the detail, e.g. Title, Artist, Album, etc.
-     * @param detail The description of the label
-     */
-    private void appendDetail(String label, String detail){
-        if (detail == null) {
-            detail = "N/A";
-        }
-        details.append(label + ": " + detail + "\n\n");
-        int label_length = label.length() + 2; // 2 for the ": "
-        details.setSpan(new android.text.style.StyleSpan(Typeface.BOLD), idx, idx + label_length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        details.setSpan(new RelativeSizeSpan(1.2f), idx, idx + label_length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        int total_length = label_length + detail.length() + 2; // 2 for the "\n\n"
-        idx += total_length;
+    public void setThemeColors() {
+        // set theme colors
+        details_background.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_SECONDARY));
+        heading.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+        msgWindow.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
     }
 
     /**

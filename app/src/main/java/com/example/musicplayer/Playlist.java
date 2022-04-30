@@ -101,7 +101,7 @@ public class Playlist implements Parcelable {
     }
 
     public String getDateAddedString(){
-        return MusicDetailsActivity.convertDateTimeString(String.valueOf(dateAdded));
+        return MusicDetailsFragment.convertDateTimeString(String.valueOf(dateAdded));
     }
 
     public void setId(int id) {

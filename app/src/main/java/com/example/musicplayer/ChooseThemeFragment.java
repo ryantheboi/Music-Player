@@ -30,7 +30,7 @@ public class ChooseThemeFragment extends Fragment {
     private ImageButton bronya_btn;
     private ImageButton noelle_btn;
     private Animation slide_in_palette_anim;
-    private Animation slide_out_palette_anim;
+    private MainActivity mainActivity;
 
     public static final int THEME_SELECTED = 99;
     public static final int THEME_DONE = 98;
@@ -53,7 +53,7 @@ public class ChooseThemeFragment extends Fragment {
         if (getArguments() != null) {
             this.mainActivity_messenger = getArguments().getParcelable(MESSENGER_TAG);
         }
-
+        this.mainActivity = (MainActivity) getActivity();
         initAnimations();
     }
 
@@ -61,8 +61,14 @@ public class ChooseThemeFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         view.startAnimation(slide_in_palette_anim);
         initViews(view);
-        initBackgroundClickListener();
+        initBackgroundClickListeners();
         initThemeBtnClickListeners();
+    }
+
+    @Override
+    public void onDetach() {
+        finish();
+        super.onDetach();
     }
 
     private void initViews(View view) {
@@ -81,36 +87,23 @@ public class ChooseThemeFragment extends Fragment {
 
     private void initAnimations(){
         slide_in_palette_anim = AnimationUtils.loadAnimation(getContext(), R.anim.slide_in_palette_animation);
-        slide_out_palette_anim = AnimationUtils.loadAnimation(getContext(), R.anim.slide_out_palette_animation);
-
-        final MainActivity mainActivity = (MainActivity) getActivity();
-        slide_out_palette_anim.setAnimationListener(new Animation.AnimationListener(){
-            @Override
-            public void onAnimationStart(Animation arg0) {
-            }
-            @Override
-            public void onAnimationRepeat(Animation arg0) {
-            }
-            @Override
-            public void onAnimationEnd(Animation arg0) {
-                finish(mainActivity);
-            }
-        });
     }
 
-    private void initBackgroundClickListener(){
+    private void initBackgroundClickListeners(){
         // set background images to finish activity on click
         palette_background.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getView().startAnimation(slide_out_palette_anim);
+                mainActivity.getSupportFragmentManager().popBackStackImmediate();
+                onDetach();
             }
         });
 
         exit_background.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getView().startAnimation(slide_out_palette_anim);
+                mainActivity.getSupportFragmentManager().popBackStackImmediate();
+                onDetach();
             }
         });
     }
@@ -203,7 +196,7 @@ public class ChooseThemeFragment extends Fragment {
         }
     }
 
-    public void finish(MainActivity activity) {
+    public void finish() {
         // inform main activity that the user is done choosing a theme
         Message msg = Message.obtain();
         Bundle bundle = new Bundle();
@@ -215,7 +208,5 @@ public class ChooseThemeFragment extends Fragment {
             e.printStackTrace();
             Logger.logException(e, "ChooseThemeActivity");
         }
-
-        activity.getSupportFragmentManager().popBackStackImmediate();
     }
 }

@@ -747,7 +747,6 @@ public class MainActivity extends AppCompatActivity {
                                 try {
                                     Thread.sleep(100);
                                 } catch (InterruptedException e) {
-                                    e.printStackTrace();
                                     Logger.logException(e, "MainActivity");
                                 }
                             }

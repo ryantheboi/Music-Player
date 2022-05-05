@@ -329,7 +329,6 @@ public class PlaylistFragment extends Fragment {
                                 try {
                                     m_mainMessenger.send(msg);
                                 } catch (RemoteException e) {
-                                    e.printStackTrace();
                                     Logger.logException(e, "PlaylistFragment");
                                 }
 

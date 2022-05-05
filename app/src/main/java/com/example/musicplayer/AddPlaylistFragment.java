@@ -282,7 +282,6 @@ public class AddPlaylistFragment extends Fragment {
         try {
             mainActivityMessenger.send(msg);
         } catch (RemoteException e) {
-            e.printStackTrace();
             Logger.logException(e, "AddPlaylistActivity");
         }
     }
@@ -298,7 +297,6 @@ public class AddPlaylistFragment extends Fragment {
         try {
             messenger.send(msg);
         } catch (RemoteException e) {
-            e.printStackTrace();
             Logger.logException(e, "AddPlaylistActivity");
         }
     }

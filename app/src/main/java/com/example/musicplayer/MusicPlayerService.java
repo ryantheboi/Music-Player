@@ -431,7 +431,6 @@ public class MusicPlayerService
             try {
                 messenger.send(msg);
             } catch (RemoteException e) {
-                e.printStackTrace();
                 Logger.logException(e, "MusicPlayerService");
             }
         }
@@ -452,7 +451,6 @@ public class MusicPlayerService
             try {
                 messenger.send(msg);
             } catch (RemoteException e) {
-                e.printStackTrace();
                 Logger.logException(e, "MusicPlayerService");
             }
         }
@@ -473,7 +471,6 @@ public class MusicPlayerService
             try {
                 messenger.send(msg);
             } catch (RemoteException e) {
-                e.printStackTrace();
                 Logger.logException(e, "MusicPlayerService");
             }
         }
@@ -515,7 +512,6 @@ public class MusicPlayerService
                             sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY, false, -1);
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
                         Logger.logException(e, "MusicPlayerService");
                     }
                     break;
@@ -529,7 +525,6 @@ public class MusicPlayerService
                             sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE, false, -1);
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
                         Logger.logException(e, "MusicPlayerService");
                     }
                     break;
@@ -547,7 +542,6 @@ public class MusicPlayerService
                         audioFocusToggleMedia();
                         sendUpdateMessage(mainActivity_messenger, UPDATE_PAUSE, true, -1);
                     } catch (Exception e) {
-                        e.printStackTrace();
                         Logger.logException(e, "MusicPlayerService");
                     }
                     break;
@@ -583,7 +577,6 @@ public class MusicPlayerService
                                 sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY, true, 0);
                             }
                         } catch (Exception e) {
-                            e.printStackTrace();
                             Logger.logException(e, "MusicPlayerService");
                         }
                     }
@@ -604,7 +597,6 @@ public class MusicPlayerService
                                 sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY, true, 0);
                             }
                         } catch (Exception e) {
-                            e.printStackTrace();
                             Logger.logException(e, "MusicPlayerService");
                         }
                     }
@@ -621,7 +613,6 @@ public class MusicPlayerService
                             continuePlaying = false;
                             sendUpdateMessage(mainActivity_messenger, UPDATE_PLAY, true, 0);
                         } catch (Exception e) {
-                            e.printStackTrace();
                             Logger.logException(e, "MusicPlayerService");
                         }
                     }

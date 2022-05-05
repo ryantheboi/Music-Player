@@ -43,7 +43,6 @@ public class M3U {
             }
             br.close();
         }catch (Exception e){
-            e.printStackTrace();
             Logger.logException(e, "M3U");
         }
 
@@ -64,7 +63,6 @@ public class M3U {
                 }
             }
         }catch (Exception e){
-            e.printStackTrace();
             Logger.logException(e, "M3U");
         }
 
@@ -104,7 +102,6 @@ public class M3U {
             writer.close();
             return true;
         }catch (Exception e){
-            e.printStackTrace();
             Logger.logException(e, "M3U");
             return false;
         }

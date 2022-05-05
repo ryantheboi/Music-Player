@@ -52,5 +52,8 @@ public class Logger {
                 Logger.logException(e, "Logger");
             }
         }
+        else{
+            exception.printStackTrace();
+        }
     }
 }

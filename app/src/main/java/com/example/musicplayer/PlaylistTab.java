@@ -135,7 +135,7 @@ public class PlaylistTab extends Fragment {
                 PlaylistFragment playlistFragment = PlaylistFragment.getInstance(playlist, m_mainMessenger);
                 getActivity().getSupportFragmentManager().beginTransaction()
                         .setReorderingAllowed(true)
-                        .add(R.id.fragment_playlist, playlistFragment)
+                        .add(R.id.fragment_main_primary, playlistFragment)
                         .addToBackStack("playlistTabFragment")
                         .commit();
             }

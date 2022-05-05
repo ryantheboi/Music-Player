@@ -282,7 +282,7 @@ public class SongListTab extends Fragment {
                         AddPlaylistFragment addPlaylistFragment = AddPlaylistFragment.getInstance(playlist, mainActivityMessenger);
                         getActivity().getSupportFragmentManager().beginTransaction()
                                 .setReorderingAllowed(true)
-                                .add(R.id.fragment_playlist, addPlaylistFragment)
+                                .add(R.id.fragment_main_primary, addPlaylistFragment)
                                 .addToBackStack("addPlaylistFragment")
                                 .commit();
 

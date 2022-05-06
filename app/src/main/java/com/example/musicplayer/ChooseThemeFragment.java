@@ -73,7 +73,7 @@ public class ChooseThemeFragment extends Fragment {
 
     private void initViews(View view) {
         palette_background = view.findViewById(R.id.palette_background);
-        exit_background = view.findViewById(R.id.exit_background);
+        exit_background = view.findViewById(R.id.palette_exit_background);
         light_btn = view.findViewById(R.id.btn_light);
         night_btn = view.findViewById(R.id.btn_night);
         ram_btn = view.findViewById(R.id.btn_ram);
@@ -191,7 +191,6 @@ public class ChooseThemeFragment extends Fragment {
         try {
             mainActivity_messenger.send(msg);
         } catch (RemoteException e) {
-            e.printStackTrace();
             Logger.logException(e, "ChooseThemeActivity");
         }
     }
@@ -205,7 +204,6 @@ public class ChooseThemeFragment extends Fragment {
         try {
             mainActivity_messenger.send(msg);
         } catch (RemoteException e) {
-            e.printStackTrace();
             Logger.logException(e, "ChooseThemeActivity");
         }
     }

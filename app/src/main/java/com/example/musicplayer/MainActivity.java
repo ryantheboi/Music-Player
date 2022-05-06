@@ -638,6 +638,9 @@ public class MainActivity extends AppCompatActivity {
     public void setIsInfoDisplaying(boolean isInfoDisplaying){
         this.isInfoDisplaying = isInfoDisplaying;
     }
+    public void setSlidingUpPanelTouchEnabled(boolean status){
+        mainActivityLayout.setTouchEnabled(status);
+    }
     public static void setRandom_seed(int seed){
         random_seed = seed;
     }

@@ -260,7 +260,6 @@ public class MainFragmentSecondary extends Fragment {
     private void initButtons(){
         initMainButtons();
         initInfoButton();
-        initSlidingUpPanelButtons();
     }
 
     /**
@@ -599,6 +598,7 @@ public class MainFragmentSecondary extends Fragment {
             public void onClick(View v) {
                 if (!mainActivity.getIsInfoDisplaying()) {
                     mainActivity.setIsInfoDisplaying(true);
+                    mainActivity.setSlidingUpPanelTouchEnabled(false);
                     Song current_song = MainActivity.getCurrent_song();
                     MusicDetailsFragment musicDetailsFragment = MusicDetailsFragment.getInstance(
                             current_song, mainActivity.getFullSongMetadataHashMap().get(current_song.getId()));

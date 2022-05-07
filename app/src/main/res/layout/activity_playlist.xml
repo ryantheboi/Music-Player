@@ -67,6 +67,19 @@
                 android:text="@string/InitialTime"
                 android:textSize="15sp"
                 android:textColor="@color/selector_default"/>
+
+            <ImageButton
+                android:id="@+id/ibtn_timer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
+                android:layout_marginRight="25dp"
+                android:layout_marginEnd="25dp"
+                android:background="@drawable/button_ripple"
+                android:layout_marginTop="4dp"
+                android:src="@drawable/ic_timer24dp"/>
         </RelativeLayout>
     </androidx.appcompat.widget.Toolbar>
 

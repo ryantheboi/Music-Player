@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="20dp">
+
+    <EditText
+        android:id="@+id/timer_input"
+        android:layout_width="45dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="80dp"
+        android:layout_marginStart="80dp"
+        android:hint="@string/Zero"
+        android:imeOptions="actionDone"
+        android:inputType="number"
+        android:gravity="center"
+        android:theme="@style/EditTextHint"/>
+
+    <TextView
+        android:id="@+id/timer_text_minutes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/timer_input"
+        android:layout_toEndOf="@id/timer_input"
+        android:layout_marginLeft="5dp"
+        android:layout_marginStart="5dp"
+        android:layout_centerVertical="true"
+        android:text="@string/Minutes"
+        android:textSize="20sp"
+        android:textColor="@color/generalTextDark"
+        />
+
+</RelativeLayout>

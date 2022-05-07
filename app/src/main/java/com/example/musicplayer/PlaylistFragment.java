@@ -11,14 +11,19 @@ import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.text.Editable;
 import android.text.SpannableString;
+import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -39,6 +44,7 @@ public class PlaylistFragment extends Fragment {
 
     private static final String MESSENGER_TAG = "Messenger";
     private static final String PLAYLIST_TAG = "Playlist";
+    private static final int MAX_TIMER_MINUTES = 999;
 
     private Messenger m_mainMessenger;
     private Playlist m_playlist;
@@ -52,12 +58,18 @@ public class PlaylistFragment extends Fragment {
     private Toolbar m_playlist_toolbar;
     private ActionBar m_playlist_actionBar;
     private ImageButton m_back_btn;
+    private ImageButton m_timer_btn;
     private TextView m_playlist_name_tv;
     private TextView m_playlist_size_tv;
     private TextView m_playlist_divider_tv;
     private TextView m_playlist_time_tv;
     private int m_total_time;
     private static ArrayList<Song> m_userSelection = new ArrayList<>();
+    private AlertDialog.Builder m_timer_dialogBuilder;
+    private AlertDialog m_timer_dialog;
+    private TextView m_timer_minutes_tv;
+    private View m_timer_inputdialog_view;
+    private EditText m_timer_inputdialog;
 
     public PlaylistFragment() {
         super(R.layout.activity_playlist);
@@ -99,10 +111,16 @@ public class PlaylistFragment extends Fragment {
         m_playlist_divider_tv = view.findViewById(R.id.textview_playlist_divider);
         m_playlist_time_tv = view.findViewById(R.id.textview_playlist_time);
         m_back_btn = view.findViewById(R.id.ibtn_playlist_back);
+        m_timer_btn = view.findViewById(R.id.ibtn_timer);
         m_listView = view.findViewById(R.id.listview_playlist_songs);
         m_playlist_cardview = view.findViewById(R.id.cardview_playlist);
         m_playlist_background_layer = view.findViewById(R.id.imageview_playlist_background_layer);
         m_playlist_background_image = view.findViewById(R.id.imageview_playlist_background_image);
+
+        // init inputdialog edittext and textview
+        m_timer_inputdialog_view = LayoutInflater.from(getContext()).inflate(R.layout.input_dialog_timer, m_playlist_layout, false);
+        m_timer_inputdialog = m_timer_inputdialog_view.findViewById(R.id.timer_input);
+        m_timer_minutes_tv = m_timer_inputdialog_view.findViewById(R.id.timer_text_minutes);
     }
 
     /**
@@ -110,12 +128,15 @@ public class PlaylistFragment extends Fragment {
      */
     private void initObjects() {
         m_songListAdapter = new SongListAdapter(getContext(), R.layout.adapter_song_layout, m_playlist.getSongList(), getActivity());
+        m_timer_dialogBuilder = new AlertDialog.Builder(getContext(), ThemeColors.getAlertDialogStyleResourceId());
     }
 
     /**
      * Initializes the following listeners:
      * listview onItemClick and onMultiChoice listeners
      * back button onClick listener
+     * timer edittext onTextChanged listener
+     * timer button onClick listener
      */
     private void initListeners(){
         // init intents and attributes for listview listeners
@@ -379,6 +400,76 @@ public class PlaylistFragment extends Fragment {
                 getActivity().getSupportFragmentManager().popBackStackImmediate();
             }
         });
+
+        // init edittext listener
+        m_timer_inputdialog.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before,
+                                      int count) {
+                // prevent number from being further incremented if it will exceed the max timer allowed
+                if (!TextUtils.isEmpty(s)) {
+                    if (Integer.parseInt(s.toString()) > MAX_TIMER_MINUTES){
+                        m_timer_inputdialog.setText(s.subSequence(0, s.length() - 1));
+                        m_timer_inputdialog.setSelection(m_timer_inputdialog.getText().length());
+                    }
+                }
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count,
+                                          int after) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // disable ok button if there is no text or if timer is 0, enable otherwise
+                if (!TextUtils.isEmpty(s)) {
+                    m_timer_dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(Integer.parseInt(s.toString()) > 0);
+                }
+                else{
+                    m_timer_dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                }
+            }
+        });
+
+        // init button to create a timer with the songs in this playlist
+        m_timer_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // construct dialog to input playlist name
+                m_timer_dialogBuilder.setTitle(R.string.SetTimer);
+                // avoid adding the child again if it already exists
+                if (m_timer_inputdialog_view.getParent() != null) {
+                    ((ViewGroup) m_timer_inputdialog_view.getParent()).removeView(m_timer_inputdialog_view);
+                }
+                m_timer_dialogBuilder.setView(m_timer_inputdialog_view);
+
+                // ok button
+                m_timer_dialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+
+                // cancel button
+                m_timer_dialogBuilder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+
+                // create and show dialog
+                m_timer_dialog = m_timer_dialogBuilder.show();
+
+                // initially disable ok button if there isn't already text
+                if (m_timer_inputdialog.getText().toString().equals("")) {
+                    m_timer_dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                }
+            }
+        });
     }
 
     /**
@@ -413,6 +504,7 @@ public class PlaylistFragment extends Fragment {
         m_songListAdapter.setItemsTitleTextColor(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
         m_songListAdapter.setItemsAlbumArtistTextColor(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
         setBackBtnColor();
+        setTimerColors();
     }
 
     /**
@@ -426,5 +518,21 @@ public class PlaylistFragment extends Fragment {
 
         RippleDrawable back_btn_ripple = (RippleDrawable) m_back_btn.getBackground();
         back_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
+    }
+
+    /**
+     * sets the color of the timer's imagebutton and input dialog
+     */
+    private void setTimerColors(){
+        Drawable unwrappedBackBtn = m_timer_btn.getDrawable();
+        Drawable wrappedBackBtn = DrawableCompat.wrap(unwrappedBackBtn);
+        DrawableCompat.setTint(wrappedBackBtn, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
+        RippleDrawable back_btn_ripple = (RippleDrawable) m_timer_btn.getBackground();
+        back_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
+
+        m_timer_minutes_tv.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+        m_timer_inputdialog.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+        m_timer_inputdialog.setHintTextColor(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
+        m_timer_inputdialog.setBackgroundTintList(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
     }
 }

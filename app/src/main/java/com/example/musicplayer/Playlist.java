@@ -29,7 +29,7 @@ public class Playlist implements Parcelable {
     @Ignore
     private HashMap<Song, SongNode> songHashMap;
 
-    public static final int MAX_TRANSIENTS = 3;
+    private static final int MAX_TRANSIENTS = 3;
 
     /**
      * Constructor used by database to create a playlist for every row
@@ -116,6 +116,72 @@ public class Playlist implements Parcelable {
 
     public void setTransientId(int transientId){
         this.transientId = transientId;
+    }
+
+    /**
+     * does the current number of transient playlists reach or exceed the max allowed?
+     * @return true if number of transient playlists are greater than or equal to the max allowed
+     *         false otherwise
+     */
+    public static boolean isNumTransientsMaxed(){
+        // count the current number of temporary (transient) queues
+        int num_transients = 0;
+        ArrayList<Playlist> allPlaylists = MainActivity.getPlaylists();
+        for (Playlist p : allPlaylists) {
+            if (p.getTransientId() > 0) {
+                num_transients++;
+            }
+        }
+        return num_transients >= MAX_TRANSIENTS;
+    }
+
+    /**
+     * creates a temporary (transient) playlist which can be replaced if NUM_TRANSIENTS == MAX_TRANSIENTS
+     * if the max number of transient playlists already exist, then the oldest's id and name will be used
+     * otherwise, create new transient playlist with transient id less than or equal to MAX_TRANSIENTS
+     * @param songList the list of songs to put in the transient playlist
+     * @return a new playlist that has a transient id > 0
+     */
+    public static Playlist createTransientPlaylist(ArrayList<Song> songList){
+        // count the current number of temporary (transient) queues
+        int num_transients = 0;
+        int[] transient_ids = new int[Playlist.MAX_TRANSIENTS + 1];
+        Playlist transient_playlist = null;
+        Playlist oldest_transient_playlist = null;
+        ArrayList<Playlist> allPlaylists = MainActivity.getPlaylists();
+        for (Playlist p : allPlaylists){
+            int p_transientId = p.getTransientId();
+            if (p_transientId > 0){
+                transient_ids[p_transientId] = 1;
+                num_transients++;
+                if (oldest_transient_playlist == null){
+                    oldest_transient_playlist = p;
+                }
+                else{
+                    if (p.getDateAdded() < oldest_transient_playlist.getDateAdded()){
+                        oldest_transient_playlist = p;
+                    }
+                }
+            }
+
+            // maximum transient playlists reached, stop counting
+            // replace existing transient playlist songs with songList
+            if (num_transients == MAX_TRANSIENTS){
+                return new Playlist(oldest_transient_playlist.getId(), oldest_transient_playlist.getName(), songList, oldest_transient_playlist.getTransientId());
+            }
+        }
+
+        // else, construct new transient playlist songs with songList
+        for (int curr_transient_id = 1; curr_transient_id < Playlist.MAX_TRANSIENTS + 1; curr_transient_id++){
+            int transient_id_flag = transient_ids[curr_transient_id];
+            if (transient_id_flag == 0){
+                // transient id currently does not exist and may be used
+                transient_playlist = new Playlist(DatabaseRepository.generatePlaylistId(), "TEMP_QUEUE_" + curr_transient_id, songList, curr_transient_id);
+                break;
+            }
+        }
+
+        return transient_playlist;
     }
 
     /**

@@ -30,6 +30,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
@@ -44,7 +45,7 @@ public class PlaylistFragment extends Fragment {
 
     private static final String MESSENGER_TAG = "Messenger";
     private static final String PLAYLIST_TAG = "Playlist";
-    private static final int MAX_TIMER_MINUTES = 999;
+    private static final int MAX_TIMER_CHARACTERS = 3;
 
     private Messenger m_mainMessenger;
     private Playlist m_playlist;
@@ -409,7 +410,7 @@ public class PlaylistFragment extends Fragment {
                                       int count) {
                 // prevent number from being further incremented if it will exceed the max timer allowed
                 if (!TextUtils.isEmpty(s)) {
-                    if (Integer.parseInt(s.toString()) > MAX_TIMER_MINUTES){
+                    if (s.length() > MAX_TIMER_CHARACTERS){
                         m_timer_inputdialog.setText(s.subSequence(0, s.length() - 1));
                         m_timer_inputdialog.setSelection(m_timer_inputdialog.getText().length());
                     }
@@ -450,6 +451,29 @@ public class PlaylistFragment extends Fragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
+                        int timer_minutes = Integer.parseInt(m_timer_inputdialog.getText().toString());
+
+                        Playlist timerPlaylist = m_playlist.createTimerPlaylist(timer_minutes);
+
+                        // obtain the selected song object
+                        if (timerPlaylist.getSize() > 0) {
+                            Song song = timerPlaylist.getSongList().get(0);
+
+                            // redirect the current playlist to reference the songs in this playlist
+                            MainActivity.setCurrent_playlist(timerPlaylist);
+
+                            // change current song
+                            MainActivity.setCurrent_song(song);
+
+                            // notify music player service about the current song change
+                            musicListSelectIntent.putExtra("musicListSong", "");
+                            getActivity().startService(musicListSelectIntent);
+                        }
+                        else{
+                            Toast.makeText(getActivity(),
+                                    "Unable to create timer, no songs found within the time specified",
+                                    Toast.LENGTH_SHORT).show();
+                        }
                     }
                 });
 

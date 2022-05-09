@@ -3,6 +3,8 @@ package com.example.musicplayer;
 import android.annotation.TargetApi;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import java.util.Collections;
 import java.util.Random;
 
 import androidx.annotation.NonNull;
@@ -42,7 +44,7 @@ public class Playlist implements Parcelable {
     }
 
     /**
-     * Overloaded Constructor which does not need id
+     * Overloaded Constructor which does not need id or transientId
      * id is generated when the playlist is expected to persist in database storage
      * otherwise, id is 0 for current playlist
      */
@@ -157,6 +159,95 @@ public class Playlist implements Parcelable {
     }
 
     /**
+     * creates a random subset playlist from this playlist, given a number of songs desired
+     * if the number of songs desired is more than the number of songs in this playlist,
+     * then this playlist will be returned as it is
+     * @param numSongs the number of songs desired in this playlist's subset
+     * @return new playlist containing a subset of songs in this playlist
+     */
+    public Playlist createRandomSubsetPlaylist(long numSongs){
+        int playlist_size = getSize();
+        if (numSongs >= playlist_size){
+            return this;
+        }
+        else{
+            ArrayList<Song> randomSongsList = new ArrayList<>();
+            ArrayList<Integer> randomSongIndexes = new ArrayList<Integer>();
+            for (int i = 0; i < playlist_size; i++) {
+                randomSongIndexes.add(i);
+            }
+            Collections.shuffle(randomSongIndexes);
+            for (int i = 0; i < numSongs; i++) {
+                randomSongsList.add(songList.get(randomSongIndexes.get(i)));
+            }
+            return new Playlist("Random Playlist Subset", randomSongsList);
+        }
+    }
+
+    /**
+     * creates a new playlist from a random subset of songs in this playlist,
+     * maximizing the value of all songs in the random subset and given a time constraint in minutes.
+     * uses tabulation (bottom up dynamic programming) approach
+     * @param timer_minutes the number of minutes that this playlist should be
+     * @return new playlist within the timer constraint
+     */
+    public Playlist createTimerPlaylist(int timer_minutes)
+    {
+        int timer_seconds = timer_minutes * 60;
+        long numSongs = Math.round(timer_seconds / 1.5);
+
+        Playlist randomPlaylist = createRandomSubsetPlaylist(numSongs);
+        int[] times = randomPlaylist.getTimesInSecondsArray();
+        int[] values = randomPlaylist.getValuesArray();
+
+        int n = randomPlaylist.getSize();
+        int[][] K = new int[n + 1][timer_seconds + 1];
+
+        // build table K[][] in bottom up manner
+        for (int i = 0; i <= n; i++) {
+            for (int j = 0; j <= timer_seconds; j++) {
+                if (i == 0 || j == 0)
+                    K[i][j] = 0;
+                else if (times[i - 1] <= j)
+                    K[i][j] = Math.max(
+                            values[i - 1] + K[i - 1][j - times[i - 1]],
+                            K[i - 1][j]);
+                else
+                    K[i][j] = K[i - 1][j];
+            }
+        }
+
+        // the maximum value possible with the random playlist of songs, given the timer constraint
+        int maxValue = K[n][timer_seconds];
+
+        // use the table to populate timer playlist
+        int remaining_value = maxValue;
+        int remaining_seconds = timer_seconds;
+        ArrayList<Song> randomSongsList = randomPlaylist.getSongList();
+        ArrayList<Song> timerSongsList = new ArrayList<>();
+        for (int i = n; i > 0 && maxValue > 0; i--) {
+
+            // either the value comes from
+            // (K[i-1][j]) or from
+            // (values[i-1] + K[i-1][j-times[i-1]])
+            // if it comes from the latter, then song is included in timer playlist
+            if (remaining_value == K[i - 1][remaining_seconds]) {
+            }
+
+            // this song is included
+            else {
+                Song song = randomSongsList.get(i-1);
+                timerSongsList.add(song);
+
+                // deduct this song's value and remaining seconds from total
+                remaining_value = remaining_value - values[i - 1];
+                remaining_seconds = remaining_seconds - times[i - 1];
+            }
+        }
+        return new Playlist(timer_seconds/60 + " Minutes - Playlist", timerSongsList);
+    }
+
+    /**
      * gets the song before the current song being played in this playlist
      * @return the previous song
      */
@@ -174,6 +265,34 @@ public class Playlist implements Parcelable {
         Song current_song = MainActivity.getCurrent_song();
         SongNode songNode = songHashMap.get(current_song);
         return songNode.getNext();
+    }
+
+    /**
+     * gets a array containing the duration, in seconds, of every song in this playlist, in songList order
+     * @return array of song durations, in seconds
+     */
+    public int[] getTimesInSecondsArray(){
+        int playlist_size = getSize();
+        int[] songTimes = new int[playlist_size];
+        for (int i = 0; i < playlist_size; i ++){
+            songTimes[i] = songList.get(i).getDuration() / 1000;
+        }
+        return songTimes;
+    }
+
+    /**
+     * gets a array containing the utility value of every song in this playlist, in songList order
+     * utility value of a song can be derived from how often the song is listened to, etc.
+     * TODO currently, all songs just have the same utility value of 1
+     * @return array of song values
+     */
+    public int[] getValuesArray(){
+        int playlist_size = getSize();
+        int[] songValues = new int[playlist_size];
+        for (int i = 0; i < playlist_size; i ++){
+            songValues[i] = 1;
+        }
+        return songValues;
     }
 
     /**

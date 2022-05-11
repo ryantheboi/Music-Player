@@ -458,13 +458,8 @@ public class PlaylistFragment extends Fragment {
      * sets the text for every textview in this activity appropriate to this playlist
      */
     private void setTextViews(){
-        // calculate playlist total time
-        ArrayList<Song> playlists_songs = m_playlist.getSongList();
-        m_total_time = 0;
-        for (Song playlist_song : playlists_songs){
-            m_total_time += playlist_song.getDuration();
-        }
         String playlist_size = m_playlist.getSize() + " Songs";
+        m_total_time = m_playlist.getTotalDurationMS();
 
         m_playlist_name_tv.setText(m_playlist.getName());
         m_playlist_size_tv.setText(playlist_size);

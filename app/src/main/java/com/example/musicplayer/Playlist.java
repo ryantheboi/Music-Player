@@ -30,6 +30,7 @@ public class Playlist implements Parcelable {
     private HashMap<Song, SongNode> songHashMap;
 
     private static final int MAX_TRANSIENTS = 3;
+    private static final double TIMER_FACTOR = 0.05;
 
     /**
      * Constructor used by database to create a playlist for every row
@@ -104,6 +105,16 @@ public class Playlist implements Parcelable {
 
     public String getDateAddedString(){
         return MusicDetailsFragment.convertDateTimeString(String.valueOf(dateAdded));
+    }
+
+    public int getTotalDurationMS(){
+        // calculate playlist total time
+        ArrayList<Song> playlists_songs = getSongList();
+        int total_duration = 0;
+        for (Song playlist_song : playlists_songs){
+            total_duration += playlist_song.getDuration();
+        }
+        return total_duration;
     }
 
     public void setId(int id) {
@@ -259,10 +270,24 @@ public class Playlist implements Parcelable {
      */
     public Playlist createTimerPlaylist(int timer_minutes)
     {
+        // calculate the random pool of songs to choose from for the timer playlist
         int timer_seconds = timer_minutes * 60;
-        long numSongs = Math.round(timer_seconds / 1.5);
+        int playlist_size = getSize();
+        int total_duration_seconds = getTotalDurationMS() / 1000;
+        int average_song_duration_seconds = total_duration_seconds / playlist_size;
 
-        Playlist randomPlaylist = createRandomSubsetPlaylist(numSongs);
+        // start with a third of the playlist songs, then scale up with the timer
+        long numSongs = playlist_size/3;
+        double adjustment = ((double)(timer_seconds / total_duration_seconds) / 100);
+        int adjusted_numSongs = Math.min((int) (numSongs + (adjustment * numSongs)), playlist_size);
+        while ((adjusted_numSongs * average_song_duration_seconds) < timer_seconds + (TIMER_FACTOR * timer_seconds)) {
+            if (adjusted_numSongs >= playlist_size){
+                break;
+            }
+            adjusted_numSongs += 1;
+        }
+
+        Playlist randomPlaylist = createRandomSubsetPlaylist(adjusted_numSongs);
         int[] times = randomPlaylist.getTimesInSecondsArray();
         int[] values = randomPlaylist.getValuesArray();
 
@@ -291,8 +316,7 @@ public class Playlist implements Parcelable {
         int remaining_seconds = timer_seconds;
         ArrayList<Song> randomSongsList = randomPlaylist.getSongList();
         ArrayList<Song> timerSongsList = new ArrayList<>();
-        for (int i = n; i > 0 && maxValue > 0; i--) {
-
+        for (int i = n; i > 0 && remaining_value > 0; i--) {
             // either the value comes from
             // (K[i-1][j]) or from
             // (values[i-1] + K[i-1][j-times[i-1]])
@@ -310,7 +334,8 @@ public class Playlist implements Parcelable {
                 remaining_seconds = remaining_seconds - times[i - 1];
             }
         }
-        return new Playlist(timer_seconds/60 + " Minutes - Playlist", timerSongsList);
+        Playlist timerPlaylist = new Playlist(timer_seconds/60 + " Minutes - Playlist", timerSongsList);
+        return timerPlaylist;
     }
 
     /**
@@ -347,9 +372,9 @@ public class Playlist implements Parcelable {
     }
 
     /**
-     * gets a array containing the utility value of every song in this playlist, in songList order
-     * utility value of a song can be derived from how often the song is listened to, etc.
-     * TODO currently, all songs just have the same utility value of 1
+     * gets a array containing the importance value of every song in this playlist, in songList order
+     * importance value of a song can be derived from how often the song is listened to, etc.
+     * TODO currently, all songs just have the same importance value of 1
      * @return array of song values
      */
     public int[] getValuesArray(){

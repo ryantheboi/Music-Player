@@ -66,6 +66,8 @@ public class PlaylistFragment extends Fragment {
     private TextView m_playlist_time_tv;
     private int m_total_time;
     private static ArrayList<Song> m_userSelection = new ArrayList<>();
+    private Playlist m_timerPlaylist;
+    private AlertDialog.Builder m_timer_confirm_dialogBuilder;
     private AlertDialog.Builder m_timer_dialogBuilder;
     private AlertDialog m_timer_dialog;
     private TextView m_timer_minutes_tv;
@@ -130,6 +132,8 @@ public class PlaylistFragment extends Fragment {
     private void initObjects() {
         m_songListAdapter = new SongListAdapter(getContext(), R.layout.adapter_song_layout, m_playlist.getSongList(), getActivity());
         m_timer_dialogBuilder = new AlertDialog.Builder(getContext(), ThemeColors.getAlertDialogStyleResourceId());
+        m_timer_confirm_dialogBuilder = new AlertDialog.Builder(getActivity(), ThemeColors.getAlertDialogStyleResourceId());
+        m_timer_confirm_dialogBuilder.setTitle("Confirm Timer?");
     }
 
     /**
@@ -415,17 +419,70 @@ public class PlaylistFragment extends Fragment {
                         dialog.dismiss();
                         int timer_minutes = Integer.parseInt(m_timer_inputdialog.getText().toString());
 
-                        Playlist timerPlaylist = m_playlist.createTimerPlaylist(timer_minutes);
+                        m_timerPlaylist = m_playlist.createTimerPlaylist(timer_minutes);
 
-                        // obtain the selected song object
-                        if (timerPlaylist.getSize() > 0) {
-                            Song song = timerPlaylist.getSongList().get(0);
-                            MainActivity.setCurrent_playlist(timerPlaylist);
-                            MainActivity.setCurrent_song(song);
+                        // create show confirmation dialog
+                        // ok button
+                        m_timer_confirm_dialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                // start current timer playlist and first song
+                                Song song = m_timerPlaylist.getSongList().get(0);
+                                MainActivity.setCurrent_playlist(m_timerPlaylist);
+                                MainActivity.setCurrent_song(song);
 
-                            // notify music player service about the current song change
-                            musicListSelectIntent.putExtra("musicListSong", "");
-                            getActivity().startService(musicListSelectIntent);
+                                // notify music player service about the current song change
+                                musicListSelectIntent.putExtra("musicListSong", "");
+                                getActivity().startService(musicListSelectIntent);
+
+                            }
+                        });
+
+                        // retry (generate new timer playlist) button
+                        m_timer_confirm_dialogBuilder.setNegativeButton(R.string.GenerateAgain, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                                // create new timer playlist and ask again
+                                m_timerPlaylist = m_playlist.createTimerPlaylist(timer_minutes);
+
+                                // different message if timer playlist varies by over a minute
+                                int timer_difference_minutes = (int) Math.round(((double) (m_timerPlaylist.getTotalDurationMS() / 1000) / 60)) - timer_minutes;
+                                if (timer_difference_minutes > 1){
+                                    m_timer_confirm_dialogBuilder.setMessage("Playlist with " + m_timerPlaylist.getSizeString() +
+                                            " Songs - " + SongHelper.convertTime(m_timerPlaylist.getTotalDurationMS()) +
+                                            " is about " + timer_difference_minutes + " minutes more than the set timer");
+                                }
+                                else if (timer_difference_minutes < -1){
+                                    m_timer_confirm_dialogBuilder.setMessage("Playlist with " + m_timerPlaylist.getSizeString() +
+                                            " Songs - " + SongHelper.convertTime(m_timerPlaylist.getTotalDurationMS()) +
+                                            " is about " + Math.abs(timer_difference_minutes) + " minutes less than the set timer");
+                                }
+                                else{
+                                    m_timer_confirm_dialogBuilder.setMessage("Playlist with " + m_timerPlaylist.getSizeString() +
+                                            " Songs - " + SongHelper.convertTime(m_timerPlaylist.getTotalDurationMS()) + " Duration");
+                                }
+                                m_timer_confirm_dialogBuilder.show();
+                            }
+                        });
+
+                        if (m_timerPlaylist.getSize() > 0) {
+                            // different message for timer dialog if timer playlist varies by over a minute
+                            int timer_difference_minutes = (int) Math.round(((double) (m_timerPlaylist.getTotalDurationMS() / 1000) / 60)) - timer_minutes;
+                            if (timer_difference_minutes > 1) {
+                                m_timer_confirm_dialogBuilder.setMessage("Playlist with " + m_timerPlaylist.getSizeString() +
+                                        " Songs - " + SongHelper.convertTime(m_timerPlaylist.getTotalDurationMS()) +
+                                        " is about " + timer_difference_minutes + " minutes more than the set timer");
+                            } else if (timer_difference_minutes < -1) {
+                                m_timer_confirm_dialogBuilder.setMessage("Playlist with " + m_timerPlaylist.getSizeString() +
+                                        " Songs - " + SongHelper.convertTime(m_timerPlaylist.getTotalDurationMS()) +
+                                        " is about " + Math.abs(timer_difference_minutes) + " minutes less than the set timer");
+                            } else {
+                                m_timer_confirm_dialogBuilder.setMessage("Playlist with " + m_timerPlaylist.getSizeString() +
+                                        " Songs - " + SongHelper.convertTime(m_timerPlaylist.getTotalDurationMS()) + " Duration");
+                            }
+                            m_timer_confirm_dialogBuilder.show();
                         }
                         else{
                             Toast.makeText(getActivity(),

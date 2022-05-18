@@ -681,180 +681,217 @@ public class MainActivity extends AppCompatActivity {
         @Override
         @TargetApi(26)
         public void handleMessage(Message msg) {
-
-            Bundle bundle = msg.getData();
-            int updateOperation = (int) bundle.get("update");
-            switch (updateOperation) {
-                case MusicPlayerService.UPDATE_PLAY:
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_play28dp, R.drawable.ic_play24dp);
-                        }
-                    });
-                    notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_play24dp, "play", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
-                    notificationChannel1 = notificationBuilder.build();
-                    notificationManager.notify(1, notificationChannel1);
-
-                    // update the isPlaying and seekPosition values in the metadata
-                    if ((boolean)bundle.get("updateDatabase")) {
-                        databaseRepository.updateMetadataIsPlaying(false);
-
-                        // use the seek position given by the music player service
-                        if ((int)bundle.get("updateSeek") >= 0) {
-                            databaseRepository.updateMetadataSeek((int)bundle.get("updateSeek"));
-                        }
-                        // use the seek position from the seekbar view
-                        else {
-                            databaseRepository.updateMetadataSeek(mainFragmentSecondary.getSeekbarProgress());
-                        }
-                    }
-                    break;
-                case MusicPlayerService.UPDATE_PAUSE:
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_pause28dp, R.drawable.ic_pause24dp);
-                        }
-                    });
-                    notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_pause24dp, "pause", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
-                    notificationChannel1 = notificationBuilder.build();
-                    notificationManager.notify(1, notificationChannel1);
-
-                    // update the isPlaying status in the metadata
-                    if ((boolean)bundle.get("updateDatabase")) {
-                        databaseRepository.updateMetadataIsPlaying(true);
-                    }
-                    break;
-                case MusicPlayerService.UPDATE_SEEKBAR_DURATION:
-                    // init the seekbar & textview max duration and begin thread to track progress
-                    final int musicMaxDuration = (int) bundle.get("time");
-
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mainFragmentSecondary.setSeekbarMaxDuration(musicMaxDuration);
-                        }
-                    });
-
-                    // spawn a thread to update seekbar progress each 100 milliseconds
-                    final Messenger seekMessenger = new Messenger(seekbarHandler);
-                    seekBar_progressIntent.putExtra("seekbarProgress", seekMessenger);
-                    Thread seekbarUpdateThread = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            while (!isDestroyed) {
-                                if (!mainFragmentSecondary.getSeekbar_isTracking()) {
-                                    startService(seekBar_progressIntent);
-                                }
+            try {
+                Bundle bundle = msg.getData();
+                int updateOperation = (int) bundle.get("update");
+                switch (updateOperation) {
+                    case MusicPlayerService.UPDATE_PLAY:
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
                                 try {
-                                    Thread.sleep(100);
-                                } catch (InterruptedException e) {
-                                    Logger.logException(e, "MainActivity");
+                                    if (!isDestroyed) {
+                                        mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_play28dp, R.drawable.ic_play24dp);
+                                    }
+                                } catch (Exception e) {
+                                    Logger.logException(e);
                                 }
                             }
+                        });
+                        notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_play24dp, "play", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
+                        notificationChannel1 = notificationBuilder.build();
+                        notificationManager.notify(1, notificationChannel1);
+
+                        // update the isPlaying and seekPosition values in the metadata
+                        if ((boolean) bundle.get("updateDatabase")) {
+                            databaseRepository.updateMetadataIsPlaying(false);
+
+                            // use the seek position given by the music player service
+                            if ((int) bundle.get("updateSeek") >= 0) {
+                                databaseRepository.updateMetadataSeek((int) bundle.get("updateSeek"));
+                            }
+                            // use the seek position from the seekbar view
+                            else {
+                                databaseRepository.updateMetadataSeek(mainFragmentSecondary.getSeekbarProgress());
+                            }
                         }
-                    });
-                    seekbarUpdateThread.start();
-                    break;
-                case MusicPlayerService.UPDATE_SEEKBAR_PROGRESS:
-                    int musicCurrentPosition = (int) bundle.get("time");
-                    mainFragmentSecondary.setSeekbarProgress(musicCurrentPosition);
-                    break;
-                case MusicPlayerService.UPDATE_SONG:
-                    // update main activity with the selected song from music list
-                    current_song = (Song) bundle.get("song");
+                        break;
+                    case MusicPlayerService.UPDATE_PAUSE:
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    if (!isDestroyed) {
+                                        mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_pause28dp, R.drawable.ic_pause24dp);
+                                    }
+                                } catch (Exception e) {
+                                    Logger.logException(e);
+                                }
+                            }
+                        });
+                        notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_pause24dp, "pause", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
+                        notificationChannel1 = notificationBuilder.build();
+                        notificationManager.notify(1, notificationChannel1);
 
-                    // grab song album art and duration
-                    String albumID = current_song.getAlbumID();
-                    long albumID_long = Long.parseLong(albumID);
-                    Uri albumArtURI = ContentUris.withAppendedId(MusicPlayerService.artURI, albumID_long);
-                    ContentResolver res = getContentResolver();
-                    try {
-                        InputStream in = res.openInputStream(albumArtURI);
-                        current_albumImage = BitmapFactory.decodeStream(in);
-                        if (in != null){
-                            in.close();
+                        // update the isPlaying status in the metadata
+                        if ((boolean) bundle.get("updateDatabase")) {
+                            databaseRepository.updateMetadataIsPlaying(true);
                         }
-                    }catch(Exception e){
-                        current_albumImage = BitmapFactory.decodeResource(getResources(), R.drawable.default_albumart);
-                        e.printStackTrace();
-                    }
+                        break;
+                    case MusicPlayerService.UPDATE_SEEKBAR_DURATION:
+                        // init the seekbar & textview max duration and begin thread to track progress
+                        final int musicMaxDuration = (int) bundle.get("time");
 
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    mainFragmentSecondary.setSeekbarMaxDuration(musicMaxDuration);
+                                } catch (Exception e) {
+                                    Logger.logException(e);
+                                }
+                            }
+                        });
 
-                    // view changes must be done on the main ui thread
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mainFragmentSecondary.updateMainSongDetails(current_song, current_playlist, current_albumImage);
+                        // spawn a thread to update seekbar progress each 100 milliseconds
+                        final Messenger seekMessenger = new Messenger(seekbarHandler);
+                        seekBar_progressIntent.putExtra("seekbarProgress", seekMessenger);
+                        Thread seekbarUpdateThread = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    while (!isDestroyed) {
+                                        if (!mainFragmentSecondary.getSeekbar_isTracking()) {
+                                            startService(seekBar_progressIntent);
+                                        }
+                                        Thread.sleep(100);
+                                    }
+                                } catch (Exception e) {
+                                    Logger.logException(e);
+                                }
+                            }
+                        });
+                        seekbarUpdateThread.start();
+                        break;
+                    case MusicPlayerService.UPDATE_SEEKBAR_PROGRESS:
+                        int musicCurrentPosition = (int) bundle.get("time");
+                        mainFragmentSecondary.setSeekbarProgress(musicCurrentPosition);
+                        break;
+                    case MusicPlayerService.UPDATE_SONG:
+                        // update main activity with the selected song from music list
+                        current_song = (Song) bundle.get("song");
+
+                        // grab song album art and duration
+                        String albumID = current_song.getAlbumID();
+                        long albumID_long = Long.parseLong(albumID);
+                        Uri albumArtURI = ContentUris.withAppendedId(MusicPlayerService.artURI, albumID_long);
+                        ContentResolver res = getContentResolver();
+                        try {
+                            InputStream in = res.openInputStream(albumArtURI);
+                            current_albumImage = BitmapFactory.decodeStream(in);
+                            if (in != null) {
+                                in.close();
+                            }
+                        } catch (Exception e) {
+                            current_albumImage = BitmapFactory.decodeResource(getResources(), R.drawable.default_albumart);
+                            e.printStackTrace();
                         }
-                    });
 
-                    // update notification details
-                    notificationBuilder
-                            .setContentTitle(current_song.getTitle())
-                            .setPriority(NotificationManager.IMPORTANCE_LOW)
-                            .setContentText(current_song.getArtist())
-                            .setLargeIcon(current_albumImage);
-                    notificationChannel1 = notificationBuilder.build();
-                    notificationManager.notify(1, notificationChannel1);
 
-                    // update palette swatch colors for the animated gradients
-                    ThemeColors.generatePaletteColors(current_albumImage);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mainFragmentSecondary.updateFragmentColors();
-                        }
-                    });
+                        // view changes must be done on the main ui thread
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    mainFragmentSecondary.updateMainSongDetails(current_song, current_playlist, current_albumImage);
+                                } catch (Exception e) {
+                                    Logger.logException(e);
+                                }
+                            }
+                        });
 
-                    // update the index of the current song in database
-                    // song can be updated within or outside of the app
-                    databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
-                    break;
-                case ChooseThemeFragment.THEME_SELECTED:
-                    final int theme_resid = ThemeColors.getThemeResourceId();
+                        // update notification details
+                        notificationBuilder
+                                .setContentTitle(current_song.getTitle())
+                                .setPriority(NotificationManager.IMPORTANCE_LOW)
+                                .setContentText(current_song.getArtist())
+                                .setLargeIcon(current_albumImage);
+                        notificationChannel1 = notificationBuilder.build();
+                        notificationManager.notify(1, notificationChannel1);
 
-                    // change theme colors and button image to match the current theme
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            updateTheme(theme_resid);
-                            mainFragmentPrimary.updateFragmentColors();
-                        }
-                    });
-                    break;
-                case ChooseThemeFragment.THEME_DONE:
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mainFragmentPrimary.rotateThemeButton();
-                        }
-                    });
-                    break;
-                case AddPlaylistFragment.ADD_PLAYLIST:
-                    databaseRepository.asyncInsertPlaylist((Playlist) bundle.get("playlist"), (Messenger) bundle.get("messenger"));
-                    break;
-                case AddPlaylistFragment.MODIFY_PLAYLIST:
-                    databaseRepository.asyncModifyPlaylist((Playlist) bundle.get("playlist"), (Messenger) bundle.get("messenger"));
-                    break;
-                case PlaylistTab.REMOVE_PLAYLISTS:
-                    databaseRepository.asyncRemovePlaylistByIds((int[]) bundle.get("ids"));
-                    break;
-                case MusicPlayerService.UPDATE_SONG_PLAYED:
-                    // increment played counter for the song metadata in memory and in database
-                    SongMetadata played_songMetadata = fullSongMetadataHashMap.get(((Song) bundle.get("song")).getId());
-                    played_songMetadata.setPlayed(played_songMetadata.getPlayed() + 1);
-                    databaseRepository.updateSongMetadataPlayed(played_songMetadata);
-                    break;
-                case MusicPlayerService.UPDATE_SONG_LISTENED:
-                    // update listened data for the song metadata in memory and in database
-                    String data_listened = Long.toString(System.currentTimeMillis() / 1000);
-                    SongMetadata listened_songMetadata = fullSongMetadataHashMap.get(((Song) bundle.get("song")).getId());
-                    listened_songMetadata.setListened(listened_songMetadata.getListened() + 1);
-                    listened_songMetadata.setDateListened(data_listened);
-                    databaseRepository.updateSongMetadataListened(listened_songMetadata, data_listened);
-                    break;
+                        // update palette swatch colors for the animated gradients
+                        ThemeColors.generatePaletteColors(current_albumImage);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    if (!isDestroyed) {
+                                        mainFragmentSecondary.updateFragmentColors();
+                                    }
+                                } catch (Exception e) {
+                                    Logger.logException(e);
+                                }
+                            }
+                        });
+
+                        // update the index of the current song in database
+                        // song can be updated within or outside of the app
+                        databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
+                        break;
+                    case ChooseThemeFragment.THEME_SELECTED:
+                        final int theme_resid = ThemeColors.getThemeResourceId();
+
+                        // change theme colors and button image to match the current theme
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    updateTheme(theme_resid);
+                                    mainFragmentPrimary.updateFragmentColors();
+                                } catch (Exception e) {
+                                    Logger.logException(e);
+                                }
+                            }
+                        });
+                        break;
+                    case ChooseThemeFragment.THEME_DONE:
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    mainFragmentPrimary.rotateThemeButton();
+                                } catch (Exception e) {
+                                    Logger.logException(e);
+                                }
+                            }
+                        });
+                        break;
+                    case AddPlaylistFragment.ADD_PLAYLIST:
+                        databaseRepository.asyncInsertPlaylist((Playlist) bundle.get("playlist"), (Messenger) bundle.get("messenger"));
+                        break;
+                    case AddPlaylistFragment.MODIFY_PLAYLIST:
+                        databaseRepository.asyncModifyPlaylist((Playlist) bundle.get("playlist"), (Messenger) bundle.get("messenger"));
+                        break;
+                    case PlaylistTab.REMOVE_PLAYLISTS:
+                        databaseRepository.asyncRemovePlaylistByIds((int[]) bundle.get("ids"));
+                        break;
+                    case MusicPlayerService.UPDATE_SONG_PLAYED:
+                        // increment played counter for the song metadata in memory and in database
+                        SongMetadata played_songMetadata = fullSongMetadataHashMap.get(((Song) bundle.get("song")).getId());
+                        played_songMetadata.setPlayed(played_songMetadata.getPlayed() + 1);
+                        databaseRepository.updateSongMetadataPlayed(played_songMetadata);
+                        break;
+                    case MusicPlayerService.UPDATE_SONG_LISTENED:
+                        // update listened data for the song metadata in memory and in database
+                        String data_listened = Long.toString(System.currentTimeMillis() / 1000);
+                        SongMetadata listened_songMetadata = fullSongMetadataHashMap.get(((Song) bundle.get("song")).getId());
+                        listened_songMetadata.setListened(listened_songMetadata.getListened() + 1);
+                        listened_songMetadata.setDateListened(data_listened);
+                        databaseRepository.updateSongMetadataListened(listened_songMetadata, data_listened);
+                        break;
+                }
+            }catch (Exception e){
+                Logger.logException(e);
             }
         }
     }

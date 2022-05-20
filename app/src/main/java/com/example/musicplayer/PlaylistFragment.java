@@ -147,7 +147,6 @@ public class PlaylistFragment extends Fragment {
         // init intents and attributes for listview listeners
         final Intent musicListSelectIntent = new Intent(getContext(), MusicPlayerService.class);
         final Intent musicListQueueIntent = new Intent(getContext(), MusicPlayerService.class);
-        final Intent addPlaylistIntent = new Intent(getContext(), AddPlaylistFragment.class);
         m_listView.setAdapter(m_songListAdapter);
         m_listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
 
@@ -279,11 +278,15 @@ public class PlaylistFragment extends Fragment {
                         mode.finish(); // Action picked, so close the CAB
                         return true;
                     case R.id.menuitem_createplaylist:
-                        // construct named playlist
+                        // construct named playlist and send it to addPlaylist fragment
                         Playlist playlist = new Playlist(getString(R.string.Favorites), m_userSelection);
-                        addPlaylistIntent.putExtra("addPlaylist", playlist);
-                        addPlaylistIntent.putExtra("messenger", m_mainMessenger);
-                        startActivity(addPlaylistIntent);
+
+                        AddPlaylistFragment addPlaylistFragment = AddPlaylistFragment.getInstance(playlist, m_mainMessenger);
+                        getActivity().getSupportFragmentManager().beginTransaction()
+                                .setReorderingAllowed(true)
+                                .add(R.id.fragment_main_primary, addPlaylistFragment)
+                                .addToBackStack("addPlaylistFragment")
+                                .commit();
 
                         mode.finish(); // Action picked, so close the CAB
                         return true;

@@ -238,7 +238,7 @@ public class SongListTab extends Fragment {
                         mode.finish(); // Action picked, so close the CAB
                         return true;
                     case R.id.menuitem_createplaylist:
-                        // construct named playlist and send it to addPlaylist activity
+                        // construct named playlist and send it to addPlaylist fragment
                         Playlist playlist = new Playlist(getString(R.string.Favorites), userSelection);
 
                         AddPlaylistFragment addPlaylistFragment = AddPlaylistFragment.getInstance(playlist, mainActivityMessenger);

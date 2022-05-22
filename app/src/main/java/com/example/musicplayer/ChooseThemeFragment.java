@@ -36,7 +36,7 @@ public class ChooseThemeFragment extends Fragment {
     public static final int THEME_DONE = 98;
 
     public ChooseThemeFragment() {
-        super(R.layout.activity_choosetheme);
+        super(R.layout.fragment_choosetheme);
     }
 
     public static ChooseThemeFragment getInstance(Messenger messenger) {

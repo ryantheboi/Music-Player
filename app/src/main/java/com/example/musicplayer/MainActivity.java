@@ -303,7 +303,7 @@ public class MainActivity extends AppCompatActivity {
                                 String selection = MediaStore.Audio.Media._ID + "=?";
                                 do {
                                     // query for cursor to identify playlist members that are songs
-                                    String track_id = playlistMembersCursor.getString(playlistMembersCursor.getColumnIndex(MediaStore.Audio.Playlists.Members.AUDIO_ID));
+                                    @SuppressLint("Range") String track_id = playlistMembersCursor.getString(playlistMembersCursor.getColumnIndex(MediaStore.Audio.Playlists.Members.AUDIO_ID));
                                     String[] selectionArgs = new String[]{track_id};
                                     Cursor songCursor = contentResolver.query(songUri, null, selection, selectionArgs, null);
                                     SongHelper.setSongCursorIndexes(songCursor);
@@ -361,6 +361,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case MY_PERMISSION_REQUEST:
                 // if request is cancelled, the result arrays are empty.

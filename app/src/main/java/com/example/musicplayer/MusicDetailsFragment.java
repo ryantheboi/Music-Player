@@ -34,7 +34,7 @@ public class MusicDetailsFragment extends Fragment {
     private MainActivity mainActivity;
 
     public MusicDetailsFragment() {
-        super(R.layout.activity_details);
+        super(R.layout.fragment_musicdetails);
     }
 
     public static MusicDetailsFragment getInstance(Song song, SongMetadata songMetadata) {

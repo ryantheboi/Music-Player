@@ -75,7 +75,7 @@ public class PlaylistFragment extends Fragment {
     private EditText m_timer_inputdialog;
 
     public PlaylistFragment() {
-        super(R.layout.activity_playlist);
+        super(R.layout.fragment_playlist);
     }
 
     public static PlaylistFragment getInstance(Playlist playlist, Messenger messenger) {

@@ -59,7 +59,7 @@ public class AddPlaylistFragment extends Fragment {
     public static final int MODIFY_PLAYLIST = 96;
 
     public AddPlaylistFragment() {
-        super(R.layout.activity_addplaylist);
+        super(R.layout.fragment_addplaylist);
     }
 
     public static AddPlaylistFragment getInstance(Playlist playlist, Messenger messenger) {

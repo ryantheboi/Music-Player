@@ -18,18 +18,13 @@
         android:theme="@style/AppTheme"
         android:requestLegacyExternalStorage="true"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".AddPlaylistActivity"
-            android:theme="@style/ToolbarAppTheme.Playlist"/>
-        <activity android:name=".MusicDetailsActivity"
-            android:theme="@style/AppTheme.MusicPopup"/>
-        <activity android:name=".ChooseThemeActivity"
-            android:theme="@style/AppTheme.MusicPopup"/>
 
         <service
             android:name=".MusicPlayerService"
             android:enabled="true"/>
 
-        <activity android:name=".MainActivity">
+        <activity android:name=".MainActivity"
+                android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -3,7 +3,6 @@ package com.example.musicplayer;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.RippleDrawable;
@@ -26,6 +25,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -38,7 +38,10 @@ import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
 
-public class MainFragment extends Fragment {
+public class MainFragmentPrimary extends Fragment {
+
+    private static final String MESSENGER_TAG = "Messenger";
+
     private Messenger mainActivityMessenger;
     private MainActivity mainActivity;
 
@@ -59,9 +62,24 @@ public class MainFragment extends Fragment {
     private PagerAdapter pagerAdapter;
     private boolean isCreated = false;
 
-    public MainFragment(Messenger mainActivityMessenger) {
-        super(R.layout.fragment_main);
-        this.mainActivityMessenger = mainActivityMessenger;
+    public MainFragmentPrimary() {
+        super(R.layout.fragment_main_primary);
+    }
+
+    public static MainFragmentPrimary getInstance(Messenger messenger) {
+        MainFragmentPrimary fragment = new MainFragmentPrimary();
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(MESSENGER_TAG, messenger);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            this.mainActivityMessenger = getArguments().getParcelable(MESSENGER_TAG);
+        }
     }
 
     @Override
@@ -104,6 +122,97 @@ public class MainFragment extends Fragment {
         searchFilter_btn_ripple = (RippleDrawable) searchFilter_btn.getBackground();
         searchFilter_btn_ripple.setRadius((int) getResources().getDimension(R.dimen.searchfilter_button_ripple));
         super.onCreateOptionsMenu(menu,inflater);
+    }
+
+    /**
+     * Apply the current theme's colors to this fragment
+     */
+    public void updateFragmentColors() {
+        theme_btn.setImageResource(ThemeColors.getThemeBtnResourceId());
+        musicListRelativeLayout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
+        SongListTab.toggleTabColor();
+        PlaylistTab.toggleTabColor();
+        updateTabLayoutColors();
+        updateViewPager();
+        updateSearchFilterColors();
+        updateActionBarColors();
+    }
+
+    /**
+     * Rotate the theme button back to its original position after theme selection is done
+     */
+    public void rotateThemeButton(){
+        // user is finished selecting a theme
+        isThemeSelecting = false;
+
+        // rotate theme btn back to original orientation
+        theme_btn.startAnimation(AnimationUtils.loadAnimation(getActivity(), R.anim.rotate_themebtn_reverse_animation));
+    }
+
+    public void setAdapters(SongListAdapter sa, PlaylistAdapter pa){
+        songListAdapter = sa;
+        playlistAdapter = pa;
+        initViewPagerTabs();
+
+        // should be initialized last to set the touch listener for all views
+        initFilterSearch();
+    }
+
+    public void addPlaylist(Playlist playlist){
+        playlistAdapter.add(playlist);
+    }
+
+    public void updateMainFragment(Object object, final int operation) {
+        switch (operation) {
+            case DatabaseRepository.ASYNC_INSERT_PLAYLIST:
+                // update current playlist adapter with the newly created playlist
+                playlistAdapter.add((Playlist) object);
+                playlistAdapter.notifyDataSetChanged();
+
+                // move to playlist tab
+                viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
+                break;
+            case DatabaseRepository.ASYNC_MODIFY_PLAYLIST:
+                Playlist temp_playlist = (Playlist) object;
+                Playlist original_playlist = (Playlist) playlistAdapter.getItem(playlistAdapter.getPosition(temp_playlist));
+
+                // check if the playlist being modified is transient
+                if (temp_playlist.getTransientId() > 0){
+                    // replace old transient playlist with new
+                    playlistAdapter.remove(original_playlist);
+                    playlistAdapter.add(temp_playlist);
+                    playlistAdapter.notifyDataSetChanged();
+                }
+
+                // check if songs were removed from existing playlist
+                else if (original_playlist.getSize() > temp_playlist.getSize()) {
+                    // modify the original playlist to adopt the changes
+                    original_playlist.adoptSongList(temp_playlist);
+
+                    // reconstruct viewpager adapter to reflect changes to individual playlist
+                    pagerAdapter = new PagerAdapter(getChildFragmentManager(), tabLayout.getTabCount(), songListAdapter, playlistAdapter, mainActivityMessenger, mainActivity);
+                    viewPager.setAdapter(pagerAdapter);
+
+                    // adjust tab colors
+                    SongListTab.toggleTabColor();
+                    PlaylistTab.toggleTabColor();
+
+                    // move to playlist tab
+                    viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
+                }
+
+                // playlist was simply renamed, or extended, notify playlist adapter
+                else {
+                    playlistAdapter.notifyDataSetChanged();
+                }
+                break;
+            case DatabaseRepository.ASYNC_DELETE_PLAYLISTS_BY_ID:
+                ArrayList<Playlist> playlists = (ArrayList<Playlist>) object;
+
+                for (Playlist playlist : playlists) {
+                    playlistAdapter.remove(playlist);
+                }
+        }
     }
 
     /**
@@ -195,27 +304,30 @@ public class MainFragment extends Fragment {
         }
     }
 
-    public void initThemeButton() {
+    private void initThemeButton() {
         isThemeSelecting = false;
-        final Intent chooseThemeIntent = new Intent(getContext(), ChooseThemeActivity.class);
-        chooseThemeIntent.putExtra("mainActivityMessenger", mainActivityMessenger);
         final Animation rotate = AnimationUtils.loadAnimation(getContext(), R.anim.rotate_themebtn_animation);
 
-        final MainFragment mainFragment = this;
         theme_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (!isThemeSelecting) {
                     isThemeSelecting = true;
                     theme_btn.startAnimation(rotate);
-                    startActivity(chooseThemeIntent);
+
+                    ChooseThemeFragment chooseThemeFragment = ChooseThemeFragment.getInstance(mainActivityMessenger);
+                    getActivity().getSupportFragmentManager().beginTransaction()
+                            .setReorderingAllowed(true)
+                            .add(R.id.fragment_main_primary, chooseThemeFragment)
+                            .addToBackStack("chooseThemeFragment")
+                            .commit();
                 }
             }
         });
 
     }
 
-    public void initViewPagerTabs(){
+    private void initViewPagerTabs(){
         // remove any existing tabs prior to activity pause and re-add
         tabLayout.removeAllTabs();
         tabLayout.addTab(tabLayout.newTab().setText("Songs"));
@@ -323,31 +435,6 @@ public class MainFragment extends Fragment {
     }
 
     /**
-     * Apply the current theme's colors to this fragment
-     */
-    public void updateFragmentColors() {
-        theme_btn.setImageResource(ThemeColors.getThemeBtnResourceId());
-        musicListRelativeLayout.setBackgroundColor(ThemeColors.getColor(ThemeColors.COLOR_PRIMARY));
-        SongListTab.toggleTabColor();
-        PlaylistTab.toggleTabColor();
-        updateTabLayoutColors();
-        updateViewPager();
-        updateSearchFilterColors();
-        updateActionBarColors();
-    }
-
-    /**
-     * Rotate the theme button back to its original position after theme selection is done
-     */
-    public void rotateThemeButton(){
-        // user is finished selecting a theme
-        isThemeSelecting = false;
-
-        // rotate theme btn back to original orientation
-        theme_btn.startAnimation(AnimationUtils.loadAnimation(getActivity(), R.anim.rotate_themebtn_reverse_animation));
-    }
-
-    /**
      * Recursively find all child views (if any) from a view
      * @param v the view to find all children from
      * @return an arraylist of all child views under v
@@ -376,71 +463,5 @@ public class MainFragment extends Fragment {
             children.addAll(viewArrayList);
         }
         return children;
-    }
-
-    public void setAdapters(SongListAdapter sa, PlaylistAdapter pa){
-        songListAdapter = sa;
-        playlistAdapter = pa;
-        initViewPagerTabs();
-
-        // should be initialized last to set the touch listener for all views
-        initFilterSearch();
-    }
-
-    public void addPlaylist(Playlist playlist){
-        playlistAdapter.add(playlist);
-    }
-
-    public void updateMainFragment(Object object, final int operation) {
-        switch (operation) {
-            case DatabaseRepository.ASYNC_INSERT_PLAYLIST:
-                // update current playlist adapter with the newly created playlist
-                playlistAdapter.add((Playlist) object);
-                playlistAdapter.notifyDataSetChanged();
-
-                // move to playlist tab
-                viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
-                break;
-            case DatabaseRepository.ASYNC_MODIFY_PLAYLIST:
-                Playlist temp_playlist = (Playlist) object;
-                Playlist original_playlist = (Playlist) playlistAdapter.getItem(playlistAdapter.getPosition(temp_playlist));
-
-                // check if the playlist being modified is transient
-                if (temp_playlist.getTransientId() > 0){
-                    // replace old transient playlist with new
-                    playlistAdapter.remove(original_playlist);
-                    playlistAdapter.add(temp_playlist);
-                    playlistAdapter.notifyDataSetChanged();
-                }
-
-                // check if songs were removed from existing playlist
-                else if (original_playlist.getSize() > temp_playlist.getSize()) {
-                    // modify the original playlist to adopt the changes
-                    original_playlist.adoptSongList(temp_playlist);
-
-                    // reconstruct viewpager adapter to reflect changes to individual playlist
-                    pagerAdapter = new PagerAdapter(getChildFragmentManager(), tabLayout.getTabCount(), songListAdapter, playlistAdapter, mainActivityMessenger, mainActivity);
-                    viewPager.setAdapter(pagerAdapter);
-
-                    // adjust tab colors
-                    SongListTab.toggleTabColor();
-                    PlaylistTab.toggleTabColor();
-
-                    // move to playlist tab
-                    viewPager.setCurrentItem(PagerAdapter.PLAYLISTS_TAB);
-                }
-
-                // playlist was simply renamed, or extended, notify playlist adapter
-                else {
-                    playlistAdapter.notifyDataSetChanged();
-                }
-                break;
-            case DatabaseRepository.ASYNC_DELETE_PLAYLISTS_BY_ID:
-                ArrayList<Playlist> playlists = (ArrayList<Playlist>) object;
-
-                for (Playlist playlist : playlists) {
-                    playlistAdapter.remove(playlist);
-                }
-        }
     }
 }

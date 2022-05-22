@@ -3,6 +3,8 @@ package com.example.musicplayer;
 import android.annotation.TargetApi;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import java.util.Collections;
 import java.util.Random;
 
 import androidx.annotation.NonNull;
@@ -27,7 +29,8 @@ public class Playlist implements Parcelable {
     @Ignore
     private HashMap<Song, SongNode> songHashMap;
 
-    public static final int MAX_TRANSIENTS = 3;
+    private static final int MAX_TRANSIENTS = 3;
+    private static final double TIMER_FACTOR = 0.05;
 
     /**
      * Constructor used by database to create a playlist for every row
@@ -42,7 +45,7 @@ public class Playlist implements Parcelable {
     }
 
     /**
-     * Overloaded Constructor which does not need id
+     * Overloaded Constructor which does not need id or transientId
      * id is generated when the playlist is expected to persist in database storage
      * otherwise, id is 0 for current playlist
      */
@@ -101,7 +104,17 @@ public class Playlist implements Parcelable {
     }
 
     public String getDateAddedString(){
-        return MusicDetailsActivity.convertDateTimeString(String.valueOf(dateAdded));
+        return MusicDetailsFragment.convertDateTimeString(String.valueOf(dateAdded));
+    }
+
+    public int getTotalDurationMS(){
+        // calculate playlist total time
+        ArrayList<Song> playlists_songs = getSongList();
+        int total_duration = 0;
+        for (Song playlist_song : playlists_songs){
+            total_duration += playlist_song.getDuration();
+        }
+        return total_duration;
     }
 
     public void setId(int id) {
@@ -114,6 +127,72 @@ public class Playlist implements Parcelable {
 
     public void setTransientId(int transientId){
         this.transientId = transientId;
+    }
+
+    /**
+     * does the current number of transient playlists reach or exceed the max allowed?
+     * @return true if number of transient playlists are greater than or equal to the max allowed
+     *         false otherwise
+     */
+    public static boolean isNumTransientsMaxed(){
+        // count the current number of temporary (transient) queues
+        int num_transients = 0;
+        ArrayList<Playlist> allPlaylists = MainActivity.getPlaylists();
+        for (Playlist p : allPlaylists) {
+            if (p.getTransientId() > 0) {
+                num_transients++;
+            }
+        }
+        return num_transients >= MAX_TRANSIENTS;
+    }
+
+    /**
+     * creates a temporary (transient) playlist which can be replaced if NUM_TRANSIENTS == MAX_TRANSIENTS
+     * if the max number of transient playlists already exist, then the oldest's id and name will be used
+     * otherwise, create new transient playlist with transient id less than or equal to MAX_TRANSIENTS
+     * @param songList the list of songs to put in the transient playlist
+     * @return a new playlist that has a transient id > 0
+     */
+    public static Playlist createTransientPlaylist(ArrayList<Song> songList){
+        // count the current number of temporary (transient) queues
+        int num_transients = 0;
+        int[] transient_ids = new int[Playlist.MAX_TRANSIENTS + 1];
+        Playlist transient_playlist = null;
+        Playlist oldest_transient_playlist = null;
+        ArrayList<Playlist> allPlaylists = MainActivity.getPlaylists();
+        for (Playlist p : allPlaylists){
+            int p_transientId = p.getTransientId();
+            if (p_transientId > 0){
+                transient_ids[p_transientId] = 1;
+                num_transients++;
+                if (oldest_transient_playlist == null){
+                    oldest_transient_playlist = p;
+                }
+                else{
+                    if (p.getDateAdded() < oldest_transient_playlist.getDateAdded()){
+                        oldest_transient_playlist = p;
+                    }
+                }
+            }
+
+            // maximum transient playlists reached, stop counting
+            // replace existing transient playlist songs with songList
+            if (num_transients == MAX_TRANSIENTS){
+                return new Playlist(oldest_transient_playlist.getId(), oldest_transient_playlist.getName(), songList, oldest_transient_playlist.getTransientId());
+            }
+        }
+
+        // else, construct new transient playlist songs with songList
+        for (int curr_transient_id = 1; curr_transient_id < Playlist.MAX_TRANSIENTS + 1; curr_transient_id++){
+            int transient_id_flag = transient_ids[curr_transient_id];
+            if (transient_id_flag == 0){
+                // transient id currently does not exist and may be used
+                transient_playlist = new Playlist(DatabaseRepository.generatePlaylistId(), "TEMP_QUEUE_" + curr_transient_id, songList, curr_transient_id);
+                break;
+            }
+        }
+
+        return transient_playlist;
     }
 
     /**
@@ -157,6 +236,109 @@ public class Playlist implements Parcelable {
     }
 
     /**
+     * creates a random subset playlist from this playlist, given a number of songs desired
+     * if the number of songs desired is more than the number of songs in this playlist,
+     * then this playlist will be returned as it is
+     * @param numSongs the number of songs desired in this playlist's subset
+     * @return new playlist containing a subset of songs in this playlist
+     */
+    public Playlist createRandomSubsetPlaylist(long numSongs){
+        int playlist_size = getSize();
+        if (numSongs >= playlist_size){
+            return this;
+        }
+        else{
+            ArrayList<Song> randomSongsList = new ArrayList<>();
+            ArrayList<Integer> randomSongIndexes = new ArrayList<Integer>();
+            for (int i = 0; i < playlist_size; i++) {
+                randomSongIndexes.add(i);
+            }
+            Collections.shuffle(randomSongIndexes);
+            for (int i = 0; i < numSongs; i++) {
+                randomSongsList.add(songList.get(randomSongIndexes.get(i)));
+            }
+            return new Playlist("Random Playlist Subset", randomSongsList);
+        }
+    }
+
+    /**
+     * creates a new playlist from a random subset of songs in this playlist,
+     * maximizing the value of all songs in the random subset and given a time constraint in minutes.
+     * uses tabulation (bottom up dynamic programming) approach
+     * @param timer_minutes the number of minutes that this playlist should be
+     * @return new playlist within the timer constraint
+     */
+    public Playlist createTimerPlaylist(int timer_minutes)
+    {
+        // calculate the random pool of songs to choose from for the timer playlist
+        int timer_seconds = timer_minutes * 60;
+        int playlist_size = getSize();
+        int total_duration_seconds = getTotalDurationMS() / 1000;
+        int average_song_duration_seconds = total_duration_seconds / playlist_size;
+
+        // start with a third of the playlist songs, then scale up with the timer
+        long numSongs = playlist_size/3;
+        double adjustment = ((double)(timer_seconds / total_duration_seconds) / 100);
+        int adjusted_numSongs = Math.min((int) (numSongs + (adjustment * numSongs)), playlist_size);
+        while ((adjusted_numSongs * average_song_duration_seconds) < timer_seconds + (TIMER_FACTOR * timer_seconds)) {
+            if (adjusted_numSongs >= playlist_size){
+                break;
+            }
+            adjusted_numSongs += 1;
+        }
+
+        Playlist randomPlaylist = createRandomSubsetPlaylist(adjusted_numSongs);
+        int[] times = randomPlaylist.getTimesInSecondsArray();
+        int[] values = randomPlaylist.getValuesArray();
+
+        int n = randomPlaylist.getSize();
+        int[][] K = new int[n + 1][timer_seconds + 1];
+
+        // build table K[][] in bottom up manner
+        for (int i = 0; i <= n; i++) {
+            for (int j = 0; j <= timer_seconds; j++) {
+                if (i == 0 || j == 0)
+                    K[i][j] = 0;
+                else if (times[i - 1] <= j)
+                    K[i][j] = Math.max(
+                            values[i - 1] + K[i - 1][j - times[i - 1]],
+                            K[i - 1][j]);
+                else
+                    K[i][j] = K[i - 1][j];
+            }
+        }
+
+        // the maximum value possible with the random playlist of songs, given the timer constraint
+        int maxValue = K[n][timer_seconds];
+
+        // use the table to populate timer playlist
+        int remaining_value = maxValue;
+        int remaining_seconds = timer_seconds;
+        ArrayList<Song> randomSongsList = randomPlaylist.getSongList();
+        ArrayList<Song> timerSongsList = new ArrayList<>();
+        for (int i = n; i > 0 && remaining_value > 0; i--) {
+            // either the value comes from
+            // (K[i-1][j]) or from
+            // (values[i-1] + K[i-1][j-times[i-1]])
+            // if it comes from the latter, then song is included in timer playlist
+            if (remaining_value == K[i - 1][remaining_seconds]) {
+            }
+
+            // this song is included
+            else {
+                Song song = randomSongsList.get(i-1);
+                timerSongsList.add(song);
+
+                // deduct this song's value and remaining seconds from total
+                remaining_value = remaining_value - values[i - 1];
+                remaining_seconds = remaining_seconds - times[i - 1];
+            }
+        }
+        Playlist timerPlaylist = new Playlist(timer_seconds/60 + " Minutes - Playlist", timerSongsList);
+        return timerPlaylist;
+    }
+
+    /**
      * gets the song before the current song being played in this playlist
      * @return the previous song
      */
@@ -174,6 +356,34 @@ public class Playlist implements Parcelable {
         Song current_song = MainActivity.getCurrent_song();
         SongNode songNode = songHashMap.get(current_song);
         return songNode.getNext();
+    }
+
+    /**
+     * gets a array containing the duration, in seconds, of every song in this playlist, in songList order
+     * @return array of song durations, in seconds
+     */
+    public int[] getTimesInSecondsArray(){
+        int playlist_size = getSize();
+        int[] songTimes = new int[playlist_size];
+        for (int i = 0; i < playlist_size; i ++){
+            songTimes[i] = songList.get(i).getDuration() / 1000;
+        }
+        return songTimes;
+    }
+
+    /**
+     * gets a array containing the importance value of every song in this playlist, in songList order
+     * importance value of a song can be derived from how often the song is listened to, etc.
+     * TODO currently, all songs just have the same importance value of 1
+     * @return array of song values
+     */
+    public int[] getValuesArray(){
+        int playlist_size = getSize();
+        int[] songValues = new int[playlist_size];
+        for (int i = 0; i < playlist_size; i ++){
+            songValues[i] = 1;
+        }
+        return songValues;
     }
 
     /**

@@ -27,5 +27,9 @@
     <string name="Export">Export</string>
     <string name="ExportPlaylist">Export Playlist</string>
     <string name="Divider">•</string>
+    <string name="Zero">0</string>
+    <string name="Minutes">Minutes</string>
+    <string name="SetTimer">Set Timer</string>
+    <string name="GenerateAgain">Generate Again</string>
 
 </resources>

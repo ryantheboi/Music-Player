@@ -3,7 +3,6 @@ package com.example.musicplayer;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.RippleDrawable;
@@ -133,10 +132,10 @@ public class PlaylistTab extends Fragment {
                 // obtain the selected playlist object and launch playlist fragment
                 Playlist playlist = (Playlist) m_listView.getItemAtPosition(position);
 
-                PlaylistFragment playlistFragment = new PlaylistFragment(playlist, m_mainMessenger);
+                PlaylistFragment playlistFragment = PlaylistFragment.getInstance(playlist, m_mainMessenger);
                 getActivity().getSupportFragmentManager().beginTransaction()
                         .setReorderingAllowed(true)
-                        .add(R.id.fragment_playlist, playlistFragment)
+                        .add(R.id.fragment_main_primary, playlistFragment)
                         .addToBackStack("playlistTabFragment")
                         .commit();
             }
@@ -261,7 +260,7 @@ public class PlaylistTab extends Fragment {
                                     // notify MainActivity about modified playlist
                                     Message msg = Message.obtain();
                                     Bundle bundle = new Bundle();
-                                    bundle.putInt("update", AddPlaylistActivity.MODIFY_PLAYLIST);
+                                    bundle.putInt("update", AddPlaylistFragment.MODIFY_PLAYLIST);
                                     bundle.putParcelable("playlist", modify_playlist);
                                     bundle.putParcelable("messenger", null);
                                     msg.setData(bundle);
@@ -269,7 +268,6 @@ public class PlaylistTab extends Fragment {
                                     try {
                                         m_mainMessenger.send(msg);
                                     } catch (RemoteException e) {
-                                        e.printStackTrace();
                                         Logger.logException(e, "PlaylistTab");
                                     }
                                 }
@@ -368,7 +366,6 @@ public class PlaylistTab extends Fragment {
                                 try {
                                     m_mainMessenger.send(msg);
                                 } catch (RemoteException e) {
-                                    e.printStackTrace();
                                     Logger.logException(e, "PlaylistTab");
                                 }
 

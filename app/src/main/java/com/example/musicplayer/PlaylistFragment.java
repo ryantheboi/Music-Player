@@ -11,21 +11,28 @@ import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.text.Editable;
 import android.text.SpannableString;
+import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
@@ -35,6 +42,10 @@ import androidx.fragment.app.Fragment;
 import java.util.ArrayList;
 
 public class PlaylistFragment extends Fragment {
+
+    private static final String MESSENGER_TAG = "Messenger";
+    private static final String PLAYLIST_TAG = "Playlist";
+    private static final int MAX_TIMER_CHARACTERS = 3;
 
     private Messenger m_mainMessenger;
     private Playlist m_playlist;
@@ -48,17 +59,41 @@ public class PlaylistFragment extends Fragment {
     private Toolbar m_playlist_toolbar;
     private ActionBar m_playlist_actionBar;
     private ImageButton m_back_btn;
+    private ImageButton m_timer_btn;
     private TextView m_playlist_name_tv;
     private TextView m_playlist_size_tv;
     private TextView m_playlist_divider_tv;
     private TextView m_playlist_time_tv;
     private int m_total_time;
     private static ArrayList<Song> m_userSelection = new ArrayList<>();
+    private Playlist m_timerPlaylist;
+    private AlertDialog.Builder m_timer_confirm_dialogBuilder;
+    private AlertDialog.Builder m_timer_dialogBuilder;
+    private AlertDialog m_timer_dialog;
+    private TextView m_timer_minutes_tv;
+    private View m_timer_inputdialog_view;
+    private EditText m_timer_inputdialog;
 
-    public PlaylistFragment(Playlist playlist, Messenger messenger) {
-        super(R.layout.activity_playlist);
-        m_playlist = playlist;
-        m_mainMessenger = messenger;
+    public PlaylistFragment() {
+        super(R.layout.fragment_playlist);
+    }
+
+    public static PlaylistFragment getInstance(Playlist playlist, Messenger messenger) {
+        PlaylistFragment fragment = new PlaylistFragment();
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(MESSENGER_TAG, messenger);
+        bundle.putParcelable(PLAYLIST_TAG, playlist);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            this.m_playlist = getArguments().getParcelable(PLAYLIST_TAG);
+            this.m_mainMessenger = getArguments().getParcelable(MESSENGER_TAG);
+        }
     }
 
     @Override
@@ -79,10 +114,16 @@ public class PlaylistFragment extends Fragment {
         m_playlist_divider_tv = view.findViewById(R.id.textview_playlist_divider);
         m_playlist_time_tv = view.findViewById(R.id.textview_playlist_time);
         m_back_btn = view.findViewById(R.id.ibtn_playlist_back);
+        m_timer_btn = view.findViewById(R.id.ibtn_timer);
         m_listView = view.findViewById(R.id.listview_playlist_songs);
         m_playlist_cardview = view.findViewById(R.id.cardview_playlist);
         m_playlist_background_layer = view.findViewById(R.id.imageview_playlist_background_layer);
         m_playlist_background_image = view.findViewById(R.id.imageview_playlist_background_image);
+
+        // init inputdialog edittext and textview
+        m_timer_inputdialog_view = LayoutInflater.from(getContext()).inflate(R.layout.input_dialog_timer, m_playlist_layout, false);
+        m_timer_inputdialog = m_timer_inputdialog_view.findViewById(R.id.timer_input);
+        m_timer_minutes_tv = m_timer_inputdialog_view.findViewById(R.id.timer_text_minutes);
     }
 
     /**
@@ -90,18 +131,22 @@ public class PlaylistFragment extends Fragment {
      */
     private void initObjects() {
         m_songListAdapter = new SongListAdapter(getContext(), R.layout.adapter_song_layout, m_playlist.getSongList(), getActivity());
+        m_timer_dialogBuilder = new AlertDialog.Builder(getContext(), ThemeColors.getAlertDialogStyleResourceId());
+        m_timer_confirm_dialogBuilder = new AlertDialog.Builder(getActivity(), ThemeColors.getAlertDialogStyleResourceId());
+        m_timer_confirm_dialogBuilder.setTitle("Confirm Timer?");
     }
 
     /**
      * Initializes the following listeners:
      * listview onItemClick and onMultiChoice listeners
      * back button onClick listener
+     * timer edittext onTextChanged listener
+     * timer button onClick listener
      */
     private void initListeners(){
         // init intents and attributes for listview listeners
         final Intent musicListSelectIntent = new Intent(getContext(), MusicPlayerService.class);
         final Intent musicListQueueIntent = new Intent(getContext(), MusicPlayerService.class);
-        final Intent addPlaylistIntent = new Intent(getContext(), AddPlaylistActivity.class);
         m_listView.setAdapter(m_songListAdapter);
         m_listView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
 
@@ -212,56 +257,18 @@ public class PlaylistFragment extends Fragment {
             public boolean onActionItemClicked(final android.view.ActionMode mode, MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.menuitem_createqueue:
-                        // count the current number of temporary (transient) queues
-                        int num_transients = 0;
-                        int[] transient_ids = new int[Playlist.MAX_TRANSIENTS + 1];
-                        Playlist oldest_transient_playlist = null;
-                        ArrayList<Playlist> allPlaylists = MainActivity.getPlaylists();
-                        for (Playlist p : allPlaylists){
-                            int p_transientId = p.getTransientId();
-                            if (p_transientId > 0){
-                                transient_ids[p_transientId] = 1;
-                                num_transients++;
-                                if (oldest_transient_playlist == null){
-                                    oldest_transient_playlist = p;
-                                }
-                                else{
-                                    if (p.getDateAdded() < oldest_transient_playlist.getDateAdded()){
-                                        oldest_transient_playlist = p;
-                                    }
-                                }
-                            }
+                        Playlist transient_playlist = Playlist.createTransientPlaylist(m_userSelection);
+                        MainActivity.setCurrent_transientPlaylist(transient_playlist);
+                        MainActivity.setCurrent_song(m_userSelection.get(0));
 
-                            // maximum transient playlists reached, stop counting
-                            if (num_transients == Playlist.MAX_TRANSIENTS){
-                                break;
-                            }
+                        // replace existing transient playlist with new current playlist
+                        if (Playlist.isNumTransientsMaxed()){
+                            AddPlaylistFragment.sendPlaylistUpdateMessage(transient_playlist, m_mainMessenger, AddPlaylistFragment.MODIFY_PLAYLIST);
                         }
 
-                        // replace existing transient playlist with new current playlist, given the user selections
-                        if (num_transients == Playlist.MAX_TRANSIENTS){
-                            Playlist transient_playlist = new Playlist(oldest_transient_playlist.getId(), oldest_transient_playlist.getName(), m_userSelection, oldest_transient_playlist.getTransientId());
-                            MainActivity.setCurrent_transientPlaylist(transient_playlist);
-                            MainActivity.setCurrent_song(m_userSelection.get(0));
-
-                            AddPlaylistActivity.sendPlaylistUpdateMessage(transient_playlist, m_mainMessenger, AddPlaylistActivity.MODIFY_PLAYLIST);
-                        }
-
-                        // construct new transient and current playlist, given the user selections
+                        // construct new transient and current playlist
                         else {
-                            // create transient id (less than or equal to MAX_TRANSIENTS)
-                            for (int curr_transient_id = 1; curr_transient_id < Playlist.MAX_TRANSIENTS + 1; curr_transient_id++){
-                                int transient_id_flag = transient_ids[curr_transient_id];
-                                if (transient_id_flag == 0){
-                                    // transient id currently does not exist and may be used
-                                    Playlist transient_playlist = new Playlist(DatabaseRepository.generatePlaylistId(), "TEMP_QUEUE_" + curr_transient_id, m_userSelection, curr_transient_id);
-                                    MainActivity.setCurrent_transientPlaylist(transient_playlist);
-                                    MainActivity.setCurrent_song(m_userSelection.get(0));
-
-                                    AddPlaylistActivity.sendPlaylistUpdateMessage(transient_playlist, m_mainMessenger, AddPlaylistActivity.ADD_PLAYLIST);
-                                    break;
-                                }
-                            }
+                            AddPlaylistFragment.sendPlaylistUpdateMessage(transient_playlist, m_mainMessenger, AddPlaylistFragment.ADD_PLAYLIST);
                         }
 
                         // notify music player service to start the new song in the new playlist (queue)
@@ -271,11 +278,15 @@ public class PlaylistFragment extends Fragment {
                         mode.finish(); // Action picked, so close the CAB
                         return true;
                     case R.id.menuitem_createplaylist:
-                        // construct named playlist
+                        // construct named playlist and send it to addPlaylist fragment
                         Playlist playlist = new Playlist(getString(R.string.Favorites), m_userSelection);
-                        addPlaylistIntent.putExtra("addPlaylist", playlist);
-                        addPlaylistIntent.putExtra("messenger", m_mainMessenger);
-                        startActivity(addPlaylistIntent);
+
+                        AddPlaylistFragment addPlaylistFragment = AddPlaylistFragment.getInstance(playlist, m_mainMessenger);
+                        getActivity().getSupportFragmentManager().beginTransaction()
+                                .setReorderingAllowed(true)
+                                .add(R.id.fragment_main_primary, addPlaylistFragment)
+                                .addToBackStack("addPlaylistFragment")
+                                .commit();
 
                         mode.finish(); // Action picked, so close the CAB
                         return true;
@@ -303,13 +314,12 @@ public class PlaylistFragment extends Fragment {
                                 // send message to update mainactivity
                                 Message msg = Message.obtain();
                                 Bundle bundle = new Bundle();
-                                bundle.putInt("update", AddPlaylistActivity.MODIFY_PLAYLIST);
+                                bundle.putInt("update", AddPlaylistFragment.MODIFY_PLAYLIST);
                                 bundle.putParcelable("playlist", m_playlist);
                                 msg.setData(bundle);
                                 try {
                                     m_mainMessenger.send(msg);
                                 } catch (RemoteException e) {
-                                    e.printStackTrace();
                                     Logger.logException(e, "PlaylistFragment");
                                 }
 
@@ -360,19 +370,156 @@ public class PlaylistFragment extends Fragment {
                 getActivity().getSupportFragmentManager().popBackStackImmediate();
             }
         });
+
+        // init edittext listener
+        m_timer_inputdialog.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before,
+                                      int count) {
+                // prevent number from being further incremented if it will exceed the max timer allowed
+                if (!TextUtils.isEmpty(s)) {
+                    if (s.length() > MAX_TIMER_CHARACTERS){
+                        m_timer_inputdialog.setText(s.subSequence(0, s.length() - 1));
+                        m_timer_inputdialog.setSelection(m_timer_inputdialog.getText().length());
+                    }
+                }
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count,
+                                          int after) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                // disable ok button if there is no text or if timer is 0, enable otherwise
+                if (!TextUtils.isEmpty(s)) {
+                    m_timer_dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(Integer.parseInt(s.toString()) > 0);
+                }
+                else{
+                    m_timer_dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                }
+            }
+        });
+
+        // init button to create a timer with the songs in this playlist
+        m_timer_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // construct dialog to input playlist name
+                m_timer_dialogBuilder.setTitle(R.string.SetTimer);
+                // avoid adding the child again if it already exists
+                if (m_timer_inputdialog_view.getParent() != null) {
+                    ((ViewGroup) m_timer_inputdialog_view.getParent()).removeView(m_timer_inputdialog_view);
+                }
+                m_timer_dialogBuilder.setView(m_timer_inputdialog_view);
+
+                // ok button
+                m_timer_dialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        int timer_minutes = Integer.parseInt(m_timer_inputdialog.getText().toString());
+
+                        m_timerPlaylist = m_playlist.createTimerPlaylist(timer_minutes);
+
+                        // create show confirmation dialog
+                        // ok button
+                        m_timer_confirm_dialogBuilder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                // start current timer playlist and first song
+                                Song song = m_timerPlaylist.getSongList().get(0);
+                                MainActivity.setCurrent_playlist(m_timerPlaylist);
+                                MainActivity.setCurrent_song(song);
+
+                                // notify music player service about the current song change
+                                musicListSelectIntent.putExtra("musicListSong", "");
+                                getActivity().startService(musicListSelectIntent);
+
+                            }
+                        });
+
+                        // retry (generate new timer playlist) button
+                        m_timer_confirm_dialogBuilder.setNegativeButton(R.string.GenerateAgain, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                                // create new timer playlist and ask again
+                                m_timerPlaylist = m_playlist.createTimerPlaylist(timer_minutes);
+
+                                // different message if timer playlist varies by over a minute
+                                int timer_difference_minutes = (int) Math.round(((double) (m_timerPlaylist.getTotalDurationMS() / 1000) / 60)) - timer_minutes;
+                                if (timer_difference_minutes > 1){
+                                    m_timer_confirm_dialogBuilder.setMessage("Playlist with " + m_timerPlaylist.getSizeString() +
+                                            " Songs - " + SongHelper.convertTime(m_timerPlaylist.getTotalDurationMS()) +
+                                            " is about " + timer_difference_minutes + " minutes more than the set timer");
+                                }
+                                else if (timer_difference_minutes < -1){
+                                    m_timer_confirm_dialogBuilder.setMessage("Playlist with " + m_timerPlaylist.getSizeString() +
+                                            " Songs - " + SongHelper.convertTime(m_timerPlaylist.getTotalDurationMS()) +
+                                            " is about " + Math.abs(timer_difference_minutes) + " minutes less than the set timer");
+                                }
+                                else{
+                                    m_timer_confirm_dialogBuilder.setMessage("Playlist with " + m_timerPlaylist.getSizeString() +
+                                            " Songs - " + SongHelper.convertTime(m_timerPlaylist.getTotalDurationMS()) + " Duration");
+                                }
+                                m_timer_confirm_dialogBuilder.show();
+                            }
+                        });
+
+                        if (m_timerPlaylist.getSize() > 0) {
+                            // different message for timer dialog if timer playlist varies by over a minute
+                            int timer_difference_minutes = (int) Math.round(((double) (m_timerPlaylist.getTotalDurationMS() / 1000) / 60)) - timer_minutes;
+                            if (timer_difference_minutes > 1) {
+                                m_timer_confirm_dialogBuilder.setMessage("Playlist with " + m_timerPlaylist.getSizeString() +
+                                        " Songs - " + SongHelper.convertTime(m_timerPlaylist.getTotalDurationMS()) +
+                                        " is about " + timer_difference_minutes + " minutes more than the set timer");
+                            } else if (timer_difference_minutes < -1) {
+                                m_timer_confirm_dialogBuilder.setMessage("Playlist with " + m_timerPlaylist.getSizeString() +
+                                        " Songs - " + SongHelper.convertTime(m_timerPlaylist.getTotalDurationMS()) +
+                                        " is about " + Math.abs(timer_difference_minutes) + " minutes less than the set timer");
+                            } else {
+                                m_timer_confirm_dialogBuilder.setMessage("Playlist with " + m_timerPlaylist.getSizeString() +
+                                        " Songs - " + SongHelper.convertTime(m_timerPlaylist.getTotalDurationMS()) + " Duration");
+                            }
+                            m_timer_confirm_dialogBuilder.show();
+                        }
+                        else{
+                            Toast.makeText(getActivity(),
+                                    "Unable to create timer, no songs found within the time specified",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+
+                // cancel button
+                m_timer_dialogBuilder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+
+                // create and show dialog
+                m_timer_dialog = m_timer_dialogBuilder.show();
+
+                // initially disable ok button if there isn't already text
+                if (m_timer_inputdialog.getText().toString().equals("")) {
+                    m_timer_dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                }
+            }
+        });
     }
 
     /**
      * sets the text for every textview in this activity appropriate to this playlist
      */
     private void setTextViews(){
-        // calculate playlist total time
-        ArrayList<Song> playlists_songs = m_playlist.getSongList();
-        m_total_time = 0;
-        for (Song playlist_song : playlists_songs){
-            m_total_time += playlist_song.getDuration();
-        }
         String playlist_size = m_playlist.getSize() + " Songs";
+        m_total_time = m_playlist.getTotalDurationMS();
 
         m_playlist_name_tv.setText(m_playlist.getName());
         m_playlist_size_tv.setText(playlist_size);
@@ -394,6 +541,7 @@ public class PlaylistFragment extends Fragment {
         m_songListAdapter.setItemsTitleTextColor(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.ITEM_TEXT_COLOR)));
         m_songListAdapter.setItemsAlbumArtistTextColor(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
         setBackBtnColor();
+        setTimerColors();
     }
 
     /**
@@ -407,5 +555,21 @@ public class PlaylistFragment extends Fragment {
 
         RippleDrawable back_btn_ripple = (RippleDrawable) m_back_btn.getBackground();
         back_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
+    }
+
+    /**
+     * sets the color of the timer's imagebutton and input dialog
+     */
+    private void setTimerColors(){
+        Drawable unwrappedBackBtn = m_timer_btn.getDrawable();
+        Drawable wrappedBackBtn = DrawableCompat.wrap(unwrappedBackBtn);
+        DrawableCompat.setTint(wrappedBackBtn, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
+        RippleDrawable back_btn_ripple = (RippleDrawable) m_timer_btn.getBackground();
+        back_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));
+
+        m_timer_minutes_tv.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+        m_timer_inputdialog.setTextColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
+        m_timer_inputdialog.setHintTextColor(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
+        m_timer_inputdialog.setBackgroundTintList(getResources().getColorStateList(ThemeColors.getColor(ThemeColors.SUBTITLE_TEXT_COLOR)));
     }
 }

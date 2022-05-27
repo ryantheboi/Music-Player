@@ -1,5 +1,6 @@
 package com.example.musicplayer;
 
+import android.os.Environment;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -14,9 +15,9 @@ import java.util.HashMap;
  * based on the standard m3u format specification
  */
 public class M3U {
+    public static final String EXPORT_DIRECTORY = Environment.getExternalStorageDirectory() + "/" + Environment.DIRECTORY_MUSIC;
     private static final char COMMA_SEPARATOR = ',';
     private static final String DASH_SEPARATOR = " - ";
-    private static final String EXPORT_DIRECTORY = "/storage/emulated/0/Playlists";
     private static final String M3U_EXTENSION = ".m3u";
     private static final String M3U_HEADER = "#EXTM3U";
     private static final String M3U_TRACK_INFO_DIRECTIVE = "#EXTINF:";
@@ -29,7 +30,6 @@ public class M3U {
      */
     public static Playlist parseM3U(String filepath){
         File file = new File(filepath);
-
         // populate arraylist with song filepaths
         ArrayList<String> songPaths = new ArrayList<>();
         try {
@@ -78,12 +78,12 @@ public class M3U {
      */
     public static boolean exportM3U(Playlist playlist){
         try {
-            File f = new File(EXPORT_DIRECTORY);
-            if (!f.exists()){
-                f.mkdir();
+            File directory = new File(EXPORT_DIRECTORY);
+            if (!directory.exists()) {
+                directory.mkdir();
             }
-
-            BufferedWriter writer = new BufferedWriter(new FileWriter(EXPORT_DIRECTORY + '/' + playlist.getName() + M3U_EXTENSION, false));
+            String filename = EXPORT_DIRECTORY + '/' + playlist.getName() + M3U_EXTENSION;
+            BufferedWriter writer = new BufferedWriter(new FileWriter(filename, false));
             writer.append(M3U_HEADER);
             writer.append('\n');
 

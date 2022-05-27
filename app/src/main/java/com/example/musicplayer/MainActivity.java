@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
     public static ActionMode actionMode = null;
     private boolean isDestroyed = false;
     private Metadata metadata;
-    private boolean isMetadataLoaded = false;
+    private boolean isViewModelReady = false;
     private static int random_seed;
     private static boolean isShuffled;
     private boolean isAlbumArtCircular;
@@ -149,7 +149,9 @@ public class MainActivity extends AppCompatActivity {
                 databaseRepository.asyncGetMetadata();
 
                 // init listview functionality and playlist
-                initMusicList();
+                if (!isViewModelReady) {
+                    initMusicList();
+                }
             } else if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
                 // present rationale to user and then request for permissions
@@ -180,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             System.out.println("paused");
             if (isPermissionGranted) {
-                if (isMetadataLoaded) {
+                if (isViewModelReady) {
                     // update current metadata values in database
                     int theme_resourceid = ThemeColors.getThemeResourceId();
                     int songtab_scrollindex = SongListTab.getScrollIndex();
@@ -514,7 +516,9 @@ public class MainActivity extends AppCompatActivity {
         // after generating theme values, update the main ui
         updateTheme(themeResourceId);
         SongListTab.setScrollSelection(songtab_scrollindex, songtab_scrolloffset);
-        isMetadataLoaded = true;
+
+        // metadata has finished loading and the UI is now ready to be consumed
+        isViewModelReady = true;
     }
 
     /**

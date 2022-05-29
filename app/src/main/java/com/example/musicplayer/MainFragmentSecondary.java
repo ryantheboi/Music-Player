@@ -163,7 +163,8 @@ public class MainFragmentSecondary extends Fragment {
     }
 
     /**
-     * Updates sliding up panel with details about the song and playlist
+     * Updates sliding up panel with details about the song and playlist,
+     * using a mediametadata object from a mediacontroller
      * @param metadata title, artist, album, albumart, and duration of a song
      * @param playlist the playlist the current song is from
      */
@@ -185,6 +186,9 @@ public class MainFragmentSecondary extends Fragment {
         mainDisplay_albumArt.setImageBitmap(albumArt);
         mainDisplay_seekBar.setMax(songDuration);
         mainDisplay_musicDuration.setText(SongHelper.convertTime(songDuration));
+
+        // generate appropriate palette swatch colors using this song's album art
+        ThemeColors.generatePaletteColors(albumArt);
     }
 
     /**

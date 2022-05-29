@@ -9,8 +9,8 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Intent;
@@ -27,7 +27,11 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.provider.MediaStore;
+import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.view.ActionMode;
 import android.view.View;
 import android.widget.Toast;
@@ -62,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
     private Intent notificationNextIntent;
     private Intent seekBar_progressIntent;
     private MediaSessionCompat mediaSession;
-    private static Notification notificationChannel1;
+    private static Notification notification;
     private NotificationManagerCompat notificationManager;
     private NotificationCompat.Builder notificationBuilder;
     public static boolean isActionMode = false;
@@ -81,9 +85,15 @@ public class MainActivity extends AppCompatActivity {
     // database
     private DatabaseRepository databaseRepository;
 
-    //fragments
+    // fragments
     private MainFragmentPrimary mainFragmentPrimary;
     private MainFragmentSecondary mainFragmentSecondary;
+
+    // service
+    private MediaBrowserCompat mediaBrowser;
+    private MediaBrowserCompat.ConnectionCallback mediaBrowserConnectionCallback;
+    private MediaControllerCompat mediaController;
+    private MediaControllerCompat.Callback mediaControllerCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,6 +103,8 @@ public class MainActivity extends AppCompatActivity {
             ThemeColors.generateThemeValues(this, R.style.ThemeOverlay_AppCompat_MusicLight);
 
             System.out.println("created");
+
+            initMediaBrowserClient();
 
             // initialize database repository to handle all retrievals and transactions
             databaseRepository = new DatabaseRepository(this, this);
@@ -136,6 +148,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             super.onStart();
             System.out.println("started");
+            mediaBrowser.connect();
 
             isPermissionGranted = ContextCompat.checkSelfPermission(MainActivity.this,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
@@ -172,6 +185,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             System.out.println("resumed");
             super.onResume();
+            setVolumeControlStream(AudioManager.STREAM_MUSIC);
         }catch (Exception e){
             Logger.logException(e);
         }
@@ -212,6 +226,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         try {
             System.out.println("stopped");
+            if (MediaControllerCompat.getMediaController(this) != null) {
+                MediaControllerCompat.getMediaController(this).unregisterCallback(mediaControllerCallback);
+            }
+            mediaBrowser.disconnect();
             if (isPermissionGranted) {
                 databaseRepository.finish();
             }
@@ -230,6 +248,122 @@ public class MainActivity extends AppCompatActivity {
         }catch (Exception e){
             Logger.logException(e);
         }
+    }
+
+    public void initMediaBrowserClient(){
+        // Create MediaBrowserServiceCompat for music service
+        mediaBrowserConnectionCallback =
+                new MediaBrowserCompat.ConnectionCallback() {
+                    @Override
+                    public void onConnected() {
+                        System.out.println("CONNECTION ESTABLISHED");
+                        // get the token for the MediaSession
+                        MediaSessionCompat.Token token = mediaBrowser.getSessionToken();
+
+                        mediaController =
+                                new MediaControllerCompat(MainActivity.this, token);
+                        mediaController.registerCallback(new MediaControllerCompat.Callback() {
+                        });
+
+                        // save the controller
+                        MediaControllerCompat.setMediaController(MainActivity.this, mediaController);
+
+                        // metadata and playback states
+                        MediaMetadataCompat metadata = mediaController.getMetadata();
+                        PlaybackStateCompat pbState = mediaController.getPlaybackState();
+
+                        // register a Callback to stay in sync
+                        mediaControllerCallback =
+                                new MediaControllerCompat.Callback() {
+                                    @Override
+                                    public void onMetadataChanged(MediaMetadataCompat metadata) {
+                                    }
+
+                                    @Override
+                                    public void onSessionDestroyed() {
+                                        mediaBrowser.disconnect();
+                                        // maybe schedule a reconnection using a new MediaBrowser instance
+                                    }
+
+                                    @Override
+                                    public void onPlaybackStateChanged(PlaybackStateCompat state) {
+                                        switch (state.getState()){
+                                            case PlaybackStateCompat.STATE_PLAYING:
+                                                System.out.println("STATE_PLAYING");
+                                                runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        try {
+                                                            if (!isDestroyed) {
+                                                                mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_pause28dp, R.drawable.ic_pause24dp);
+                                                            }
+                                                        } catch (Exception e) {
+                                                            Logger.logException(e);
+                                                        }
+                                                    }
+                                                });
+//                                                notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_play24dp, "play", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_IMMUTABLE)));
+//                                                notification = notificationBuilder.build();
+//                                                notificationManager.notify(1, notification);
+//
+//                                                // update the isPlaying and seekPosition values in the metadata
+//                                                if ((boolean) bundle.get("updateDatabase")) {
+//                                                    databaseRepository.updateMetadataIsPlaying(false);
+//
+//                                                    // use the seek position given by the music player service
+//                                                    if ((int) bundle.get("updateSeek") >= 0) {
+//                                                        databaseRepository.updateMetadataSeek((int) bundle.get("updateSeek"));
+//                                                    }
+//                                                    // use the seek position from the seekbar view
+//                                                    else {
+//                                                        databaseRepository.updateMetadataSeek(mainFragmentSecondary.getSeekbarProgress());
+//                                                    }
+                                                break;
+                                            case PlaybackStateCompat.STATE_PAUSED:
+                                                System.out.println("STATE_PAUSED");
+                                                runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        try {
+                                                            if (!isDestroyed) {
+                                                                mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_play28dp, R.drawable.ic_play24dp);
+                                                            }
+                                                        } catch (Exception e) {
+                                                            Logger.logException(e);
+                                                        }
+                                                    }
+                                                });
+//                                                notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_pause24dp, "pause", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
+//                                                notification = notificationBuilder.build();
+//                                                notificationManager.notify(1, notification);
+
+                                                // update the isPlaying status in the metadata
+//                                                databaseRepository.updateMetadataIsPlaying(true);
+                                                break;
+                                        }
+                                    }
+                                };
+                        mediaController.registerCallback(mediaControllerCallback);
+
+                        // Finish building the UI
+                        initMusicUI();
+                    }
+
+                    @Override
+                    public void onConnectionSuspended() {
+                        // The Service has crashed. Disable transport controls until it automatically reconnects
+                    }
+
+                    @Override
+                    public void onConnectionFailed() {
+                        // The Service has refused our connection
+                    }
+                };
+
+        mediaBrowser = new MediaBrowserCompat(this,
+                            new ComponentName(this, MusicPlayerService.class),
+                            mediaBrowserConnectionCallback,
+                    null); // optional Bundle
     }
 
     /**
@@ -403,15 +537,15 @@ public class MainActivity extends AppCompatActivity {
                 .addAction(R.drawable.ic_prev24dp, "prev", PendingIntent.getService(this, 0, notificationPrevIntent, PendingIntent.FLAG_UPDATE_CURRENT))
                 .addAction(R.drawable.ic_play24dp, "play", PendingIntent.getService(this, 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT))
                 .addAction(R.drawable.ic_next24dp, "next", PendingIntent.getService(this, 2, notificationNextIntent, PendingIntent.FLAG_UPDATE_CURRENT))
-                .setPriority(NotificationCompat.PRIORITY_MIN)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setOngoing(false)
                 .setContentIntent(contentIntent)
                 .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
                         .setShowActionsInCompactView(0, 1, 2)
                         .setMediaSession(mediaSession.getSessionToken()));
 
-        notificationChannel1 = notificationBuilder.build();
-        notificationManager.notify(1, notificationChannel1);
+        notification = notificationBuilder.build();
+        notificationManager.notify(1, notification);
 
         // notify music player service about the notification
         notificationIntent = new Intent(this, MusicPlayerService.class);
@@ -634,7 +768,7 @@ public class MainActivity extends AppCompatActivity {
         return fullPlaylist;
     }
     public static Notification getNotification(){
-        return notificationChannel1;
+        return notification;
     }
 
     public void setIsAlbumArtCircular(boolean isAlbumArtCircular){
@@ -691,57 +825,57 @@ public class MainActivity extends AppCompatActivity {
                 int updateOperation = (int) bundle.get("update");
                 switch (updateOperation) {
                     case MusicPlayerService.UPDATE_PLAY:
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    if (!isDestroyed) {
-                                        mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_play28dp, R.drawable.ic_play24dp);
-                                    }
-                                } catch (Exception e) {
-                                    Logger.logException(e);
-                                }
-                            }
-                        });
-                        notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_play24dp, "play", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
-                        notificationChannel1 = notificationBuilder.build();
-                        notificationManager.notify(1, notificationChannel1);
-
-                        // update the isPlaying and seekPosition values in the metadata
-                        if ((boolean) bundle.get("updateDatabase")) {
-                            databaseRepository.updateMetadataIsPlaying(false);
-
-                            // use the seek position given by the music player service
-                            if ((int) bundle.get("updateSeek") >= 0) {
-                                databaseRepository.updateMetadataSeek((int) bundle.get("updateSeek"));
-                            }
-                            // use the seek position from the seekbar view
-                            else {
-                                databaseRepository.updateMetadataSeek(mainFragmentSecondary.getSeekbarProgress());
-                            }
-                        }
+//                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                try {
+//                                    if (!isDestroyed) {
+//                                        mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_play28dp, R.drawable.ic_play24dp);
+//                                    }
+//                                } catch (Exception e) {
+//                                    Logger.logException(e);
+//                                }
+//                            }
+//                        });
+//                        notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_play24dp, "play", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_IMMUTABLE)));
+//                        notification = notificationBuilder.build();
+//                        notificationManager.notify(1, notification);
+//
+//                        // update the isPlaying and seekPosition values in the metadata
+//                        if ((boolean) bundle.get("updateDatabase")) {
+//                            databaseRepository.updateMetadataIsPlaying(false);
+//
+//                            // use the seek position given by the music player service
+//                            if ((int) bundle.get("updateSeek") >= 0) {
+//                                databaseRepository.updateMetadataSeek((int) bundle.get("updateSeek"));
+//                            }
+//                            // use the seek position from the seekbar view
+//                            else {
+//                                databaseRepository.updateMetadataSeek(mainFragmentSecondary.getSeekbarProgress());
+//                            }
+//                        }
                         break;
                     case MusicPlayerService.UPDATE_PAUSE:
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    if (!isDestroyed) {
-                                        mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_pause28dp, R.drawable.ic_pause24dp);
-                                    }
-                                } catch (Exception e) {
-                                    Logger.logException(e);
-                                }
-                            }
-                        });
-                        notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_pause24dp, "pause", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
-                        notificationChannel1 = notificationBuilder.build();
-                        notificationManager.notify(1, notificationChannel1);
-
-                        // update the isPlaying status in the metadata
-                        if ((boolean) bundle.get("updateDatabase")) {
-                            databaseRepository.updateMetadataIsPlaying(true);
-                        }
+//                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                try {
+//                                    if (!isDestroyed) {
+//                                        mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_pause28dp, R.drawable.ic_pause24dp);
+//                                    }
+//                                } catch (Exception e) {
+//                                    Logger.logException(e);
+//                                }
+//                            }
+//                        });
+//                        notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_pause24dp, "pause", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
+//                        notification = notificationBuilder.build();
+//                        notificationManager.notify(1, notification);
+//
+//                        // update the isPlaying status in the metadata
+//                        if ((boolean) bundle.get("updateDatabase")) {
+//                            databaseRepository.updateMetadataIsPlaying(true);
+//                        }
                         break;
                     case MusicPlayerService.UPDATE_SEEKBAR_DURATION:
                         // init the seekbar & textview max duration and begin thread to track progress
@@ -818,11 +952,10 @@ public class MainActivity extends AppCompatActivity {
                         // update notification details
                         notificationBuilder
                                 .setContentTitle(current_song.getTitle())
-                                .setPriority(NotificationManager.IMPORTANCE_LOW)
                                 .setContentText(current_song.getArtist())
                                 .setLargeIcon(current_albumImage);
-                        notificationChannel1 = notificationBuilder.build();
-                        notificationManager.notify(1, notificationChannel1);
+                        notification = notificationBuilder.build();
+                        notificationManager.notify(1, notification);
 
                         // update palette swatch colors for the animated gradients
                         ThemeColors.generatePaletteColors(current_albumImage);

@@ -2,7 +2,6 @@ package com.example.musicplayer;
 
 import android.annotation.TargetApi;
 import android.app.Notification;
-import android.app.Service;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
@@ -13,26 +12,44 @@ import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnErrorListener;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.PowerManager;
 import android.os.RemoteException;
+import android.os.ResultReceiver;
 import android.provider.MediaStore;
+import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaDescriptionCompat;
+import android.support.v4.media.RatingCompat;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.media.MediaBrowserServiceCompat;
+
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class MusicPlayerService
-        extends Service
-        implements OnCompletionListener, OnErrorListener {
+        extends MediaBrowserServiceCompat
+implements OnCompletionListener, OnErrorListener {
 
+    private static final String MEDIA_ROOT_ID = "media_root_id";
+    private static final String EMPTY_MEDIA_ROOT_ID = "empty_root_id";
+
+    private MediaSessionCompat mediaSession;
+    private PlaybackStateCompat.Builder stateBuilder;
+    private MusicPlayerSessionCallback mediaPlayerSessionCallback;
     private static MediaPlayer mediaPlayer;
     private static AudioManager mAudioManager;
     private static AudioAttributes mAudioAttributes;
@@ -74,10 +91,11 @@ public class MusicPlayerService
     private static final int PREPARE_SONG_PLAYED = 11;
     private static final int PREPARE_SONG_LISTENED = 12;
 
-
     @Override
     @TargetApi(26)
     public void onCreate() {
+        super.onCreate();
+
         try {
             scheduleSongListener();
             Song current_song = MainActivity.getCurrent_song();
@@ -101,48 +119,30 @@ public class MusicPlayerService
             // keep CPU from sleeping and be able to play music with screen off
             mediaPlayer.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK);
 
-            mAudioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+            mediaSession = new MediaSessionCompat(getApplicationContext(), "MusicPlayerService-MediaSession");
 
-            mAudioAttributes =
-                    new AudioAttributes.Builder()
-                            .setUsage(AudioAttributes.USAGE_MEDIA)
-                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                            .build();
-            mAudioFocusRequest =
-                    new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-                            .setAudioAttributes(mAudioAttributes)
-                            .setAcceptsDelayedFocusGain(true)
-                            .setOnAudioFocusChangeListener(
-                                    new AudioManager.OnAudioFocusChangeListener() {
-                                        @Override
-                                        public void onAudioFocusChange(int focusChange) {
-                                            switch (focusChange) {
-                                                case AudioManager.AUDIOFOCUS_GAIN:
-                                                    if (mPlayOnAudioFocus && !mediaPlayer.isPlaying()) {
-                                                        mediaPlayer.start();
-                                                    } else if (mediaPlayer.isPlaying()) {
-                                                        mediaPlayer.setVolume(1.0f, 1.0f);
-                                                    }
-                                                    mPlayOnAudioFocus = false;
-                                                    break;
-                                                // case may not be necessary as Android O and above supports auto ducking automatically
-                                                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
-                                                    mediaPlayer.setVolume(0.05f, 0.05f);
-                                                    break;
-                                                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                                                    if (mediaPlayer.isPlaying()) {
-                                                        mPlayOnAudioFocus = true;
-                                                        mediaPlayer.pause();
-                                                    }
-                                                    break;
-                                                case AudioManager.AUDIOFOCUS_LOSS:
-                                                    mAudioManager.abandonAudioFocus(this);
-                                                    mPlayOnAudioFocus = false;
-                                                    stopMedia();
-                                                    break;
-                                            }
-                                        }
-                                    }).build();
+            // enable callbacks from MediaButtons and TransportControls
+            mediaSession.setFlags(
+                    MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
+                            MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
+
+            // Set an initial PlaybackState with ACTION_PLAY, so media buttons can start the player
+            stateBuilder = new PlaybackStateCompat.Builder()
+                    .setActions(PlaybackStateCompat.ACTION_PLAY |
+                            PlaybackStateCompat.ACTION_PAUSE );
+//                        PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
+//                        PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
+//                        PlaybackStateCompat.ACTION_SEEK_TO );
+            mediaSession.setPlaybackState(stateBuilder.build());
+
+            // MusicPlayerSessionCallback() has methods that handle callbacks from a media controller
+            mediaPlayerSessionCallback = new MusicPlayerSessionCallback(this);
+            mediaSession.setCallback(mediaPlayerSessionCallback);
+
+            // Set the session's token so that client activities can communicate with it.
+            setSessionToken(mediaSession.getSessionToken());
+
+            initAudioFocus();
         }catch (Exception e){
             Logger.logException(e, "MusicPlayerService");
         }
@@ -233,9 +233,15 @@ public class MusicPlayerService
         }
     }
 
+    @Nullable
     @Override
-    public IBinder onBind(Intent intent) {
-        return null;
+    public BrowserRoot onGetRoot(@NonNull String clientPackageName, int clientUid, @Nullable Bundle rootHints) {
+        return new BrowserRoot(MEDIA_ROOT_ID, null);
+    }
+
+    @Override
+    public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowserCompat.MediaItem>> result) {
+
     }
 
     @Override
@@ -254,6 +260,104 @@ public class MusicPlayerService
         }
 
         return false;
+    }
+
+    /**
+     * What to do when the current song finishes playing
+     * Behavior depends on the repeat status from MainActivity
+     * @param mp (unused) the mediaplayer object responsible for playing the song
+     */
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+        try {
+            switch (MainActivity.getRepeat_status()) {
+                // disable repeat
+                case 0:
+                    Playlist curr_playlist = MainActivity.getCurrent_playlist();
+                    Song curr_song = MainActivity.getCurrent_song();
+                    int curr_playlist_size = curr_playlist.getSize();
+
+                    // if the current song is the last song in the playlist
+                    if (curr_playlist.getSongList().indexOf(curr_song) == curr_playlist_size - 1) {
+                        playerHandler.removeMessages(PREPARE_NEXT_PAUSE);
+                        playerHandler.obtainMessage(PREPARE_NEXT_PAUSE).sendToTarget();
+                    } else {
+                        playerHandler.removeMessages(PREPARE_NEXT);
+                        playerHandler.obtainMessage(PREPARE_NEXT).sendToTarget();
+                    }
+                    break;
+
+                // repeat playlist
+                case 1:
+                    playerHandler.removeMessages(PREPARE_NEXT);
+                    playerHandler.obtainMessage(PREPARE_NEXT).sendToTarget();
+                    break;
+
+                // repeat one song
+                case 2:
+                    playerHandler.removeMessages(PREPARE_SONG);
+                    playerHandler.obtainMessage(PREPARE_SONG).sendToTarget();
+
+                    // reset song listener and consider the song played
+                    setSong_currentlyListening(MainActivity.getCurrent_song());
+                    playerHandler.removeMessages(PREPARE_SONG_PLAYED);
+                    playerHandler.obtainMessage(PREPARE_SONG_PLAYED).sendToTarget();
+                    if (getSong_secondsListened() == SECONDS_LISTENED) {
+                        setSong_secondsListened(0);
+                        setSong_isListened(false);
+                    }
+                    break;
+            }
+        }catch (Exception e){
+            Logger.logException(e, "MusicPlayerService");
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void initAudioFocus(){
+        mAudioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+
+        // request audio focus for playback, this registers the afChangeListener
+        mAudioAttributes =
+                new AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .build();
+        mAudioFocusRequest =
+                new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                        .setAudioAttributes(mAudioAttributes)
+                        .setAcceptsDelayedFocusGain(true)
+                        .setOnAudioFocusChangeListener(
+                                new AudioManager.OnAudioFocusChangeListener() {
+                                    @Override
+                                    public void onAudioFocusChange(int focusChange) {
+                                        switch (focusChange) {
+                                            case AudioManager.AUDIOFOCUS_GAIN:
+                                                if (mPlayOnAudioFocus && !mediaPlayer.isPlaying()) {
+                                                    mediaPlayer.start();
+                                                } else if (mediaPlayer.isPlaying()) {
+                                                    mediaPlayer.setVolume(1.0f, 1.0f);
+                                                }
+                                                mPlayOnAudioFocus = false;
+                                                break;
+                                            // case may not be necessary as Android O and above supports auto ducking automatically
+                                            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                                                mediaPlayer.setVolume(0.05f, 0.05f);
+                                                break;
+                                            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                                                if (mediaPlayer.isPlaying()) {
+                                                    mPlayOnAudioFocus = true;
+                                                    mediaPlayer.pause();
+                                                }
+                                                break;
+                                            case AudioManager.AUDIOFOCUS_LOSS:
+                                                mAudioManager.abandonAudioFocus(this);
+                                                mPlayOnAudioFocus = false;
+                                                stopMedia();
+                                                break;
+                                        }
+                                    }
+                                }).build();
     }
 
     /**
@@ -352,57 +456,6 @@ public class MusicPlayerService
      */
     private synchronized void setSong_isListened(boolean isListened){
         this.song_isListened = isListened;
-    }
-
-    /**
-     * What to do when the current song finishes playing
-     * Behavior depends on the repeat status from MainActivity
-     * @param mp (unused) the mediaplayer object responsible for playing the song
-     */
-    @Override
-    public void onCompletion(MediaPlayer mp) {
-        try {
-            switch (MainActivity.getRepeat_status()) {
-                // disable repeat
-                case 0:
-                    Playlist curr_playlist = MainActivity.getCurrent_playlist();
-                    Song curr_song = MainActivity.getCurrent_song();
-                    int curr_playlist_size = curr_playlist.getSize();
-
-                    // if the current song is the last song in the playlist
-                    if (curr_playlist.getSongList().indexOf(curr_song) == curr_playlist_size - 1) {
-                        playerHandler.removeMessages(PREPARE_NEXT_PAUSE);
-                        playerHandler.obtainMessage(PREPARE_NEXT_PAUSE).sendToTarget();
-                    } else {
-                        playerHandler.removeMessages(PREPARE_NEXT);
-                        playerHandler.obtainMessage(PREPARE_NEXT).sendToTarget();
-                    }
-                    break;
-
-                // repeat playlist
-                case 1:
-                    playerHandler.removeMessages(PREPARE_NEXT);
-                    playerHandler.obtainMessage(PREPARE_NEXT).sendToTarget();
-                    break;
-
-                // repeat one song
-                case 2:
-                    playerHandler.removeMessages(PREPARE_SONG);
-                    playerHandler.obtainMessage(PREPARE_SONG).sendToTarget();
-
-                    // reset song listener and consider the song played
-                    setSong_currentlyListening(MainActivity.getCurrent_song());
-                    playerHandler.removeMessages(PREPARE_SONG_PLAYED);
-                    playerHandler.obtainMessage(PREPARE_SONG_PLAYED).sendToTarget();
-                    if (getSong_secondsListened() == SECONDS_LISTENED) {
-                        setSong_secondsListened(0);
-                        setSong_isListened(false);
-                    }
-                    break;
-            }
-        }catch (Exception e){
-            Logger.logException(e, "MusicPlayerService");
-        }
     }
 
     private final class PlaybackHandler extends Handler {
@@ -644,4 +697,192 @@ public class MusicPlayerService
             }
         }
     }
+
+    private class MusicPlayerSessionCallback extends MediaSessionCompat.Callback{
+
+        private MusicPlayerService mService;
+
+        public MusicPlayerSessionCallback(MusicPlayerService mService) {
+            super();
+            this.mService = mService;
+        }
+
+        @Override
+        public void onCommand(String command, Bundle extras, ResultReceiver cb) {
+            super.onCommand(command, extras, cb);
+        }
+
+        @Override
+        public boolean onMediaButtonEvent(Intent mediaButtonEvent) {
+            return super.onMediaButtonEvent(mediaButtonEvent);
+        }
+
+        @Override
+        public void onPrepare() {
+            super.onPrepare();
+        }
+
+        @Override
+        public void onPrepareFromMediaId(String mediaId, Bundle extras) {
+            super.onPrepareFromMediaId(mediaId, extras);
+        }
+
+        @Override
+        public void onPrepareFromSearch(String query, Bundle extras) {
+            super.onPrepareFromSearch(query, extras);
+        }
+
+        @Override
+        public void onPrepareFromUri(Uri uri, Bundle extras) {
+            super.onPrepareFromUri(uri, extras);
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.O)
+        @Override
+        public void onPlay() {
+            super.onPlay();
+//        mediaPlayer.start();
+            int focusRequest = mAudioManager.requestAudioFocus(mAudioFocusRequest);
+            switch (focusRequest) {
+                case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
+                    break;
+                case AudioManager.AUDIOFOCUS_REQUEST_GRANTED:
+                    // start the service and set the session active
+                    mService.startService(new Intent(mService.getApplicationContext(), MusicPlayerService.class));
+                    mediaSession.setActive(true);
+
+                    // start the player (custom call)
+                    mediaPlayer.start();
+
+                    // update metadata and state
+                    stateBuilder.setState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition(), 1);
+                    mediaSession.setPlaybackState(stateBuilder.build());
+
+                    // Register BECOME_NOISY BroadcastReceiver
+//            registerReceiver(myNoisyAudioStreamReceiver, intentFilter);
+                    // Put the service in the foreground, post notification
+//                mService.startForeground(id, myPlayerNotification);
+                    break;
+            }
+        }
+
+        @Override
+        public void onPlayFromMediaId(String mediaId, Bundle extras) {
+            super.onPlayFromMediaId(mediaId, extras);
+        }
+
+        @Override
+        public void onPlayFromSearch(String query, Bundle extras) {
+            super.onPlayFromSearch(query, extras);
+        }
+
+        @Override
+        public void onPlayFromUri(Uri uri, Bundle extras) {
+            super.onPlayFromUri(uri, extras);
+        }
+
+        @Override
+        public void onSkipToQueueItem(long id) {
+            super.onSkipToQueueItem(id);
+        }
+
+        @Override
+        public void onPause() {
+            super.onPause();
+            mAudioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+
+            // pause the player (custom call)
+            mediaPlayer.pause();
+
+            // update metadata and state
+            stateBuilder.setState(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition(), 0);
+            mediaSession.setPlaybackState(stateBuilder.build());
+
+            // unregister BECOME_NOISY BroadcastReceiver
+//            unregisterReceiver(myNoisyAudioStreamReceiver);
+            // Take the service out of the foreground, retain the notification
+//            service.stopForeground(false);
+        }
+
+        @Override
+        public void onSkipToNext() {
+            super.onSkipToNext();
+        }
+
+        @Override
+        public void onSkipToPrevious() {
+            super.onSkipToPrevious();
+        }
+
+        @Override
+        public void onFastForward() {
+            super.onFastForward();
+        }
+
+        @Override
+        public void onRewind() {
+            super.onRewind();
+        }
+
+        @Override
+        public void onStop() {
+            super.onStop();
+        }
+
+        @Override
+        public void onSeekTo(long pos) {
+            super.onSeekTo(pos);
+        }
+
+        @Override
+        public void onSetRating(RatingCompat rating) {
+            super.onSetRating(rating);
+        }
+
+        @Override
+        public void onSetRating(RatingCompat rating, Bundle extras) {
+            super.onSetRating(rating, extras);
+        }
+
+        @Override
+        public void onSetPlaybackSpeed(float speed) {
+            super.onSetPlaybackSpeed(speed);
+        }
+
+        @Override
+        public void onSetCaptioningEnabled(boolean enabled) {
+            super.onSetCaptioningEnabled(enabled);
+        }
+
+        @Override
+        public void onSetRepeatMode(int repeatMode) {
+            super.onSetRepeatMode(repeatMode);
+        }
+
+        @Override
+        public void onSetShuffleMode(int shuffleMode) {
+            super.onSetShuffleMode(shuffleMode);
+        }
+
+        @Override
+        public void onCustomAction(String action, Bundle extras) {
+            super.onCustomAction(action, extras);
+        }
+
+        @Override
+        public void onAddQueueItem(MediaDescriptionCompat description) {
+            super.onAddQueueItem(description);
+        }
+
+        @Override
+        public void onAddQueueItem(MediaDescriptionCompat description, int index) {
+            super.onAddQueueItem(description, index);
+        }
+
+        @Override
+        public void onRemoveQueueItem(MediaDescriptionCompat description) {
+            super.onRemoveQueueItem(description);
+        }
+    }
+
 }

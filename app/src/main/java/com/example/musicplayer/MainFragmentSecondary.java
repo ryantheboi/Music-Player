@@ -11,6 +11,9 @@ import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Bundle;
 import android.os.Messenger;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -107,12 +110,12 @@ public class MainFragmentSecondary extends Fragment {
         mainActivity = (MainActivity) getActivity();
         slidingUpPanelLayout = (SlidingUpPanelLayout) mainActivity.getMainActivityLayout();
         initViews(view);
-        initButtons();
     }
 
     public void initMainFragmentSecondaryUI(){
         initMainGradient();
         initMainDisplay();
+        initMainDisplayButtons();
         initSeekbar();
         initSlidingUpPanel();
     }
@@ -136,7 +139,6 @@ public class MainFragmentSecondary extends Fragment {
         mainDisplay_seekBar.setMax(musicMaxDuration);
         mainDisplay_musicDuration.setText(time);
     }
-
 
     /**
      * Sets the seekbar progress without informing music service (implies this seekPosition came from the service)
@@ -257,7 +259,7 @@ public class MainFragmentSecondary extends Fragment {
         mainDisplay_playlistHeader = view.findViewById(R.id.playlist_header);
     }
 
-    private void initButtons(){
+    private void initMainDisplayButtons(){
         initMainButtons();
         initInfoButton();
     }
@@ -363,7 +365,12 @@ public class MainFragmentSecondary extends Fragment {
         slidingUp_pauseplay_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mainActivity.startService(slidingUp_pauseplayIntent);
+                int pbState = MediaControllerCompat.getMediaController(mainActivity).getPlaybackState().getState();
+                if (pbState == PlaybackStateCompat.STATE_PLAYING) {
+                    MediaControllerCompat.getMediaController(mainActivity).getTransportControls().pause();
+                } else {
+                    MediaControllerCompat.getMediaController(mainActivity).getTransportControls().play();
+                }
             }
         });
 
@@ -474,7 +481,12 @@ public class MainFragmentSecondary extends Fragment {
         mainDisplay_pauseplay_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mainActivity.startService(mainDisplay_PausePlayIntent);
+                int pbState = MediaControllerCompat.getMediaController(mainActivity).getPlaybackState().getState();
+                if (pbState == PlaybackStateCompat.STATE_PLAYING) {
+                    MediaControllerCompat.getMediaController(mainActivity).getTransportControls().pause();
+                } else {
+                    MediaControllerCompat.getMediaController(mainActivity).getTransportControls().play();
+                }
             }
         });
 

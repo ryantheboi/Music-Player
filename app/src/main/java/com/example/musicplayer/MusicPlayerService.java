@@ -2,9 +2,12 @@ package com.example.musicplayer;
 
 import android.annotation.TargetApi;
 import android.app.Notification;
+import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
@@ -25,6 +28,7 @@ import android.os.ResultReceiver;
 import android.provider.MediaStore;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaDescriptionCompat;
+import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.RatingCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -35,6 +39,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.media.MediaBrowserServiceCompat;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -48,7 +53,8 @@ implements OnCompletionListener, OnErrorListener {
     private static final String EMPTY_MEDIA_ROOT_ID = "empty_root_id";
 
     private MediaSessionCompat mediaSession;
-    private PlaybackStateCompat.Builder stateBuilder;
+    private MediaMetadataCompat.Builder metadataBuilder;
+    private PlaybackStateCompat.Builder playbackStateBuilder;
     private MusicPlayerSessionCallback mediaPlayerSessionCallback;
     private static MediaPlayer mediaPlayer;
     private static AudioManager mAudioManager;
@@ -126,14 +132,23 @@ implements OnCompletionListener, OnErrorListener {
                     MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
                             MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
 
-            // Set an initial PlaybackState with ACTION_PLAY, so media buttons can start the player
-            stateBuilder = new PlaybackStateCompat.Builder()
+            // init mediametadata builder with default metadata keys and values
+            metadataBuilder = new MediaMetadataCompat.Builder()
+                    .putString(MediaMetadataCompat.METADATA_KEY_TITLE, Song.EMPTY_SONG.getTitle())
+                    .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, Song.EMPTY_SONG.getArtist())
+                    .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, Song.EMPTY_SONG.getAlbum())
+                    .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, BitmapFactory.decodeResource(getResources(), R.drawable.default_albumart))
+                    .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, Song.EMPTY_SONG.getDuration());
+            mediaSession.setMetadata(metadataBuilder.build());
+
+            // init playbackstate builder with supported actions
+            playbackStateBuilder = new PlaybackStateCompat.Builder()
                     .setActions(PlaybackStateCompat.ACTION_PLAY |
-                            PlaybackStateCompat.ACTION_PAUSE );
-//                        PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
-//                        PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
+                            PlaybackStateCompat.ACTION_PAUSE |
+                            PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
+                            PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS);
 //                        PlaybackStateCompat.ACTION_SEEK_TO );
-            mediaSession.setPlaybackState(stateBuilder.build());
+            mediaSession.setPlaybackState(playbackStateBuilder.build());
 
             // MusicPlayerSessionCallback() has methods that handle callbacks from a media controller
             mediaPlayerSessionCallback = new MusicPlayerSessionCallback(this);
@@ -313,6 +328,25 @@ implements OnCompletionListener, OnErrorListener {
         }
     }
 
+    public Bitmap getSongAlbumArtBitmap(Song song){
+        String albumID = song.getAlbumID();
+        long albumID_long = Long.parseLong(albumID);
+        Bitmap albumArtBitmap;
+        Uri albumArtURI = ContentUris.withAppendedId(MusicPlayerService.artURI, albumID_long);
+        ContentResolver res = getContentResolver();
+        try {
+            InputStream in = res.openInputStream(albumArtURI);
+            albumArtBitmap = BitmapFactory.decodeStream(in);
+            if (in != null) {
+                in.close();
+            }
+        } catch (Exception e) {
+            albumArtBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.default_albumart);
+            e.printStackTrace();
+        }
+        return albumArtBitmap;
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void initAudioFocus(){
         mAudioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
@@ -458,6 +492,45 @@ implements OnCompletionListener, OnErrorListener {
         this.song_isListened = isListened;
     }
 
+    /**
+     * Recreates the mediaplayer with a new song URI by releasing the old one and creating anew
+     * @param songId the id of the new song to create the new mediaplayer
+     */
+    private void recreateMediaPlayer(int songId){
+        // release current mediaplayer to allow another to be created
+        mediaPlayer.release();
+
+        // prepare next song and keep it paused at seek position 0
+        Uri audioURI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        Uri songURI = ContentUris.withAppendedId(audioURI, songId);
+        MediaPlayer mp = MediaPlayer.create(getApplicationContext(), songURI);
+        mp.setOnCompletionListener(this);
+        mp.setOnErrorListener(this);
+        mp.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+        mediaPlayer = mp;
+    }
+
+    private void setMediaSessionMetadata(Song song){
+        metadataBuilder
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, song.getTitle())
+                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, song.getArtist())
+                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, song.getAlbum())
+                .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, getSongAlbumArtBitmap(song))
+                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, song.getDuration());
+        mediaSession.setMetadata(metadataBuilder.build());
+    }
+
+    private void setMediaSessionPlaybackState(int state, int progress){
+        // playbackSpeed 0 for paused, 1 for normal, negative for rewind
+        if (state == PlaybackStateCompat.STATE_PAUSED){
+            playbackStateBuilder.setState(state, progress, 0);
+        }
+        else {
+            playbackStateBuilder.setState(state, progress, 1);
+        }
+        mediaSession.setPlaybackState(playbackStateBuilder.build());
+    }
+
     private final class PlaybackHandler extends Handler {
         private MusicPlayerService mService;
 
@@ -526,24 +599,6 @@ implements OnCompletionListener, OnErrorListener {
             } catch (RemoteException e) {
                 Logger.logException(e, "MusicPlayerService");
             }
-        }
-
-        /**
-         * Recreates the mediaplayer with a new song URI by releasing the old one and creating anew
-         * @param songId the id of the new song to create the new mediaplayer
-         */
-        private void recreateMediaPlayer(int songId){
-            // release current mediaplayer to allow another to be created
-            mediaPlayer.release();
-
-            // prepare next song and keep it paused at seek position 0
-            Uri audioURI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-            Uri songURI = ContentUris.withAppendedId(audioURI, songId);
-            MediaPlayer mp = MediaPlayer.create(mService, songURI);
-            mp.setOnCompletionListener(mService);
-            mp.setOnErrorListener(mService);
-            mp.setWakeMode(mService, PowerManager.PARTIAL_WAKE_LOCK);
-            mediaPlayer = mp;
         }
 
         @Override
@@ -707,6 +762,122 @@ implements OnCompletionListener, OnErrorListener {
             this.mService = mService;
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.O)
+        @Override
+        public void onPlay() {
+            super.onPlay();
+            continuePlaying = true;
+            int focusRequest = mAudioManager.requestAudioFocus(mAudioFocusRequest);
+            switch (focusRequest) {
+                case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
+                    break;
+                case AudioManager.AUDIOFOCUS_REQUEST_GRANTED:
+                    // start the service and set the session active
+                    mService.startService(new Intent(mService.getApplicationContext(), MusicPlayerService.class));
+                    mediaSession.setActive(true);
+
+                    // start the player (custom call)
+                    mediaPlayer.start();
+
+                    // update metadata and state
+                    setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition());
+
+                    // Register BECOME_NOISY BroadcastReceiver
+//            registerReceiver(myNoisyAudioStreamReceiver, intentFilter);
+                    // Put the service in the foreground, post notification
+//                mService.startForeground(id, myPlayerNotification);
+                    break;
+            }
+        }
+
+        @Override
+        public void onPause() {
+            super.onPause();
+            continuePlaying = false;
+            mAudioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+
+            // pause the player (custom call)
+            mediaPlayer.pause();
+
+            // update metadata and state
+            setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition());
+
+            // unregister BECOME_NOISY BroadcastReceiver
+//            unregisterReceiver(myNoisyAudioStreamReceiver);
+            // Take the service out of the foreground, retain the notification
+//            service.stopForeground(false);
+        }
+
+        @Override
+        public void onSkipToNext() {
+            super.onSkipToNext();
+            if (MainActivity.getCurrent_playlist().getSize() > 0) {
+                try {
+                    // update main ui and mediaplayer with prev song
+                    Song next_song = MainActivity.getCurrent_playlist().getNextSong();
+                    MainActivity.setCurrent_song(next_song);
+
+                    // recreate mp and play prev song only if mediaplayer was playing before
+                    mService.recreateMediaPlayer(next_song.getId());
+
+                    // update metadata and playback states
+                    setMediaSessionMetadata(next_song);
+                    setMediaSessionPlaybackState(PlaybackStateCompat.STATE_SKIPPING_TO_NEXT, mediaPlayer.getCurrentPosition());
+                    if (continuePlaying) {
+                        audioFocusToggleMedia();
+                        setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition());
+                    }
+                } catch (Exception e) {
+                    Logger.logException(e, "MusicPlayerService");
+                }
+            }
+        }
+
+        @Override
+        public void onSkipToPrevious() {
+            super.onSkipToPrevious();
+            if (MainActivity.getCurrent_playlist().getSize() > 0) {
+                try {
+                    // update main ui and mediaplayer with prev song
+                    Song prev_song = MainActivity.getCurrent_playlist().getPrevSong();
+                    MainActivity.setCurrent_song(prev_song);
+
+                    // recreate mp and play prev song only if mediaplayer was playing before
+                    mService.recreateMediaPlayer(prev_song.getId());
+
+                    // update metadata and playback states
+                    setMediaSessionMetadata(prev_song);
+                    setMediaSessionPlaybackState(PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS, mediaPlayer.getCurrentPosition());
+                    if (continuePlaying) {
+                        audioFocusToggleMedia();
+                        setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition());
+                    }
+                } catch (Exception e) {
+                    Logger.logException(e, "MusicPlayerService");
+                }
+            }
+        }
+
+        @Override
+        public void onSeekTo(long pos) {
+            super.onSeekTo(pos);
+        }
+
+        @Override
+        public void onSetRepeatMode(int repeatMode) {
+            super.onSetRepeatMode(repeatMode);
+        }
+
+        @Override
+        public void onSetShuffleMode(int shuffleMode) {
+            super.onSetShuffleMode(shuffleMode);
+        }
+
+        @Override
+        public void onStop() {
+            super.onStop();
+        }
+
         @Override
         public void onCommand(String command, Bundle extras, ResultReceiver cb) {
             super.onCommand(command, extras, cb);
@@ -737,35 +908,6 @@ implements OnCompletionListener, OnErrorListener {
             super.onPrepareFromUri(uri, extras);
         }
 
-        @RequiresApi(api = Build.VERSION_CODES.O)
-        @Override
-        public void onPlay() {
-            super.onPlay();
-//        mediaPlayer.start();
-            int focusRequest = mAudioManager.requestAudioFocus(mAudioFocusRequest);
-            switch (focusRequest) {
-                case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
-                    break;
-                case AudioManager.AUDIOFOCUS_REQUEST_GRANTED:
-                    // start the service and set the session active
-                    mService.startService(new Intent(mService.getApplicationContext(), MusicPlayerService.class));
-                    mediaSession.setActive(true);
-
-                    // start the player (custom call)
-                    mediaPlayer.start();
-
-                    // update metadata and state
-                    stateBuilder.setState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition(), 1);
-                    mediaSession.setPlaybackState(stateBuilder.build());
-
-                    // Register BECOME_NOISY BroadcastReceiver
-//            registerReceiver(myNoisyAudioStreamReceiver, intentFilter);
-                    // Put the service in the foreground, post notification
-//                mService.startForeground(id, myPlayerNotification);
-                    break;
-            }
-        }
-
         @Override
         public void onPlayFromMediaId(String mediaId, Bundle extras) {
             super.onPlayFromMediaId(mediaId, extras);
@@ -787,34 +929,6 @@ implements OnCompletionListener, OnErrorListener {
         }
 
         @Override
-        public void onPause() {
-            super.onPause();
-            mAudioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
-
-            // pause the player (custom call)
-            mediaPlayer.pause();
-
-            // update metadata and state
-            stateBuilder.setState(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition(), 0);
-            mediaSession.setPlaybackState(stateBuilder.build());
-
-            // unregister BECOME_NOISY BroadcastReceiver
-//            unregisterReceiver(myNoisyAudioStreamReceiver);
-            // Take the service out of the foreground, retain the notification
-//            service.stopForeground(false);
-        }
-
-        @Override
-        public void onSkipToNext() {
-            super.onSkipToNext();
-        }
-
-        @Override
-        public void onSkipToPrevious() {
-            super.onSkipToPrevious();
-        }
-
-        @Override
         public void onFastForward() {
             super.onFastForward();
         }
@@ -822,16 +936,6 @@ implements OnCompletionListener, OnErrorListener {
         @Override
         public void onRewind() {
             super.onRewind();
-        }
-
-        @Override
-        public void onStop() {
-            super.onStop();
-        }
-
-        @Override
-        public void onSeekTo(long pos) {
-            super.onSeekTo(pos);
         }
 
         @Override
@@ -852,16 +956,6 @@ implements OnCompletionListener, OnErrorListener {
         @Override
         public void onSetCaptioningEnabled(boolean enabled) {
             super.onSetCaptioningEnabled(enabled);
-        }
-
-        @Override
-        public void onSetRepeatMode(int repeatMode) {
-            super.onSetRepeatMode(repeatMode);
-        }
-
-        @Override
-        public void onSetShuffleMode(int shuffleMode) {
-            super.onSetShuffleMode(shuffleMode);
         }
 
         @Override

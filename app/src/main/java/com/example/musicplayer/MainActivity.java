@@ -289,7 +289,6 @@ public class MainActivity extends AppCompatActivity {
                                     public void onPlaybackStateChanged(PlaybackStateCompat state) {
                                         switch (state.getState()){
                                             case PlaybackStateCompat.STATE_PLAYING:
-                                                System.out.println("STATE_PLAYING");
                                                 runOnUiThread(new Runnable() {
                                                     @Override
                                                     public void run() {
@@ -320,7 +319,6 @@ public class MainActivity extends AppCompatActivity {
 //                                                    }
                                                 break;
                                             case PlaybackStateCompat.STATE_PAUSED:
-                                                System.out.println("STATE_PAUSED");
                                                 runOnUiThread(new Runnable() {
                                                     @Override
                                                     public void run() {
@@ -339,6 +337,42 @@ public class MainActivity extends AppCompatActivity {
 
                                                 // update the isPlaying status in the metadata
 //                                                databaseRepository.updateMetadataIsPlaying(true);
+                                                break;
+                                            case PlaybackStateCompat.STATE_SKIPPING_TO_NEXT:
+                                            case PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS:
+                                                MediaMetadataCompat metadata = mediaController.getMetadata();
+                                                PlaybackStateCompat pbState = mediaController.getPlaybackState();
+                                                current_albumImage = metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART);
+                                                ThemeColors.generatePaletteColors(current_albumImage);
+
+                                                // view changes must be done on the main ui thread
+                                                runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        try {
+                                                            mainFragmentSecondary.updateMainSongDetails(metadata, current_playlist);
+
+                                                            // update palette swatch colors for the animated gradients
+                                                            if (!isDestroyed) {
+                                                                mainFragmentSecondary.updateFragmentColors();
+                                                            }
+                                                        } catch (Exception e) {
+                                                            Logger.logException(e);
+                                                        }
+                                                    }
+                                                });
+
+                                                // update notification details
+//                                                notificationBuilder
+//                                                        .setContentTitle(current_song.getTitle())
+//                                                        .setContentText(current_song.getArtist())
+//                                                        .setLargeIcon(current_albumImage);
+//                                                notification = notificationBuilder.build();
+//                                                notificationManager.notify(1, notification);
+
+                                                // update the index of the current song in database
+                                                // song can be updated within or outside of the app
+//                                                databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
                                                 break;
                                         }
                                     }
@@ -917,37 +951,36 @@ public class MainActivity extends AppCompatActivity {
                         mainFragmentSecondary.setSeekbarProgress(musicCurrentPosition);
                         break;
                     case MusicPlayerService.UPDATE_SONG:
-                        // update main activity with the selected song from music list
-                        current_song = (Song) bundle.get("song");
-
-                        // grab song album art and duration
-                        String albumID = current_song.getAlbumID();
-                        long albumID_long = Long.parseLong(albumID);
-                        Uri albumArtURI = ContentUris.withAppendedId(MusicPlayerService.artURI, albumID_long);
-                        ContentResolver res = getContentResolver();
-                        try {
-                            InputStream in = res.openInputStream(albumArtURI);
-                            current_albumImage = BitmapFactory.decodeStream(in);
-                            if (in != null) {
-                                in.close();
-                            }
-                        } catch (Exception e) {
-                            current_albumImage = BitmapFactory.decodeResource(getResources(), R.drawable.default_albumart);
-                            e.printStackTrace();
-                        }
-
-
-                        // view changes must be done on the main ui thread
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    mainFragmentSecondary.updateMainSongDetails(current_song, current_playlist, current_albumImage);
-                                } catch (Exception e) {
-                                    Logger.logException(e);
-                                }
-                            }
-                        });
+//                        // update main activity with the selected song from music list
+//                        current_song = (Song) bundle.get("song");
+//
+//                        // grab song album art
+//                        String albumID = current_song.getAlbumID();
+//                        long albumID_long = Long.parseLong(albumID);
+//                        Uri albumArtURI = ContentUris.withAppendedId(MusicPlayerService.artURI, albumID_long);
+//                        ContentResolver res = getContentResolver();
+//                        try {
+//                            InputStream in = res.openInputStream(albumArtURI);
+//                            current_albumImage = BitmapFactory.decodeStream(in);
+//                            if (in != null) {
+//                                in.close();
+//                            }
+//                        } catch (Exception e) {
+//                            current_albumImage = BitmapFactory.decodeResource(getResources(), R.drawable.default_albumart);
+//                            e.printStackTrace();
+//                        }
+//
+//                        // view changes must be done on the main ui thread
+//                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                try {
+//                                    mainFragmentSecondary.updateMainSongDetails(current_song, current_playlist, current_albumImage);
+//                                } catch (Exception e) {
+//                                    Logger.logException(e);
+//                                }
+//                            }
+//                        });
 
                         // update notification details
                         notificationBuilder

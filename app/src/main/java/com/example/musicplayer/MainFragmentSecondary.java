@@ -180,23 +180,25 @@ public class MainFragmentSecondary extends Fragment {
 
     /**
      * Updates sliding up panel with details about the song and playlist
-     * @param song the song currently playing
+     * @param metadata title, artist, album, albumart, and duration of a song
      * @param playlist the playlist the current song is from
-     * @param albumImage the album art corresponding to the song
      */
-    public void updateMainSongDetails(Song song, Playlist playlist, Bitmap albumImage){
-        final int songDuration = song.getDuration();
+    public void updateMainSongDetails(MediaMetadataCompat metadata, Playlist playlist){
+        String songTitle = metadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
+        String songArtist = metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
+        Bitmap albumArt = metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART);
+        int songDuration = (int) metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
 
         // update sliding menu details
-        slidingUp_songName.setText(song.getTitle());
-        slidingUp_artistName.setText(song.getArtist());
-        slidingUp_albumArt.setImageBitmap(albumImage);
+        slidingUp_songName.setText(songTitle);
+        slidingUp_artistName.setText(songArtist);
+        slidingUp_albumArt.setImageBitmap(albumArt);
 
         // update main activity details
         mainDisplay_playlistHeader.setText(playlist.getName());
-        mainDisplay_songTitle.setText(song.getTitle());
-        mainDisplay_songArtist.setText(song.getArtist());
-        mainDisplay_albumArt.setImageBitmap(albumImage);
+        mainDisplay_songTitle.setText(songTitle);
+        mainDisplay_songArtist.setText(songArtist);
+        mainDisplay_albumArt.setImageBitmap(albumArt);
         mainDisplay_seekBar.setMax(songDuration);
         mainDisplay_musicDuration.setText(SongHelper.convertTime(songDuration));
     }
@@ -383,7 +385,7 @@ public class MainFragmentSecondary extends Fragment {
         slidingUp_next_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mainActivity.startService(slidingUp_nextIntent);
+                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().skipToNext();
             }
         });
 
@@ -396,7 +398,7 @@ public class MainFragmentSecondary extends Fragment {
         slidingUp_prev_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mainActivity.startService(slidingUp_prevIntent);
+                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().skipToPrevious();
             }
         });
     }
@@ -499,7 +501,7 @@ public class MainFragmentSecondary extends Fragment {
         mainDisplay_next_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mainActivity.startService(mainDisplay_NextIntent);
+                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().skipToNext();
             }
         });
 
@@ -512,7 +514,7 @@ public class MainFragmentSecondary extends Fragment {
         mainDisplay_prev_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mainActivity.startService(mainDisplay_PrevIntent);
+                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().skipToPrevious();
             }
         });
 

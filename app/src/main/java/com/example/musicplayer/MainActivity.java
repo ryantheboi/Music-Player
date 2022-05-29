@@ -195,26 +195,27 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         try {
             System.out.println("paused");
-            if (isPermissionGranted) {
-                if (isViewModelReady) {
-                    // update current metadata values in database
-                    int theme_resourceid = ThemeColors.getThemeResourceId();
-                    int songtab_scrollindex = SongListTab.getScrollIndex();
-                    int songtab_scrolloffset = SongListTab.getScrollOffset();
-                    databaseRepository.updateMetadataTheme(theme_resourceid);
-                    databaseRepository.updateMetadataSongtab(songtab_scrollindex, songtab_scrolloffset);
+            if (isPermissionGranted && isViewModelReady) {
+                // update current metadata values in database
+                int theme_resourceid = ThemeColors.getThemeResourceId();
+                int songtab_scrollindex = SongListTab.getScrollIndex();
+                int songtab_scrolloffset = SongListTab.getScrollOffset();
+                databaseRepository.updateMetadataTheme(theme_resourceid);
+                databaseRepository.updateMetadataSongtab(songtab_scrollindex, songtab_scrolloffset);
 
-                    // save the current random seed
-                    databaseRepository.updateMetadataRandomSeed(random_seed);
+                // save the current random seed
+                databaseRepository.updateMetadataRandomSeed(random_seed);
 
-                    // save the current shuffle and repeat option
-                    databaseRepository.updateMetadataIsShuffled(isShuffled);
-                    databaseRepository.updateMetadataRepeatStatus(repeat_status);
+                // save the current shuffle and repeat option
+                databaseRepository.updateMetadataIsShuffled(isShuffled);
+                databaseRepository.updateMetadataRepeatStatus(repeat_status);
 
-                    // save current song index and playlist to database
-                    databaseRepository.insertPlaylist(current_playlist);
-                    databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
-                }
+                // save current song index and playlist to database
+                databaseRepository.insertPlaylist(current_playlist);
+                databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
+
+                // save current seekbar position to database
+                databaseRepository.updateMetadataSeek(mainFragmentSecondary.getSeekbarProgress());
             }
             super.onPause();
         }catch (Exception e){
@@ -340,8 +341,6 @@ public class MainActivity extends AppCompatActivity {
                                                 break;
                                             case PlaybackStateCompat.STATE_SKIPPING_TO_NEXT:
                                             case PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS:
-                                                MediaMetadataCompat metadata = mediaController.getMetadata();
-                                                PlaybackStateCompat pbState = mediaController.getPlaybackState();
                                                 current_albumImage = metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART);
                                                 ThemeColors.generatePaletteColors(current_albumImage);
 
@@ -350,7 +349,7 @@ public class MainActivity extends AppCompatActivity {
                                                     @Override
                                                     public void run() {
                                                         try {
-                                                            mainFragmentSecondary.updateMainSongDetails(metadata, current_playlist);
+                                                            mainFragmentSecondary.updateMainSongDetails(mediaController.getMetadata(), current_playlist);
 
                                                             // update palette swatch colors for the animated gradients
                                                             if (!isDestroyed) {
@@ -375,6 +374,9 @@ public class MainActivity extends AppCompatActivity {
 //                                                databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
                                                 break;
                                         }
+
+                                        // update the seekbar position in main UI
+                                        mainFragmentSecondary.setSeekbarProgress((int) state.getPosition());
                                     }
                                 };
                         mediaController.registerCallback(mediaControllerCallback);
@@ -673,8 +675,8 @@ public class MainActivity extends AppCompatActivity {
 
             initMusicUI();
 
-            // inform the music service about the seekbar's position from the metadata
-            mainFragmentSecondary.updateSeekbarProgress(seekPosition);
+            // update seekbar progress on main UI
+            mainFragmentSecondary.setSeekbarProgress(seekPosition);
         }
 
         // set the current theme and generate theme values
@@ -912,43 +914,43 @@ public class MainActivity extends AppCompatActivity {
 //                        }
                         break;
                     case MusicPlayerService.UPDATE_SEEKBAR_DURATION:
-                        // init the seekbar & textview max duration and begin thread to track progress
-                        final int musicMaxDuration = (int) bundle.get("time");
-
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    mainFragmentSecondary.setSeekbarMaxDuration(musicMaxDuration);
-                                } catch (Exception e) {
-                                    Logger.logException(e);
-                                }
-                            }
-                        });
-
-                        // spawn a thread to update seekbar progress each 100 milliseconds
-                        final Messenger seekMessenger = new Messenger(seekbarHandler);
-                        seekBar_progressIntent.putExtra("seekbarProgress", seekMessenger);
-                        Thread seekbarUpdateThread = new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    while (!isDestroyed) {
-                                        if (!mainFragmentSecondary.getSeekbar_isTracking()) {
-                                            startService(seekBar_progressIntent);
-                                        }
-                                        Thread.sleep(100);
-                                    }
-                                } catch (Exception e) {
-                                    Logger.logException(e);
-                                }
-                            }
-                        });
-                        seekbarUpdateThread.start();
+//                        // init the seekbar & textview max duration and begin thread to track progress
+//                        final int musicMaxDuration = (int) bundle.get("time");
+//
+//                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                try {
+//                                    mainFragmentSecondary.setSeekbarMaxDuration(musicMaxDuration);
+//                                } catch (Exception e) {
+//                                    Logger.logException(e);
+//                                }
+//                            }
+//                        });
+//
+//                        // spawn a thread to update seekbar progress each 100 milliseconds
+//                        final Messenger seekMessenger = new Messenger(seekbarHandler);
+//                        seekBar_progressIntent.putExtra("seekbarProgress", seekMessenger);
+//                        Thread seekbarUpdateThread = new Thread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                try {
+//                                    while (!isDestroyed) {
+//                                        if (!mainFragmentSecondary.getSeekbar_isTracking()) {
+//                                            startService(seekBar_progressIntent);
+//                                        }
+//                                        Thread.sleep(100);
+//                                    }
+//                                } catch (Exception e) {
+//                                    Logger.logException(e);
+//                                }
+//                            }
+//                        });
+//                        seekbarUpdateThread.start();
                         break;
                     case MusicPlayerService.UPDATE_SEEKBAR_PROGRESS:
-                        int musicCurrentPosition = (int) bundle.get("time");
-                        mainFragmentSecondary.setSeekbarProgress(musicCurrentPosition);
+//                        int musicCurrentPosition = (int) bundle.get("time");
+//                        mainFragmentSecondary.setSeekbarProgress(musicCurrentPosition);
                         break;
                     case MusicPlayerService.UPDATE_SONG:
 //                        // update main activity with the selected song from music list
@@ -982,32 +984,32 @@ public class MainActivity extends AppCompatActivity {
 //                            }
 //                        });
 
-                        // update notification details
-                        notificationBuilder
-                                .setContentTitle(current_song.getTitle())
-                                .setContentText(current_song.getArtist())
-                                .setLargeIcon(current_albumImage);
-                        notification = notificationBuilder.build();
-                        notificationManager.notify(1, notification);
-
-                        // update palette swatch colors for the animated gradients
-                        ThemeColors.generatePaletteColors(current_albumImage);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    if (!isDestroyed) {
-                                        mainFragmentSecondary.updateFragmentColors();
-                                    }
-                                } catch (Exception e) {
-                                    Logger.logException(e);
-                                }
-                            }
-                        });
-
-                        // update the index of the current song in database
-                        // song can be updated within or outside of the app
-                        databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
+//                        // update notification details
+//                        notificationBuilder
+//                                .setContentTitle(current_song.getTitle())
+//                                .setContentText(current_song.getArtist())
+//                                .setLargeIcon(current_albumImage);
+//                        notification = notificationBuilder.build();
+//                        notificationManager.notify(1, notification);
+//
+//                        // update palette swatch colors for the animated gradients
+//                        ThemeColors.generatePaletteColors(current_albumImage);
+//                        runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                try {
+//                                    if (!isDestroyed) {
+//                                        mainFragmentSecondary.updateFragmentColors();
+//                                    }
+//                                } catch (Exception e) {
+//                                    Logger.logException(e);
+//                                }
+//                            }
+//                        });
+//
+//                        // update the index of the current song in database
+//                        // song can be updated within or outside of the app
+//                        databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
                         break;
                     case ChooseThemeFragment.THEME_SELECTED:
                         final int theme_resid = ThemeColors.getThemeResourceId();

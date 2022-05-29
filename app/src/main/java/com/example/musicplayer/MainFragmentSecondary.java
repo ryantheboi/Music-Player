@@ -68,7 +68,6 @@ public class MainFragmentSecondary extends Fragment {
     private Intent mainDisplay_PausePlayIntent;
     private Intent mainDisplay_PrevIntent;
     private Intent mainDisplay_NextIntent;
-    private Intent seekBar_seekIntent;
     private boolean seekBar_isTracking;
     private RelativeLayout mainDisplay_mainLayout;
     private RelativeLayout slidingUpMenuLayout;
@@ -134,18 +133,14 @@ public class MainFragmentSecondary extends Fragment {
         return seekBar_isTracking;
     }
 
-    public void setSeekbarMaxDuration(int musicMaxDuration){
-        final String time = SongHelper.convertTime(musicMaxDuration);
-        mainDisplay_seekBar.setMax(musicMaxDuration);
-        mainDisplay_musicDuration.setText(time);
-    }
-
     /**
-     * Sets the seekbar progress without informing music service (implies this seekPosition came from the service)
+     * Sets the seekbar progress
      * @param seekPosition the progress position in the seekbar
      */
     public void setSeekbarProgress(int seekPosition){
-        mainDisplay_seekBar.setProgress(seekPosition);
+        if (!seekBar_isTracking) {
+            mainDisplay_seekBar.setProgress(seekPosition);
+        }
     }
 
     public void setPausePlayBtns(int mainBtnId, int slidingBtnId){
@@ -165,17 +160,6 @@ public class MainFragmentSecondary extends Fragment {
 
     public void setShuffleBtnAlpha(int alpha){
         mainDisplay_shuffle_btn.setImageAlpha(alpha);
-    }
-
-    /**
-     * Informs the music service about the seekbar's new position in addition to setting it
-     * @param seekPosition the progress position in the seekbar
-     */
-    public void updateSeekbarProgress(int seekPosition){
-        // inform the music service about the seekbar's position
-        seekBar_seekIntent.putExtra("seekbarSeek", seekPosition);
-        mainActivity.startService(seekBar_seekIntent);
-        mainDisplay_seekBar.setProgress(seekPosition);
     }
 
     /**
@@ -563,7 +547,6 @@ public class MainFragmentSecondary extends Fragment {
         });
     }
 
-
     /**
      * Initializes the seekbar and the textviews for current position and max duration
      * Time is converted from milliseconds to HH:MM:SS format
@@ -571,11 +554,6 @@ public class MainFragmentSecondary extends Fragment {
      */
     private void initSeekbar() {
         // set the seekbar & textview duration and sync with mediaplayer
-        Intent seekBarDurationIntent = new Intent(mainActivity, MusicPlayerService.class);
-        seekBar_seekIntent = new Intent(mainActivity, MusicPlayerService.class);
-        seekBarDurationIntent.putExtra("seekbarDuration", mainActivityMessenger);
-        mainActivity.startService(seekBarDurationIntent);
-
         mainDisplay_seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -590,12 +568,7 @@ public class MainFragmentSecondary extends Fragment {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                seekBar_seekIntent.putExtra("seekbarSeek", seekBar.getProgress());
-                mainActivity.startService(seekBar_seekIntent);
-
-                // update the seekPosition value in the local metadata
-                mainActivity.getDatabaseRepository().updateMetadataSeek(seekBar.getProgress());
-
+                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().seekTo(seekBar.getProgress());
                 seekBar_isTracking = false;
             }
         });

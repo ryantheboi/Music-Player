@@ -9,7 +9,7 @@ import android.os.Build;
 
 public class Notifications extends Application{
     public static final String CHANNEL_ID_1 = "channel1";
-    public static final String CHANNEL_NAME_1 = "FIRSTCHANNEL";
+    public static final String CHANNEL_NAME_1 = "MusicPlayer Notification Channel";
 
     @Override
     public void onCreate() {
@@ -22,16 +22,16 @@ public class Notifications extends Application{
     private void createNotificationChannel(){
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-            NotificationChannel channel1 = new NotificationChannel(
+            NotificationChannel notificationChannel = new NotificationChannel(
                     CHANNEL_ID_1,
                     CHANNEL_NAME_1,
-                    NotificationManager.IMPORTANCE_HIGH
+                    NotificationManager.IMPORTANCE_LOW
             );
-            channel1.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-            channel1.enableLights(true);
+            notificationChannel.enableLights(false);
+            notificationChannel.enableVibration(false);
 
             NotificationManager manager = getSystemService(NotificationManager.class);
-            manager.createNotificationChannel(channel1);
+            manager.createNotificationChannel(notificationChannel);
         }
 
     }

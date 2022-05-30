@@ -31,5 +31,9 @@
     <string name="Minutes">Minutes</string>
     <string name="SetTimer">Set Timer</string>
     <string name="GenerateAgain">Generate Again</string>
+    <string name="Pause">Pause</string>
+    <string name="Play">Play</string>
+    <string name="Next">Next</string>
+    <string name="Previous">Previous</string>
 
 </resources>

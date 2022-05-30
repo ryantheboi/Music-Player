@@ -1,7 +1,9 @@
 package com.example.musicplayer;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
@@ -30,6 +32,7 @@ import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.RatingCompat;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.widget.Toast;
@@ -38,6 +41,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.media.MediaBrowserServiceCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.media.session.MediaButtonReceiver;
 
 import java.io.InputStream;
 import java.util.List;
@@ -62,7 +68,12 @@ implements OnCompletionListener, OnErrorListener {
     private static AudioFocusRequest mAudioFocusRequest;
     private boolean mPlayOnAudioFocus;
     private static Messenger mainActivity_messenger;
-    private static Notification notification;
+    private NotificationManagerCompat notificationManager;
+    private NotificationCompat.Builder notificationBuilder;
+    PendingIntent notificationPause_intent;
+    PendingIntent notificationPlay_intent;
+    PendingIntent notificationNext_intent;
+    PendingIntent notificationPrev_intent;
     private HandlerThread musicPlayerHandlerThread;
     private PlaybackHandler playerHandler;
     private static boolean continuePlaying = false;
@@ -94,7 +105,6 @@ implements OnCompletionListener, OnErrorListener {
     private static final int PREPARE_DURATION = 7;
     private static final int PREPARE_SEEK = 8;
     private static final int PREPARE_SEEKBAR_PROGRESS = 9;
-    private static final int PREPARE_NOTIFICATION = 10;
     private static final int PREPARE_SONG_PLAYED = 11;
     private static final int PREPARE_SONG_LISTENED = 12;
 
@@ -127,7 +137,7 @@ implements OnCompletionListener, OnErrorListener {
             // keep CPU from sleeping and be able to play music with screen off
             mediaPlayer.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK);
 
-            mediaSession = new MediaSessionCompat(getApplicationContext(), "MusicPlayerService-MediaSession");
+            mediaSession = new MediaSessionCompat(MusicPlayerService.this, "MusicPlayerService-MediaSession");
 
             // enable callbacks from MediaButtons and TransportControls
             mediaSession.setFlags(
@@ -149,14 +159,15 @@ implements OnCompletionListener, OnErrorListener {
                             PlaybackStateCompat.ACTION_PAUSE |
                             PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
                             PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
-                            PlaybackStateCompat.ACTION_SEEK_TO);
+                            PlaybackStateCompat.ACTION_SEEK_TO |
+                            PlaybackStateCompat.ACTION_STOP);
             mediaSession.setPlaybackState(playbackStateBuilder.build());
 
             // MusicPlayerSessionCallback() has methods that handle callbacks from a media controller
             mediaPlayerSessionCallback = new MusicPlayerSessionCallback(this);
             mediaSession.setCallback(mediaPlayerSessionCallback);
 
-            // Set the session's token so that client activities can communicate with it.
+            // set the session's token so that client activities can communicate with it.
             setSessionToken(mediaSession.getSessionToken());
 
             initAudioFocus();
@@ -167,6 +178,10 @@ implements OnCompletionListener, OnErrorListener {
 
     @TargetApi(26)
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+        // correct callbacks to MediaSessionCompat.Callback will be triggered based on the incoming KeyEvent
+        MediaButtonReceiver.handleIntent(mediaSession, intent);
+
         // begin responding to the messenger based on message received
         try {
             Bundle b = intent.getExtras();
@@ -215,10 +230,6 @@ implements OnCompletionListener, OnErrorListener {
                         case "musicListSong":
                             playerHandler.removeMessages(PREPARE_SONG);
                             playerHandler.obtainMessage(PREPARE_SONG).sendToTarget();
-                            break;
-                        case "notification":
-                            playerHandler.removeMessages(PREPARE_NOTIFICATION);
-                            playerHandler.obtainMessage(PREPARE_NOTIFICATION).sendToTarget();
                             break;
                     }
                 }
@@ -348,9 +359,71 @@ implements OnCompletionListener, OnErrorListener {
         return albumArtBitmap;
     }
 
+    private void initNotification(){
+        notificationManager = NotificationManagerCompat.from(this);
+        notificationPrev_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
+                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS);
+        notificationPause_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
+                PlaybackStateCompat.ACTION_PAUSE);
+        notificationPlay_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
+                PlaybackStateCompat.ACTION_PLAY);
+        notificationNext_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
+                PlaybackStateCompat.ACTION_SKIP_TO_NEXT);
+
+        // init intent for launching main activity from notifications (or resuming if not destroyed)
+        Intent mainActivityIntent = new Intent(MusicPlayerService.this, MainActivity.class);
+        mainActivityIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent notificationIntent = PendingIntent.getActivity(MusicPlayerService.this, 0, mainActivityIntent, PendingIntent.FLAG_IMMUTABLE);
+
+        // create builder with current mediasession
+        MediaControllerCompat controller = mediaSession.getController();
+        MediaMetadataCompat mediaMetadata = controller.getMetadata();
+        MediaDescriptionCompat description = mediaMetadata.getDescription();
+
+        notificationBuilder = new NotificationCompat.Builder(MusicPlayerService.this, Notifications.CHANNEL_ID_1);
+        notificationBuilder
+                // Add the metadata for the currently playing track
+                .setContentTitle(description.getTitle())
+                .setContentText(description.getSubtitle())
+                .setLargeIcon(description.getIconBitmap())
+
+                // Enable launching the player by clicking the notification
+                .setContentIntent(notificationIntent)
+
+                // Make the transport controls visible on the lockscreen
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+
+                // Add app icon
+                .setSmallIcon(R.drawable.ic_notification24dp)
+
+                // Add prev, pause, next buttons in order
+                .addAction(new NotificationCompat.Action(
+                        R.drawable.ic_prev24dp, getString(R.string.Previous),
+                        notificationPrev_intent))
+                .addAction(new NotificationCompat.Action(
+                        R.drawable.ic_pause24dp, getString(R.string.Pause),
+                        notificationPause_intent))
+                .addAction(new NotificationCompat.Action(
+                        R.drawable.ic_next24dp, getString(R.string.Next),
+                        notificationNext_intent))
+
+                // do not alert for every notification update
+                .setOnlyAlertOnce(true)
+
+                // no notification sound or vibrate
+                .setSilent(true)
+
+                // notification cannot be dismissed by swipe
+                .setOngoing(true)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                // Take advantage of MediaStyle features
+                .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
+                        .setMediaSession(mediaSession.getSessionToken())
+                        .setShowActionsInCompactView(0, 1, 2));
+    }
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void initAudioFocus(){
-        mAudioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+        mAudioManager = (AudioManager) MusicPlayerService.this.getSystemService(Context.AUDIO_SERVICE);
 
         // request audio focus for playback, this registers the afChangeListener
         mAudioAttributes =
@@ -524,10 +597,10 @@ implements OnCompletionListener, OnErrorListener {
         // prepare next song and keep it paused at seek position 0
         Uri audioURI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         Uri songURI = ContentUris.withAppendedId(audioURI, songId);
-        MediaPlayer mp = MediaPlayer.create(getApplicationContext(), songURI);
+        MediaPlayer mp = MediaPlayer.create(MusicPlayerService.this, songURI);
         mp.setOnCompletionListener(this);
         mp.setOnErrorListener(this);
-        mp.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+        mp.setWakeMode(MusicPlayerService.this, PowerManager.PARTIAL_WAKE_LOCK);
         mediaPlayer = mp;
     }
 
@@ -654,6 +727,9 @@ implements OnCompletionListener, OnErrorListener {
 
                     // update metadata state
                     setMediaSessionMetadata(current_song);
+
+                    // initialize notification manager and notification build for the first time
+                    initNotification();
 
                     // send update to main messenger to complete handshake
                     sendUpdateMessage(mainActivity_messenger, UPDATE_HANDSHAKE);
@@ -788,9 +864,6 @@ implements OnCompletionListener, OnErrorListener {
 //                    progressMessage[1] = mediaPlayer.getCurrentPosition();
 //                    sendUpdateMessage(mainActivity_messenger, progressMessage);
                     break;
-                case PREPARE_NOTIFICATION:
-                    notification = MainActivity.getNotification();
-                    break;
                 case PREPARE_SONG_PLAYED:
                     sendSongUpdateMessage(mainActivity_messenger, UPDATE_SONG_PLAYED, getSong_currentlyListening());
                     break;
@@ -810,6 +883,7 @@ implements OnCompletionListener, OnErrorListener {
             this.mService = mService;
         }
 
+        @SuppressLint("RestrictedApi")
         @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
         public void onPlay() {
@@ -826,33 +900,56 @@ implements OnCompletionListener, OnErrorListener {
                     // start the player (custom call)
                     mediaPlayer.start();
 
-                    // update metadata and state
+                    // update playback state
                     setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition());
 
+                    // update notification pause/play button
+                    notificationBuilder
+                            .setOngoing(true)
+                            // Add the metadata for the currently playing track
+                            .mActions.set(1, new NotificationCompat.Action(
+                                    R.drawable.ic_pause24dp, getString(R.string.Pause),
+                                    notificationPause_intent));
+                    notificationManager.notify(1, notificationBuilder.build());
+
                     // Register BECOME_NOISY BroadcastReceiver
-//            registerReceiver(myNoisyAudioStreamReceiver, intentFilter);
-                    // Put the service in the foreground, post notification
-//                mService.startForeground(id, myPlayerNotification);
+//                    registerReceiver(myNoisyAudioStreamReceiver, intentFilter);
+
+                    // display the notification and place the service in the foreground
+                    Notification notification = notificationBuilder.build();
+                    notificationManager.notify(1, notification);
+                    mService.startForeground(1, notification);
                     break;
             }
         }
 
+        @SuppressLint("RestrictedApi")
         @Override
         public void onPause() {
             super.onPause();
             continuePlaying = false;
-            mAudioManager = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
 
             // pause the player (custom call)
             mediaPlayer.pause();
 
-            // update metadata and state
+            // update playback state
             setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition());
 
             // unregister BECOME_NOISY BroadcastReceiver
 //            unregisterReceiver(myNoisyAudioStreamReceiver);
-            // Take the service out of the foreground, retain the notification
-//            service.stopForeground(false);
+
+            // update notification pause/play button
+            notificationBuilder
+                    .setOngoing(false)
+                    // Add the metadata for the currently playing track
+                    .mActions.set(1, new NotificationCompat.Action(
+                            R.drawable.ic_play24dp, getString(R.string.Play),
+                            notificationPlay_intent));
+            notificationManager.notify(1, notificationBuilder.build());
+            mAudioManager = (AudioManager) MusicPlayerService.this.getSystemService(Context.AUDIO_SERVICE);
+
+            // take service out of the foreground, retain the notification
+            mService.stopForeground(false);
         }
 
         @Override
@@ -874,6 +971,17 @@ implements OnCompletionListener, OnErrorListener {
                         audioFocusToggleMedia();
                         setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition());
                     }
+
+                    // update notifications with next song
+                    MediaControllerCompat controller = mediaSession.getController();
+                    MediaMetadataCompat mediaMetadata = controller.getMetadata();
+                    MediaDescriptionCompat description = mediaMetadata.getDescription();
+                    notificationBuilder
+                            // add the metadata for the currently playing track
+                            .setContentTitle(description.getTitle())
+                            .setContentText(description.getSubtitle())
+                            .setLargeIcon(description.getIconBitmap());
+                    notificationManager.notify(1, notificationBuilder.build());
                 } catch (Exception e) {
                     Logger.logException(e, "MusicPlayerService");
                 }
@@ -899,6 +1007,17 @@ implements OnCompletionListener, OnErrorListener {
                         audioFocusToggleMedia();
                         setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition());
                     }
+
+                    // update notifications with previous song
+                    MediaControllerCompat controller = mediaSession.getController();
+                    MediaMetadataCompat mediaMetadata = controller.getMetadata();
+                    MediaDescriptionCompat description = mediaMetadata.getDescription();
+                    notificationBuilder
+                            // add the metadata for the currently playing track
+                            .setContentTitle(description.getTitle())
+                            .setContentText(description.getSubtitle())
+                            .setLargeIcon(description.getIconBitmap());
+                    notificationManager.notify(1, notificationBuilder.build());
                 } catch (Exception e) {
                     Logger.logException(e, "MusicPlayerService");
                 }

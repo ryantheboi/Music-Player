@@ -52,7 +52,6 @@ public class MainActivity extends AppCompatActivity {
     private Intent musicServiceIntent;
     public static boolean isActionMode = false;
     public static ActionMode actionMode = null;
-    private boolean isDestroyed = false;
     private Metadata metadata;
     private boolean isViewModelReady = false;
     private static int random_seed;
@@ -73,7 +72,6 @@ public class MainActivity extends AppCompatActivity {
     // service
     private MediaBrowserCompat mediaBrowser;
     private MediaBrowserCompat.ConnectionCallback mediaBrowserConnectionCallback;
-    private MediaControllerCompat mediaController;
     private MediaControllerCompat.Callback mediaControllerCallback;
 
     @Override
@@ -201,6 +199,7 @@ public class MainActivity extends AppCompatActivity {
             if (MediaControllerCompat.getMediaController(this) != null) {
                 MediaControllerCompat.getMediaController(this).unregisterCallback(mediaControllerCallback);
             }
+            // disconnect this client from MusicPlayerService
             mediaBrowser.disconnect();
             if (isPermissionGranted) {
                 databaseRepository.finish();
@@ -215,7 +214,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         try {
             System.out.println("destroyed");
-            isDestroyed = true;
             super.onDestroy();
         }catch (Exception e){
             Logger.logException(e);
@@ -229,16 +227,14 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onConnected() {
                         try {
-                            System.out.println("CONNECTION ESTABLISHED");
                             // get the token for the MediaSession
+
+                            // create and save the controller to this activity
                             MediaSessionCompat.Token token = mediaBrowser.getSessionToken();
-
-                            mediaController = new MediaControllerCompat(MainActivity.this, token);
-
-                            // save the controller
+                            MediaControllerCompat mediaController = new MediaControllerCompat(MainActivity.this, token);
                             MediaControllerCompat.setMediaController(MainActivity.this, mediaController);
 
-                            // register a Callback to stay in sync
+                            // register a callback to stay in sync
                             // MusicPlayerControllerCallback() has methods that handle callbacks for metadata and playback state changes
                             mediaControllerCallback = new MusicPlayerControllerCallback();
 
@@ -672,15 +668,13 @@ public class MainActivity extends AppCompatActivity {
                             public void run() {
                                 try {
                                     // update main display button depending on current playback state
+                                    MediaControllerCompat mediaController = MediaControllerCompat.getMediaController(MainActivity.this);
                                     if (mediaController.getPlaybackState().getState() == PlaybackStateCompat.STATE_PLAYING) {
                                         mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_pause28dp, R.drawable.ic_pause24dp);
                                     } else {
                                         mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_play28dp, R.drawable.ic_play24dp);
+                                        mediaController.getTransportControls().seekTo(metadata.getSeekPosition());
                                     }
-                                    // update main display seekbar and details, including album art palette colors
-                                    mainFragmentSecondary.updateMainSongDetails(mediaController.getMetadata(), current_playlist);
-                                    mainFragmentSecondary.setSeekbarProgress(metadata.getSeekPosition());
-                                    mediaController.getTransportControls().seekTo(metadata.getSeekPosition());
 
                                     // generate theme values and update main ui colors for the first time
                                     int themeResourceId = metadata.getThemeResourceId();
@@ -697,156 +691,10 @@ public class MainActivity extends AppCompatActivity {
                             }
                         });
                         break;
-                    case MusicPlayerService.UPDATE_PLAY:
-//                        runOnUiThread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                try {
-//                                    if (!isDestroyed) {
-//                                        mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_play28dp, R.drawable.ic_play24dp);
-//                                    }
-//                                } catch (Exception e) {
-//                                    Logger.logException(e);
-//                                }
-//                            }
-//                        });
-//                        notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_play24dp, "play", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_IMMUTABLE)));
-//                        notification = notificationBuilder.build();
-//                        notificationManager.notify(1, notification);
-//
-//                        // update the isPlaying and seekPosition values in the metadata
-//                        if ((boolean) bundle.get("updateDatabase")) {
-//                            databaseRepository.updateMetadataIsPlaying(false);
-//
-//                            // use the seek position given by the music player service
-//                            if ((int) bundle.get("updateSeek") >= 0) {
-//                                databaseRepository.updateMetadataSeek((int) bundle.get("updateSeek"));
-//                            }
-//                            // use the seek position from the seekbar view
-//                            else {
-//                                databaseRepository.updateMetadataSeek(mainFragmentSecondary.getSeekbarProgress());
-//                            }
-//                        }
-                        break;
-                    case MusicPlayerService.UPDATE_PAUSE:
-//                        runOnUiThread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                try {
-//                                    if (!isDestroyed) {
-//                                        mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_pause28dp, R.drawable.ic_pause24dp);
-//                                    }
-//                                } catch (Exception e) {
-//                                    Logger.logException(e);
-//                                }
-//                            }
-//                        });
-//                        notificationBuilder.mActions.set(1, new NotificationCompat.Action(R.drawable.ic_pause24dp, "pause", PendingIntent.getService(getApplicationContext(), 1, notificationPauseplayIntent, PendingIntent.FLAG_UPDATE_CURRENT)));
-//                        notification = notificationBuilder.build();
-//                        notificationManager.notify(1, notification);
-//
-//                        // update the isPlaying status in the metadata
-//                        if ((boolean) bundle.get("updateDatabase")) {
-//                            databaseRepository.updateMetadataIsPlaying(true);
-//                        }
-                        break;
-                    case MusicPlayerService.UPDATE_SEEKBAR_DURATION:
-//                        // init the seekbar & textview max duration and begin thread to track progress
-//                        final int musicMaxDuration = (int) bundle.get("time");
-//
-//                        runOnUiThread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                try {
-//                                    mainFragmentSecondary.setSeekbarMaxDuration(musicMaxDuration);
-//                                } catch (Exception e) {
-//                                    Logger.logException(e);
-//                                }
-//                            }
-//                        });
-//
-//                        // spawn a thread to update seekbar progress each 100 milliseconds
-//                        final Messenger seekMessenger = new Messenger(seekbarHandler);
-//                        seekBar_progressIntent.putExtra("seekbarProgress", seekMessenger);
-//                        Thread seekbarUpdateThread = new Thread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                try {
-//                                    while (!isDestroyed) {
-//                                        if (!mainFragmentSecondary.getSeekbar_isTracking()) {
-//                                            startService(seekBar_progressIntent);
-//                                        }
-//                                        Thread.sleep(100);
-//                                    }
-//                                } catch (Exception e) {
-//                                    Logger.logException(e);
-//                                }
-//                            }
-//                        });
-//                        seekbarUpdateThread.start();
-                        break;
                     case MusicPlayerService.UPDATE_SEEKBAR_PROGRESS:
-//                        int musicCurrentPosition = (int) bundle.get("time");
-//                        mainFragmentSecondary.setSeekbarProgress(musicCurrentPosition);
-                        break;
-                    case MusicPlayerService.UPDATE_SONG:
-//                        // update main activity with the selected song from music list
-//                        current_song = (Song) bundle.get("song");
-//
-//                        // grab song album art
-//                        String albumID = current_song.getAlbumID();
-//                        long albumID_long = Long.parseLong(albumID);
-//                        Uri albumArtURI = ContentUris.withAppendedId(MusicPlayerService.artURI, albumID_long);
-//                        ContentResolver res = getContentResolver();
-//                        try {
-//                            InputStream in = res.openInputStream(albumArtURI);
-//                            current_albumImage = BitmapFactory.decodeStream(in);
-//                            if (in != null) {
-//                                in.close();
-//                            }
-//                        } catch (Exception e) {
-//                            current_albumImage = BitmapFactory.decodeResource(getResources(), R.drawable.default_albumart);
-//                            e.printStackTrace();
-//                        }
-//
-//                        // view changes must be done on the main ui thread
-//                        runOnUiThread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                try {
-//                                    mainFragmentSecondary.updateMainSongDetails(current_song, current_playlist, current_albumImage);
-//                                } catch (Exception e) {
-//                                    Logger.logException(e);
-//                                }
-//                            }
-//                        });
-
-//                        // update notification details
-//                        notificationBuilder
-//                                .setContentTitle(current_song.getTitle())
-//                                .setContentText(current_song.getArtist())
-//                                .setLargeIcon(current_albumImage);
-//                        notification = notificationBuilder.build();
-//                        notificationManager.notify(1, notification);
-//
-//                        // update palette swatch colors for the animated gradients
-//                        ThemeColors.generatePaletteColors(current_albumImage);
-//                        runOnUiThread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                try {
-//                                    if (!isDestroyed) {
-//                                        mainFragmentSecondary.updateFragmentColors();
-//                                    }
-//                                } catch (Exception e) {
-//                                    Logger.logException(e);
-//                                }
-//                            }
-//                        });
-//
-//                        // update the index of the current song in database
-//                        // song can be updated within or outside of the app
-//                        databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
+                        int musicCurrentPosition = (int) bundle.get("time");
+                        mainFragmentSecondary.setSeekbarProgress(musicCurrentPosition);
+                        databaseRepository.updateMetadataSeek(musicCurrentPosition);
                         break;
                     case ChooseThemeFragment.THEME_SELECTED:
                         final int theme_resid = ThemeColors.getThemeResourceId();
@@ -908,13 +756,18 @@ public class MainActivity extends AppCompatActivity {
     private class MusicPlayerControllerCallback extends MediaControllerCompat.Callback{
         @Override
         public void onMetadataChanged(MediaMetadataCompat metadata) {
-            if (!isDestroyed && isViewModelReady) {
-                // update main display details including album art palette colors
-                mainFragmentSecondary.updateMainSongDetails(mediaController.getMetadata(), current_playlist);
+            // update main display details including album art palette colors
+            mainFragmentSecondary.updateMainSongDetails(MediaControllerCompat.getMediaController(MainActivity.this).getMetadata(), current_playlist);
 
-                // update palette swatch colors for the animated gradients
-                mainFragmentSecondary.updateFragmentColors();
-            }
+            // this will be called twice on app launch for the handshake
+            // update palette swatch colors for the animated gradients
+            mainFragmentSecondary.updateFragmentColors();
+
+
+            // update the index of the current song in database
+            // song can be updated within or outside of the app
+//                        databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
+
         }
 
         @Override
@@ -931,37 +784,13 @@ public class MainActivity extends AppCompatActivity {
 
                 switch (state.getState()) {
                     case PlaybackStateCompat.STATE_PLAYING:
-                        if (!isDestroyed) {
-                            mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_pause28dp, R.drawable.ic_pause24dp);
-                        }
-
-//                        // update the isPlaying and seekPosition values in the metadata
-//                        if ((boolean) bundle.get("updateDatabase")) {
-//                            databaseRepository.updateMetadataIsPlaying(false);
-//
-//                            // use the seek position given by the music player service
-//                            if ((int) bundle.get("updateSeek") >= 0) {
-//                                databaseRepository.updateMetadataSeek((int) bundle.get("updateSeek"));
-//                            }
-//                            // use the seek position from the seekbar view
-//                            else {
-//                                databaseRepository.updateMetadataSeek(mainFragmentSecondary.getSeekbarProgress());
-//                            }
+                        mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_pause28dp, R.drawable.ic_pause24dp);
                         break;
                     case PlaybackStateCompat.STATE_PAUSED:
-                        if (!isDestroyed) {
-                            mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_play28dp, R.drawable.ic_play24dp);
-                        }
-
-                        // update the isPlaying status in the metadata
-//                        databaseRepository.updateMetadataIsPlaying(true);
+                        mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_play28dp, R.drawable.ic_play24dp);
                         break;
                     case PlaybackStateCompat.STATE_SKIPPING_TO_NEXT:
                     case PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS:
-
-                        // update the index of the current song in database
-                        // song can be updated within or outside of the app
-//                        databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
                         break;
                 }
             } catch (Exception e) {

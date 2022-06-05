@@ -81,6 +81,7 @@ implements OnCompletionListener, OnErrorListener {
     private static boolean continuePlaying = false;
     private ScheduledExecutorService song_listener;
     private ScheduledExecutorService progress_listener;
+    private Future<?> song_listener_future;
     private Future<?> progress_listener_future;
     private Song song_currentlyListening;
     private int song_secondsListened;
@@ -91,13 +92,13 @@ implements OnCompletionListener, OnErrorListener {
 
     public static final int UPDATE_HANDSHAKE = 0;
     public static final int UPDATE_SEEKBAR_PROGRESS = 1;
-    public static final int UPDATE_SONG_PLAYED = 2;
-    public static final int UPDATE_SONG_LISTENED = 3;
+    public static final int UPDATE_SONG_INDEX = 2;
+    public static final int UPDATE_SONG_PLAYED = 3;
+    public static final int UPDATE_SONG_LISTENED = 4;
 
     public static final String CUSTOM_ACTION_PLAY_SONG = "play_song";
 
     private static final int PREPARE_HANDSHAKE = 0;
-    private static final int PREPARE_SONG = 1;
     private static final int PREPARE_SONG_PLAYED = 2;
     private static final int PREPARE_SONG_LISTENED = 3;
 
@@ -107,8 +108,11 @@ implements OnCompletionListener, OnErrorListener {
         super.onCreate();
 
         try {
+            // init listeners
+            song_listener = Executors.newSingleThreadScheduledExecutor();
             progress_listener = Executors.newSingleThreadScheduledExecutor();
-            scheduleSongListener();
+            setSongListenerActive(true);
+            setProgressListenerActive(true);
 
             mediaPlayer = MediaPlayer.create(this, R.raw.aft);
             mediaPlayer.setOnCompletionListener(this);
@@ -176,10 +180,6 @@ implements OnCompletionListener, OnErrorListener {
                             mainActivity_messenger = intent.getParcelableExtra("handshake");
                             playerHandler.removeMessages(PREPARE_HANDSHAKE);
                             playerHandler.obtainMessage(PREPARE_HANDSHAKE).sendToTarget();
-                            break;
-                        case "musicListSong":
-                            playerHandler.removeMessages(PREPARE_SONG);
-                            playerHandler.obtainMessage(PREPARE_SONG).sendToTarget();
                             break;
                     }
                 }
@@ -264,8 +264,8 @@ implements OnCompletionListener, OnErrorListener {
 
                     // if the current song is the last song in the playlist
                     if (curr_playlist.getSongList().indexOf(curr_song) == curr_playlist_size - 1) {
-                        mediaSession.getController().getTransportControls().pause();
                         mediaSession.getController().getTransportControls().skipToNext();
+                        mediaSession.getController().getTransportControls().pause();
                     } else {
                         mediaSession.getController().getTransportControls().skipToNext();
                     }
@@ -280,15 +280,15 @@ implements OnCompletionListener, OnErrorListener {
                 case 2:
                     mediaPlayer.seekTo(0);
                     mediaPlayer.start();
-//
-//                    // reset song listener and consider the song played
-//                    setSong_currentlyListening(MainActivity.getCurrent_song());
-//                    playerHandler.removeMessages(PREPARE_SONG_PLAYED);
-//                    playerHandler.obtainMessage(PREPARE_SONG_PLAYED).sendToTarget();
-//                    if (getSong_secondsListened() == SECONDS_LISTENED) {
-//                        setSong_secondsListened(0);
-//                        setSong_isListened(false);
-//                    }
+
+                    // reset song listener and consider the song played
+                    setSong_currentlyListening(MainActivity.getCurrent_song());
+                    playerHandler.removeMessages(PREPARE_SONG_PLAYED);
+                    playerHandler.obtainMessage(PREPARE_SONG_PLAYED).sendToTarget();
+                    if (getSong_secondsListened() == SECONDS_LISTENED) {
+                        setSong_secondsListened(0);
+                        setSong_isListened(false);
+                    }
                     break;
             }
         }catch (Exception e){
@@ -471,26 +471,34 @@ implements OnCompletionListener, OnErrorListener {
     }
 
     /**
-     * Begin listener for counting the seconds until a song is considered to be listened
+     * Sets or stops the listener for counting the seconds until a song is considered to be listened
+     * @param isActive true to start the listener, false to cancel the listener
      */
-    private void scheduleSongListener() {
+    private void setSongListenerActive(boolean isActive) {
         // schedule song listener thread to execute every second
-        song_listener = Executors.newSingleThreadScheduledExecutor();
-        song_listener.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                if (!getSong_isListened()) {
-                    int seconds = getSong_secondsListened();
-                    if (continuePlaying && seconds < SECONDS_LISTENED) {
-                        setSong_secondsListened(seconds + 1);
-                    } else if (seconds == SECONDS_LISTENED) {
-                        setSong_isListened(true);
-                        playerHandler.removeMessages(PREPARE_SONG_LISTENED);
-                        playerHandler.obtainMessage(PREPARE_SONG_LISTENED).sendToTarget();
+        if (isActive) {
+            song_listener_future = song_listener.scheduleAtFixedRate(new Runnable() {
+                @Override
+                public void run() {
+                    if (!getSong_isListened()) {
+                        int seconds = getSong_secondsListened();
+                        if (continuePlaying && seconds < SECONDS_LISTENED) {
+                            setSong_secondsListened(seconds + 1);
+                        } else if (seconds == SECONDS_LISTENED) {
+                            setSong_isListened(true);
+                            playerHandler.removeMessages(PREPARE_SONG_LISTENED);
+                            playerHandler.obtainMessage(PREPARE_SONG_LISTENED).sendToTarget();
+                        }
                     }
                 }
+            }, 0, 1000, TimeUnit.MILLISECONDS);
+        }
+        else {
+            // stop the listener and interrupt any work currently being done
+            if (song_listener_future != null) {
+                song_listener_future.cancel(true);
             }
-        }, 0, 1000, TimeUnit.MILLISECONDS);
+        }
     }
 
     /**
@@ -498,8 +506,8 @@ implements OnCompletionListener, OnErrorListener {
      * @param isActive true to start the listener, false to cancel the listener
      */
     private void setProgressListenerActive(boolean isActive) {
+        // schedule progress listener thread to execute every fifth of a second
         if (isActive) {
-            // schedule progress listener thread to execute every fifth of a second
             progress_listener_future = progress_listener.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
@@ -510,7 +518,7 @@ implements OnCompletionListener, OnErrorListener {
                 }
             }, 0, 200, TimeUnit.MILLISECONDS);
         }
-        else{
+        else {
             // stop the listener and interrupt any work currently being done
             if (progress_listener_future != null) {
                 progress_listener_future.cancel(true);
@@ -595,26 +603,6 @@ implements OnCompletionListener, OnErrorListener {
     }
 
     /**
-     * send a message containing a string and Song
-     * @param messenger the messenger to send update to
-     * @param message the update code
-     * @param song the song to update the messenger's activity with
-     */
-    private void sendSongUpdateMessage(Messenger messenger, int message, final Song song) {
-        // find the song uri and start playing the song
-        Message msg = Message.obtain();
-        Bundle bundle = new Bundle();
-        bundle.putInt("update", message);
-        bundle.putParcelable("song", song);
-        msg.setData(bundle);
-        try {
-            messenger.send(msg);
-        } catch (RemoteException e) {
-            Logger.logException(e, "MusicPlayerService");
-        }
-    }
-
-    /**
      * send a message to update the messenger
      * @param messenger the messenger to send update to
      * @param message the update code
@@ -675,10 +663,10 @@ implements OnCompletionListener, OnErrorListener {
                     sendUpdateMessage(mainActivity_messenger, UPDATE_HANDSHAKE);
                     break;
                 case PREPARE_SONG_PLAYED:
-                    sendSongUpdateMessage(mainActivity_messenger, UPDATE_SONG_PLAYED, getSong_currentlyListening());
+                    sendUpdateMessage(mainActivity_messenger, UPDATE_SONG_PLAYED);
                     break;
                 case PREPARE_SONG_LISTENED:
-                    sendSongUpdateMessage(mainActivity_messenger, UPDATE_SONG_LISTENED, getSong_currentlyListening());
+                    sendUpdateMessage(mainActivity_messenger, UPDATE_SONG_LISTENED);
                     break;
             }
         }
@@ -707,8 +695,8 @@ implements OnCompletionListener, OnErrorListener {
                     // set the session active
                     mediaSession.setActive(true);
 
-                    // start the player (custom call)
-                    mediaPlayer.start();
+                    // start the player
+                    toggleMedia();
 
                     // update playback state
                     setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition());
@@ -739,8 +727,8 @@ implements OnCompletionListener, OnErrorListener {
             super.onPause();
             continuePlaying = false;
 
-            // pause the player (custom call)
-            mediaPlayer.pause();
+            // pause the player
+            toggleMedia();
 
             // update playback state
             setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition());
@@ -804,6 +792,9 @@ implements OnCompletionListener, OnErrorListener {
                         sendUpdateMessage(mainActivity_messenger, UPDATE_SEEKBAR_PROGRESS);
                     }
 
+                    // notify main activity to update song index in database
+                    sendUpdateMessage(mainActivity_messenger, UPDATE_SONG_INDEX);
+
                     // start listening to the song progress
                     setProgressListenerActive(true);
                 } catch (Exception e) {
@@ -850,6 +841,9 @@ implements OnCompletionListener, OnErrorListener {
                         mService.recreateMediaPlayer(prev_song.getId());
                         sendUpdateMessage(mainActivity_messenger, UPDATE_SEEKBAR_PROGRESS);
                     }
+
+                    // notify main activity to update song index in database
+                    sendUpdateMessage(mainActivity_messenger, UPDATE_SONG_INDEX);
 
                     // start listening to the song progress
                     setProgressListenerActive(true);

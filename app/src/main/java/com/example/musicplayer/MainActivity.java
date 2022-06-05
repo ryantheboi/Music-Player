@@ -732,19 +732,23 @@ public class MainActivity extends AppCompatActivity {
                     case PlaylistTab.REMOVE_PLAYLISTS:
                         databaseRepository.asyncRemovePlaylistByIds((int[]) bundle.get("ids"));
                         break;
+                    case MusicPlayerService.UPDATE_SONG_INDEX:
+                        // update index for current song
+                        databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
+                        break;
                     case MusicPlayerService.UPDATE_SONG_PLAYED:
                         // increment played counter for the song metadata in memory and in database
-                        SongMetadata played_songMetadata = fullSongMetadataHashMap.get(((Song) bundle.get("song")).getId());
+                        SongMetadata played_songMetadata = fullSongMetadataHashMap.get(current_song.getId());
                         played_songMetadata.setPlayed(played_songMetadata.getPlayed() + 1);
                         databaseRepository.updateSongMetadataPlayed(played_songMetadata);
                         break;
                     case MusicPlayerService.UPDATE_SONG_LISTENED:
                         // update listened data for the song metadata in memory and in database
-                        String data_listened = Long.toString(System.currentTimeMillis() / 1000);
-                        SongMetadata listened_songMetadata = fullSongMetadataHashMap.get(((Song) bundle.get("song")).getId());
+                        String date_listened = Long.toString(System.currentTimeMillis() / 1000);
+                        SongMetadata listened_songMetadata = fullSongMetadataHashMap.get(current_song.getId());
                         listened_songMetadata.setListened(listened_songMetadata.getListened() + 1);
-                        listened_songMetadata.setDateListened(data_listened);
-                        databaseRepository.updateSongMetadataListened(listened_songMetadata, data_listened);
+                        listened_songMetadata.setDateListened(date_listened);
+                        databaseRepository.updateSongMetadataListened(listened_songMetadata, date_listened);
                         break;
                 }
             }catch (Exception e){
@@ -762,12 +766,6 @@ public class MainActivity extends AppCompatActivity {
             // this will be called twice on app launch for the handshake
             // update palette swatch colors for the animated gradients
             mainFragmentSecondary.updateFragmentColors();
-
-
-            // update the index of the current song in database
-            // song can be updated within or outside of the app
-//                        databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
-
         }
 
         @Override

@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Bundle;
 import android.os.Messenger;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
@@ -124,8 +125,9 @@ public class SongListTab extends Fragment {
                 MainActivity.setCurrent_song(song);
 
                 // notify music player service about the current song change
-                musicListSelectIntent.putExtra("musicListSong", mainActivityMessenger);
-                mainActivity.startService(musicListSelectIntent);
+                Bundle song_bundle = new Bundle();
+                song_bundle.putParcelable("song", song);
+                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().sendCustomAction(MusicPlayerService.CUSTOM_ACTION_PLAY_SONG, song_bundle);
             }
         });
 
@@ -218,8 +220,9 @@ public class SongListTab extends Fragment {
                 switch (item.getItemId()) {
                     case R.id.menuitem_createqueue:
                         Playlist transient_playlist = Playlist.createTransientPlaylist(userSelection);
+                        Song song = userSelection.get(0);
                         MainActivity.setCurrent_transientPlaylist(transient_playlist);
-                        MainActivity.setCurrent_song(userSelection.get(0));
+                        MainActivity.setCurrent_song(song);
 
                         // replace existing transient playlist with new current playlist
                         if (Playlist.isNumTransientsMaxed()){
@@ -232,8 +235,9 @@ public class SongListTab extends Fragment {
                         }
 
                         // notify music player service to start the new song in the new playlist (queue)
-                        musicListQueueIntent.putExtra("musicListSong", mainActivityMessenger);
-                        mainActivity.startService(musicListQueueIntent);
+                        Bundle song_bundle = new Bundle();
+                        song_bundle.putParcelable("song", song);
+                        MediaControllerCompat.getMediaController(mainActivity).getTransportControls().sendCustomAction(MusicPlayerService.CUSTOM_ACTION_PLAY_SONG, song_bundle);
 
                         mode.finish(); // Action picked, so close the CAB
                         return true;

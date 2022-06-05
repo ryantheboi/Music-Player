@@ -92,6 +92,8 @@ implements OnCompletionListener, OnErrorListener {
     public static final int UPDATE_SONG_PLAYED = 2;
     public static final int UPDATE_SONG_LISTENED = 3;
 
+    public static final String CUSTOM_ACTION_PLAY_SONG = "play_song";
+
     private static final int PREPARE_HANDSHAKE = 0;
     private static final int PREPARE_SONG = 1;
     private static final int PREPARE_SONG_PLAYED = 2;
@@ -940,6 +942,42 @@ implements OnCompletionListener, OnErrorListener {
         @Override
         public void onCustomAction(String action, Bundle extras) {
             super.onCustomAction(action, extras);
+            if (action.equals(CUSTOM_ACTION_PLAY_SONG)){
+                if (MainActivity.getCurrent_playlist().getSize() > 0) {
+                    try {
+                        // update main ui and mediaplayer with prev song
+                        Song curr_song = MainActivity.getCurrent_song();
+
+                        // recreate mp and play prev song only if mediaplayer was playing before
+                        mService.recreateMediaPlayer(curr_song.getId());
+
+                        // update metadata and playback states
+                        setMediaSessionMetadata(curr_song);
+                        setMediaSessionPlaybackState(PlaybackStateCompat.STATE_SKIPPING_TO_NEXT, mediaPlayer.getCurrentPosition());
+
+                        // play the song
+                        audioFocusToggleMedia();
+                        setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition());
+
+                        // update notifications with next song
+                        MediaControllerCompat controller = mediaSession.getController();
+                        MediaMetadataCompat mediaMetadata = controller.getMetadata();
+                        MediaDescriptionCompat description = mediaMetadata.getDescription();
+                        notificationBuilder
+                                // add the metadata for the currently playing track
+                                .setContentTitle(description.getTitle())
+                                .setContentText(description.getSubtitle())
+                                .setLargeIcon(description.getIconBitmap());
+
+                        // display the notification and place the service in the foreground
+                        Notification notification = notificationBuilder.build();
+                        notificationManager.notify(1, notification);
+                        mService.startForeground(1, notification);
+                    } catch (Exception e) {
+                        Logger.logException(e, "MusicPlayerService");
+                    }
+                }
+            }
         }
 
         @Override

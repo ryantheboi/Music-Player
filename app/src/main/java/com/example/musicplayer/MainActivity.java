@@ -50,16 +50,16 @@ public class MainActivity extends AppCompatActivity {
     private static Playlist fullPlaylist;
     private Messenger mainActivityMessenger;
     private Intent musicServiceIntent;
+    private boolean isViewModelReady = false;
+    private boolean isSongListChanged = false;
     public static boolean isActionMode = false;
     public static ActionMode actionMode = null;
     private Metadata metadata;
-    private boolean isViewModelReady = false;
     private static int random_seed;
     private static boolean isShuffled;
     private boolean isAlbumArtCircular;
     private static int repeat_status;
     private MessageHandler messageHandler;
-    private MainActivity.MessageHandler seekbarHandler;
     private SlidingUpPanelLayout mainActivityLayout;
 
     // database
@@ -93,11 +93,6 @@ public class MainActivity extends AppCompatActivity {
             messageHandlerThread.start();
             messageHandler = new MessageHandler(messageHandlerThread.getLooper());
             mainActivityMessenger = new Messenger(messageHandler);
-
-            // init thread for seekbar updates
-            HandlerThread seekbarHandlerThread = new HandlerThread("SeekbarHandler");
-            seekbarHandlerThread.start();
-            seekbarHandler = new MainActivity.MessageHandler(seekbarHandlerThread.getLooper());
 
             // when a configuration change occurs and activity is recreated, fragment is auto restored
             if (savedInstanceState == null) {
@@ -240,15 +235,20 @@ public class MainActivity extends AppCompatActivity {
 
                             mediaController.registerCallback(mediaControllerCallback);
 
-                            // finish initializing the UI
-                            if (!isViewModelReady) {
-                                // retrieve metadata values from database (blocks until db is available)
-                                databaseRepository.asyncGetMetadata();
+                            // initialize the UI with songs and playlists
+                            initMusicList();
 
+                            // retrieve metadata values from database (blocks until db is available)
+                            databaseRepository.asyncGetMetadata();
+
+                            // asynchronously gets all songs and playlists from database, then updates main activity
+                            databaseRepository.asyncGetAllSongMetadata();
+                            databaseRepository.asyncInitAllPlaylists();
+
+                            if (!isViewModelReady) {
                                 // init listview functionality and playlist
-                                initMusicList();
+                                mainFragmentSecondary.initMainFragmentSecondaryUI();
                             }
-                            mainFragmentSecondary.initMainFragmentSecondaryUI();
 
                         }catch (Exception e){
                             Logger.logException(e);
@@ -277,10 +277,9 @@ public class MainActivity extends AppCompatActivity {
      */
     @TargetApi(24)
     public void initMusicList() {
-        // gets all songs from device and sorts them
-        fullSongList = new ArrayList<>();
-        getMusic(); // populates fullSongList
-        fullSongList.sort(new Comparator<Song>() {
+        // get all songs from device and sort them
+        ArrayList<Song> mediastoreSongList = getMusicSongList();
+        mediastoreSongList.sort(new Comparator<Song>() {
             @Override
             public int compare(Song o1, Song o2) {
                 String o1_title = o1.getTitle().toUpperCase();
@@ -289,14 +288,17 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        fullPlaylist = new Playlist("FULL_PLAYLIST", fullSongList);
+        // there has been a change between the existing song list and the current song list
+        // this can happen when re-entering the app without destroying it
+        isSongListChanged = fullSongList != null && !fullSongList.equals(mediastoreSongList);
 
-        // asynchronously gets all songs and playlists from database, then updates main activity
-        databaseRepository.asyncGetAllSongMetadata();
-        databaseRepository.asyncInitAllPlaylists();
+        fullSongList = mediastoreSongList;
+
+        fullPlaylist = new Playlist("FULL_PLAYLIST", fullSongList);
     }
 
-    public void getMusic() {
+    public ArrayList<Song> getMusicSongList() {
+        ArrayList<Song> mediastoreSongList = new ArrayList<>();
         ContentResolver contentResolver = getContentResolver();
         Uri songUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         Cursor songCursor = contentResolver.query(songUri, null, null, null, null);
@@ -307,11 +309,12 @@ public class MainActivity extends AppCompatActivity {
             do {
                 Song song = SongHelper.createSong(songCursor);
                 databaseRepository.insertSongMetadataIfNotExist(song);
-                fullSongList.add(song);
+                mediastoreSongList.add(song);
             } while (songCursor.moveToNext());
 
             songCursor.close();
         }
+        return mediastoreSongList;
     }
 
     @TargetApi(24)
@@ -501,15 +504,18 @@ public class MainActivity extends AppCompatActivity {
      */
     public void updateMainActivity(Object object, final Messenger messenger, final int operation){
         try {
-            final MainActivity mainActivity = this;
             switch (operation) {
                 case DatabaseRepository.ASYNC_INIT_ALL_PLAYLISTS:
                     // remove any songs that were not able to be found in the device
                     playlistList = (ArrayList<Playlist>) object;
                     cleanPlaylistDatabase();
-                    SongListAdapter songListadapter = new SongListAdapter(this, R.layout.adapter_song_layout, fullSongList, this);
-                    PlaylistAdapter playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this);
-                    mainFragmentPrimary.setAdapters(songListadapter, playlistAdapter);
+
+                    // update adapters if songs have been added/removed outside of app
+                    if (!isViewModelReady || isSongListChanged) {
+                        SongListAdapter songListadapter = new SongListAdapter(this, R.layout.adapter_song_layout, fullSongList, this);
+                        PlaylistAdapter playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this);
+                        mainFragmentPrimary.setAdapters(songListadapter, playlistAdapter);
+                    }
 
                     // initialize current playlist from database, if possible
                     databaseRepository.asyncGetCurrentPlaylist();

@@ -3,12 +3,16 @@ package com.example.musicplayer;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.RippleDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Messenger;
 import android.support.v4.media.MediaMetadataCompat;
@@ -29,6 +33,7 @@ import androidx.fragment.app.Fragment;
 
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
+import java.io.InputStream;
 import java.util.Random;
 
 public class MainFragmentSecondary extends Fragment {
@@ -173,6 +178,47 @@ public class MainFragmentSecondary extends Fragment {
         String songArtist = metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
         Bitmap albumArt = metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART);
         int songDuration = (int) metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
+
+        // update sliding menu details
+        slidingUp_songName.setText(songTitle);
+        slidingUp_artistName.setText(songArtist);
+        slidingUp_albumArt.setImageBitmap(albumArt);
+
+        // update main activity details
+        mainDisplay_playlistHeader.setText(playlist.getName());
+        mainDisplay_songTitle.setText(songTitle);
+        mainDisplay_songArtist.setText(songArtist);
+        mainDisplay_albumArt.setImageBitmap(albumArt);
+        mainDisplay_seekBar.setMax(songDuration);
+        mainDisplay_musicDuration.setText(SongHelper.convertTime(songDuration));
+
+        // generate appropriate palette swatch colors using this song's album art
+        ThemeColors.generatePaletteColors(albumArt);
+    }
+
+    /**
+     * Overloaded method to updates sliding up panel with details about the song and playlist,
+     * using a song object (without relying on media metadata change)
+     * @param song the song to update this fragment's details with
+     * @param playlist the playlist the current song is from
+     */
+    public void updateMainSongDetails(Song song, Playlist playlist){
+        String songTitle = song.getTitle();
+        String songArtist = song.getArtist();
+        int songDuration = song.getDuration();
+        Bitmap albumArt;
+        long albumID_long = Long.parseLong(song.getAlbumID());
+        Uri albumArtURI = ContentUris.withAppendedId(MusicPlayerService.artURI, albumID_long);
+        ContentResolver res = mainActivity.getContentResolver();
+        try {
+            InputStream in = res.openInputStream(albumArtURI);
+            albumArt = BitmapFactory.decodeStream(in);
+            if (in != null) {
+                in.close();
+            }
+        } catch (Exception e) {
+            albumArt = BitmapFactory.decodeResource(getResources(), R.drawable.default_albumart);
+        }
 
         // update sliding menu details
         slidingUp_songName.setText(songTitle);

@@ -47,6 +47,7 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.media.session.MediaButtonReceiver;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -86,6 +87,7 @@ implements OnCompletionListener, OnErrorListener {
     private Song song_currentlyListening;
     private int song_secondsListened;
     private boolean song_isListened;
+    private int song_progress;
 
     public static final Uri artURI = Uri.parse("content://media/external/audio/albumart");
     private static final int SECONDS_LISTENED = 30;
@@ -102,6 +104,11 @@ implements OnCompletionListener, OnErrorListener {
     private static final int PREPARE_SONG_PLAYED = 2;
     private static final int PREPARE_SONG_LISTENED = 3;
 
+    private static final int NOTIFICATION_PLAY = 0;
+    private static final int NOTIFICATION_PAUSE = 1;
+    private static final int NOTIFICATION_NEXT = 2;
+    private static final int NOTIFICATION_PREV = 3;
+
     @Override
     @TargetApi(26)
     public void onCreate() {
@@ -114,16 +121,9 @@ implements OnCompletionListener, OnErrorListener {
             setSongListenerActive(true);
             setProgressListenerActive(true);
 
-            mediaPlayer = MediaPlayer.create(this, R.raw.aft);
-            mediaPlayer.setOnCompletionListener(this);
-            mediaPlayer.setOnErrorListener(this);
-
             musicPlayerHandlerThread = new HandlerThread("PlaybackHandler");
             musicPlayerHandlerThread.start();
             playerHandler = new PlaybackHandler(this, musicPlayerHandlerThread.getLooper());
-
-            // keep CPU from sleeping and be able to play music with screen off
-            mediaPlayer.setWakeMode(this, PowerManager.PARTIAL_WAKE_LOCK);
 
             mediaSession = new MediaSessionCompat(MusicPlayerService.this, "MusicPlayerService-MediaSession");
 
@@ -202,6 +202,7 @@ implements OnCompletionListener, OnErrorListener {
                     mediaPlayer.stop();
                 }
                 mediaPlayer.release();
+                mediaPlayer = null;
             }
             mAudioManager.abandonAudioFocusRequest(mAudioFocusRequest);
             song_listener.shutdownNow();
@@ -224,9 +225,15 @@ implements OnCompletionListener, OnErrorListener {
         return new BrowserRoot(MEDIA_ROOT_ID, null);
     }
 
+    /*
+      Implementations must call result.sendResult with the list of children.
+      If loading the children will be an expensive operation that should be performed on another thread,
+      result.detach may be called before returning from this function,
+      and then result.sendResult called when the loading is complete.
+     */
     @Override
     public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowserCompat.MediaItem>> result) {
-
+        result.sendResult(new ArrayList<>());
     }
 
     @Override
@@ -296,7 +303,7 @@ implements OnCompletionListener, OnErrorListener {
         }
     }
 
-    public Bitmap getSongAlbumArtBitmap(Song song){
+    private Bitmap getSongAlbumArtBitmap(Song song){
         long albumID_long = Long.parseLong(song.getAlbumID());
         Bitmap albumArtBitmap;
         Uri albumArtURI = ContentUris.withAppendedId(MusicPlayerService.artURI, albumID_long);
@@ -313,75 +320,120 @@ implements OnCompletionListener, OnErrorListener {
         return albumArtBitmap;
     }
 
-    private void initNotification(){
+    /**
+     * Update the notification builder with appropriate changes depending on the action being performed
+     * @param notificationAction the action being performed in this media session
+     */
+    @SuppressLint("RestrictedApi")
+    private void updateNotificationBuilder(int notificationAction){
         notificationManager = NotificationManagerCompat.from(this);
-        notificationPrev_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
-                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS);
-        notificationPause_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
-                PlaybackStateCompat.ACTION_PAUSE);
-        notificationPlay_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
-                PlaybackStateCompat.ACTION_PLAY);
-        notificationNext_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
-                PlaybackStateCompat.ACTION_SKIP_TO_NEXT);
 
-        // init intent for launching main activity from notifications (or resuming if not destroyed)
-        Intent mainActivityIntent = new Intent(MusicPlayerService.this, MainActivity.class);
-        mainActivityIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        PendingIntent notificationIntent = PendingIntent.getActivity(MusicPlayerService.this, 0, mainActivityIntent, PendingIntent.FLAG_IMMUTABLE);
+        switch(notificationAction){
+            case NOTIFICATION_PLAY:
+                // initialize notification builder and appropriate intents for the first time
+                if (notificationBuilder == null) {
+                    notificationPlay_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
+                            PlaybackStateCompat.ACTION_PLAY);
+                    notificationPause_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
+                            PlaybackStateCompat.ACTION_PAUSE);
+                    notificationNext_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
+                            PlaybackStateCompat.ACTION_SKIP_TO_NEXT);
+                    notificationPrev_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
+                            PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS);
 
-        // create builder with current mediasession
-        MediaControllerCompat controller = mediaSession.getController();
-        MediaMetadataCompat mediaMetadata = controller.getMetadata();
-        MediaDescriptionCompat description = mediaMetadata.getDescription();
+                    // init intent for launching main activity from notifications (or resuming if not destroyed)
+                    Intent mainActivityIntent = new Intent(MusicPlayerService.this, MainActivity.class);
+                    mainActivityIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    PendingIntent notificationIntent = PendingIntent.getActivity(MusicPlayerService.this, 0, mainActivityIntent, PendingIntent.FLAG_IMMUTABLE);
 
-        notificationBuilder = new NotificationCompat.Builder(MusicPlayerService.this, Notifications.CHANNEL_ID_1);
-        notificationBuilder
-                // Add the metadata for the currently playing track
-                .setContentTitle(description.getTitle())
-                .setContentText(description.getSubtitle())
-                .setLargeIcon(description.getIconBitmap())
+                    // update notification builder with current song
+                    Song song = MainActivity.getCurrent_song();
 
-                // launch music player by clicking the notification
-                .setContentIntent(notificationIntent)
+                    notificationBuilder = new NotificationCompat.Builder(MusicPlayerService.this, Notifications.CHANNEL_ID_1);
+                    notificationBuilder
+                            // Add the metadata for the currently playing track
+                            .setContentTitle(song.getTitle())
+                            .setContentText(song.getArtist())
+                            .setLargeIcon(getSongAlbumArtBitmap(song))
 
-                // stop the service when the notification is swiped away
-                .setDeleteIntent(MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
-                        PlaybackStateCompat.ACTION_STOP))
+                            // launch music player by clicking the notification
+                            .setContentIntent(notificationIntent)
 
-                // transport controls visible on the lockscreen
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                            // stop the service when the notification is swiped away
+                            .setDeleteIntent(MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
+                                    PlaybackStateCompat.ACTION_STOP))
 
-                // hide time when app was started
-                .setShowWhen(false)
+                            // transport controls visible on the lockscreen
+                            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 
-                // add app icon
-                .setSmallIcon(R.drawable.ic_notification24dp)
+                            // hide time when app was started
+                            .setShowWhen(false)
 
-                // add prev, pause, next buttons in order
-                .addAction(new NotificationCompat.Action(
-                        R.drawable.ic_prev24dp, getString(R.string.Previous),
-                        notificationPrev_intent))
-                .addAction(new NotificationCompat.Action(
-                        R.drawable.ic_pause24dp, getString(R.string.Pause),
-                        notificationPause_intent))
-                .addAction(new NotificationCompat.Action(
-                        R.drawable.ic_next24dp, getString(R.string.Next),
-                        notificationNext_intent))
+                            // add app icon
+                            .setSmallIcon(R.drawable.ic_notification24dp)
 
-                // do not alert for every notification update
-                .setOnlyAlertOnce(true)
+                            // add prev, pause, next buttons in order
+                            .addAction(new NotificationCompat.Action(
+                                    R.drawable.ic_prev24dp, getString(R.string.Previous),
+                                    notificationPrev_intent))
+                            .addAction(new NotificationCompat.Action(
+                                    R.drawable.ic_pause24dp, getString(R.string.Pause),
+                                    notificationPause_intent))
+                            .addAction(new NotificationCompat.Action(
+                                    R.drawable.ic_next24dp, getString(R.string.Next),
+                                    notificationNext_intent))
 
-                // no notification sound or vibrate
-                .setSilent(true)
+                            // do not alert for every notification update
+                            .setOnlyAlertOnce(true)
 
-                // notification cannot be dismissed by swipe
-                .setOngoing(true)
-                .setPriority(NotificationCompat.PRIORITY_MAX)
-                // Take advantage of MediaStyle features
-                .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
-                        .setMediaSession(mediaSession.getSessionToken())
-                        .setShowActionsInCompactView(0, 1, 2));
+                            // no notification sound or vibrate
+                            .setSilent(true)
+
+                            // notification cannot be dismissed by swipe
+                            .setOngoing(true)
+                            .setPriority(NotificationCompat.PRIORITY_MAX)
+                            // Take advantage of MediaStyle features
+                            .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
+                                    .setMediaSession(mediaSession.getSessionToken())
+                                    .setShowActionsInCompactView(0, 1, 2));
+                }
+
+                // update notification pause/play button
+                notificationBuilder
+                        .setOngoing(true)
+                        // Add the metadata for the currently playing track
+                        .mActions.set(1, new NotificationCompat.Action(
+                                R.drawable.ic_pause24dp, getString(R.string.Pause),
+                                notificationPause_intent));
+                break;
+            case NOTIFICATION_PAUSE:
+                if (notificationBuilder != null) {
+                    // update notification pause/play button
+                    notificationBuilder
+                            .setOngoing(false)
+                            // Add the metadata for the currently playing track
+                            .mActions.set(1, new NotificationCompat.Action(
+                                    R.drawable.ic_play24dp, getString(R.string.Play),
+                                    notificationPlay_intent));
+                }
+                break;
+            case NOTIFICATION_NEXT:
+            case NOTIFICATION_PREV:
+                if (notificationBuilder != null) {
+                    // update notifications with new song
+                    MediaControllerCompat controller = mediaSession.getController();
+                    MediaMetadataCompat mediaMetadata = controller.getMetadata();
+                    MediaDescriptionCompat description = mediaMetadata.getDescription();
+                    notificationBuilder
+                            // add the metadata for the currently playing track
+                            .setContentTitle(description.getTitle())
+                            .setContentText(description.getSubtitle())
+                            .setLargeIcon(description.getIconBitmap());
+                }
+                break;
+        }
     }
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void initAudioFocus(){
         mAudioManager = (AudioManager) MusicPlayerService.this.getSystemService(Context.AUDIO_SERVICE);
@@ -512,8 +564,8 @@ implements OnCompletionListener, OnErrorListener {
                 @Override
                 public void run() {
                     if (continuePlaying) {
-                        int currentPosition = mediaPlayer.getCurrentPosition();
-                        setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, currentPosition);
+                        song_progress = mediaPlayer.getCurrentPosition();
+                        setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, song_progress);
                     }
                 }
             }, 0, 200, TimeUnit.MILLISECONDS);
@@ -645,20 +697,6 @@ implements OnCompletionListener, OnErrorListener {
             }
             switch (msg.what) {
                 case PREPARE_HANDSHAKE:
-                    // recreate mediaplayer with current song
-                    Song current_song = MainActivity.getCurrent_song();
-
-                    // recreate mediaplayer (to overwrite the default initial mediaplayer) if not already playing
-                    if (mediaSession.getController().getPlaybackState().getState() != PlaybackStateCompat.STATE_PLAYING) {
-                        recreateMediaPlayer(current_song.getId());
-                    }
-
-                    // update metadata state
-                    setMediaSessionMetadata(current_song);
-
-                    // initialize notification manager and notification build for the first time
-                    initNotification();
-
                     // send update to main messenger to complete handshake
                     sendUpdateMessage(mainActivity_messenger, UPDATE_HANDSHAKE);
                     break;
@@ -681,19 +719,42 @@ implements OnCompletionListener, OnErrorListener {
             this.mService = mService;
         }
 
-        @SuppressLint("RestrictedApi")
         @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
         public void onPlay() {
             super.onPlay();
-            continuePlaying = true;
             int focusRequest = mAudioManager.requestAudioFocus(mAudioFocusRequest);
             switch (focusRequest) {
                 case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
                     break;
                 case AudioManager.AUDIOFOCUS_REQUEST_GRANTED:
+                    // create mediaplayer for the first time
+                    if (mediaPlayer == null){
+                        // create mediaplayer with current song, if it already exists
+                        Song current_song = MainActivity.getCurrent_song();
+
+                        if (!current_song.equals(Song.EMPTY_SONG)){
+                            setMediaSessionMetadata(current_song);
+                            Uri audioURI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                            Uri songURI = ContentUris.withAppendedId(audioURI, current_song.getId());
+                            mediaPlayer = MediaPlayer.create(MusicPlayerService.this, songURI);
+                        }
+                        else {
+                            mediaPlayer = MediaPlayer.create(MusicPlayerService.this, R.raw.aft);
+                        }
+                        mediaPlayer.setOnCompletionListener(MusicPlayerService.this);
+                        mediaPlayer.setOnErrorListener(MusicPlayerService.this);
+
+                        // keep CPU from sleeping and be able to play music with screen off
+                        mediaPlayer.setWakeMode(MusicPlayerService.this, PowerManager.PARTIAL_WAKE_LOCK);
+
+                        // seek to the progress that was saved before
+                        mediaPlayer.seekTo(song_progress);
+                    }
+
                     // set the session active
                     mediaSession.setActive(true);
+                    continuePlaying = true;
 
                     // start the player
                     toggleMedia();
@@ -701,19 +762,11 @@ implements OnCompletionListener, OnErrorListener {
                     // update playback state
                     setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition());
 
-                    // update notification pause/play button
-                    notificationBuilder
-                            .setOngoing(true)
-                            // Add the metadata for the currently playing track
-                            .mActions.set(1, new NotificationCompat.Action(
-                                    R.drawable.ic_pause24dp, getString(R.string.Pause),
-                                    notificationPause_intent));
-                    notificationManager.notify(1, notificationBuilder.build());
-
                     // Register BECOME_NOISY BroadcastReceiver
 //                    registerReceiver(myNoisyAudioStreamReceiver, intentFilter);
 
                     // display the notification and place the service in the foreground
+                    updateNotificationBuilder(NOTIFICATION_PLAY);
                     Notification notification = notificationBuilder.build();
                     notificationManager.notify(1, notification);
                     mService.startForeground(1, notification);
@@ -739,14 +792,9 @@ implements OnCompletionListener, OnErrorListener {
             // notify main messenger to update database with current position
             sendUpdateMessage(mainActivity_messenger, UPDATE_SEEKBAR_PROGRESS);
 
-            // update notification pause/play button
-            notificationBuilder
-                    .setOngoing(false)
-                    // Add the metadata for the currently playing track
-                    .mActions.set(1, new NotificationCompat.Action(
-                            R.drawable.ic_play24dp, getString(R.string.Play),
-                            notificationPlay_intent));
+            updateNotificationBuilder(NOTIFICATION_PAUSE);
             notificationManager.notify(1, notificationBuilder.build());
+
             mAudioManager = (AudioManager) MusicPlayerService.this.getSystemService(Context.AUDIO_SERVICE);
 
             // take service out of the foreground, retain the notification
@@ -769,15 +817,7 @@ implements OnCompletionListener, OnErrorListener {
                     setMediaSessionMetadata(next_song);
                     setMediaSessionPlaybackState(PlaybackStateCompat.STATE_SKIPPING_TO_NEXT, 0);
 
-                    // update notifications with next song
-                    MediaControllerCompat controller = mediaSession.getController();
-                    MediaMetadataCompat mediaMetadata = controller.getMetadata();
-                    MediaDescriptionCompat description = mediaMetadata.getDescription();
-                    notificationBuilder
-                            // add the metadata for the currently playing track
-                            .setContentTitle(description.getTitle())
-                            .setContentText(description.getSubtitle())
-                            .setLargeIcon(description.getIconBitmap());
+                    updateNotificationBuilder(NOTIFICATION_NEXT);
                     notificationManager.notify(1, notificationBuilder.build());
 
                     // recreate mp and play next song only if mediaplayer was playing before
@@ -819,15 +859,7 @@ implements OnCompletionListener, OnErrorListener {
                     setMediaSessionMetadata(prev_song);
                     setMediaSessionPlaybackState(PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS, 0);
 
-                    // update notifications with next song
-                    MediaControllerCompat controller = mediaSession.getController();
-                    MediaMetadataCompat mediaMetadata = controller.getMetadata();
-                    MediaDescriptionCompat description = mediaMetadata.getDescription();
-                    notificationBuilder
-                            // add the metadata for the currently playing track
-                            .setContentTitle(description.getTitle())
-                            .setContentText(description.getSubtitle())
-                            .setLargeIcon(description.getIconBitmap());
+                    updateNotificationBuilder(NOTIFICATION_PREV);
                     notificationManager.notify(1, notificationBuilder.build());
 
                     // recreate mp and play prev song only if mediaplayer was playing before
@@ -856,9 +888,14 @@ implements OnCompletionListener, OnErrorListener {
         @Override
         public void onSeekTo(long pos) {
             super.onSeekTo(pos);
-            mediaPlayer.seekTo((int) pos);
-            // notify main messenger to update database with current position
-            sendUpdateMessage(mainActivity_messenger, UPDATE_SEEKBAR_PROGRESS);
+            song_progress = (int) pos;
+
+            if (mediaPlayer != null) {
+                mediaPlayer.seekTo((int) pos);
+
+                // notify main messenger to update database with current position
+                sendUpdateMessage(mainActivity_messenger, UPDATE_SEEKBAR_PROGRESS);
+            }
         }
 
         @Override
@@ -874,6 +911,7 @@ implements OnCompletionListener, OnErrorListener {
         @Override
         public void onStop() {
             super.onStop();
+            System.out.println("stopped mediaplayer");
             stopSelf();
         }
 

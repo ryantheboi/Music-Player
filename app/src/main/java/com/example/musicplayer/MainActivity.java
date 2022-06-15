@@ -675,10 +675,12 @@ public class MainActivity extends AppCompatActivity {
                                 try {
                                     // update main display button depending on current playback state
                                     MediaControllerCompat mediaController = MediaControllerCompat.getMediaController(MainActivity.this);
+                                    mainFragmentSecondary.updateMainSongDetails(current_song, current_playlist);
                                     if (mediaController.getPlaybackState().getState() == PlaybackStateCompat.STATE_PLAYING) {
                                         mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_pause28dp, R.drawable.ic_pause24dp);
                                     } else {
                                         mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_play28dp, R.drawable.ic_play24dp);
+                                        mainFragmentSecondary.setSeekbarProgress(metadata.getSeekPosition());
                                         mediaController.getTransportControls().seekTo(metadata.getSeekPosition());
                                     }
 
@@ -699,7 +701,12 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case MusicPlayerService.UPDATE_SEEKBAR_PROGRESS:
                         int musicCurrentPosition = (int) bundle.get("time");
-                        mainFragmentSecondary.setSeekbarProgress(musicCurrentPosition);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mainFragmentSecondary.setSeekbarProgress(musicCurrentPosition);
+                            }
+                        });
                         databaseRepository.updateMetadataSeek(musicCurrentPosition);
                         break;
                     case ChooseThemeFragment.THEME_SELECTED:

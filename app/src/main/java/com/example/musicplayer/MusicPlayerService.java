@@ -618,6 +618,33 @@ implements OnCompletionListener, OnErrorListener {
     }
 
     /**
+     * Initialize mediaplayer for the first time with the current song (if exists)
+     * If current song doesn't exist, initialize with default song
+     */
+    private void initMediaPlayer(){
+        // create mediaplayer with current song, if it already exists
+        Song current_song = MainActivity.getCurrent_song();
+
+        if (!current_song.equals(Song.EMPTY_SONG)){
+            setMediaSessionMetadata(current_song);
+            Uri audioURI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+            Uri songURI = ContentUris.withAppendedId(audioURI, current_song.getId());
+            mediaPlayer = MediaPlayer.create(MusicPlayerService.this, songURI);
+        }
+        else {
+            mediaPlayer = MediaPlayer.create(MusicPlayerService.this, R.raw.aft);
+        }
+        mediaPlayer.setOnCompletionListener(MusicPlayerService.this);
+        mediaPlayer.setOnErrorListener(MusicPlayerService.this);
+
+        // keep CPU from sleeping and be able to play music with screen off
+        mediaPlayer.setWakeMode(MusicPlayerService.this, PowerManager.PARTIAL_WAKE_LOCK);
+
+        // seek to the progress that was saved before
+        mediaPlayer.seekTo(song_progress);
+    }
+
+    /**
      * Recreates the mediaplayer with a new song URI by releasing the old one and creating anew
      * @param songId the id of the new song to create the new mediaplayer
      */
@@ -632,7 +659,6 @@ implements OnCompletionListener, OnErrorListener {
         mp.setOnCompletionListener(this);
         mp.setOnErrorListener(this);
         mp.setWakeMode(MusicPlayerService.this, PowerManager.PARTIAL_WAKE_LOCK);
-        song_progress = 0;
         mediaPlayer = mp;
     }
 
@@ -733,26 +759,7 @@ implements OnCompletionListener, OnErrorListener {
                 case AudioManager.AUDIOFOCUS_REQUEST_GRANTED:
                     // create mediaplayer for the first time
                     if (mediaPlayer == null){
-                        // create mediaplayer with current song, if it already exists
-                        Song current_song = MainActivity.getCurrent_song();
-
-                        if (!current_song.equals(Song.EMPTY_SONG)){
-                            setMediaSessionMetadata(current_song);
-                            Uri audioURI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-                            Uri songURI = ContentUris.withAppendedId(audioURI, current_song.getId());
-                            mediaPlayer = MediaPlayer.create(MusicPlayerService.this, songURI);
-                        }
-                        else {
-                            mediaPlayer = MediaPlayer.create(MusicPlayerService.this, R.raw.aft);
-                        }
-                        mediaPlayer.setOnCompletionListener(MusicPlayerService.this);
-                        mediaPlayer.setOnErrorListener(MusicPlayerService.this);
-
-                        // keep CPU from sleeping and be able to play music with screen off
-                        mediaPlayer.setWakeMode(MusicPlayerService.this, PowerManager.PARTIAL_WAKE_LOCK);
-
-                        // seek to the progress that was saved before
-                        mediaPlayer.seekTo(song_progress);
+                        initMediaPlayer();
                     }
 
                     // set the session active
@@ -833,6 +840,7 @@ implements OnCompletionListener, OnErrorListener {
                             mService.recreateMediaPlayer(next_song.getId());
                             sendUpdateMessage(mainActivity_messenger, UPDATE_SEEKBAR_PROGRESS);
                         }
+                        song_progress = 0;
                     }
 
                     // notify main activity to update song index in database
@@ -876,6 +884,7 @@ implements OnCompletionListener, OnErrorListener {
                             mService.recreateMediaPlayer(prev_song.getId());
                             sendUpdateMessage(mainActivity_messenger, UPDATE_SEEKBAR_PROGRESS);
                         }
+                        song_progress = 0;
                     }
 
                     // notify main activity to update song index in database
@@ -999,47 +1008,53 @@ implements OnCompletionListener, OnErrorListener {
             super.onSetCaptioningEnabled(enabled);
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
         public void onCustomAction(String action, Bundle extras) {
             super.onCustomAction(action, extras);
             if (action.equals(CUSTOM_ACTION_PLAY_SONG)){
-                if (MainActivity.getCurrent_playlist().getSize() > 0) {
-                    try {
-                        // stop listening to the song progress
-                        setProgressListenerActive(false);
+                int focusRequest = mAudioManager.requestAudioFocus(mAudioFocusRequest);
+                switch (focusRequest) {
+                    case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
+                        break;
+                    case AudioManager.AUDIOFOCUS_REQUEST_GRANTED:
+                        // create mediaplayer for the first time
+                        if (mediaPlayer == null) {
+                            initMediaPlayer();
+                        }
 
-                        // update main ui and mediaplayer with prev song
-                        Song curr_song = MainActivity.getCurrent_song();
+                        // set the session active
+                        mediaSession.setActive(true);
+                        continuePlaying = true;
 
-                        // update metadata and playback states
-                        setMediaSessionMetadata(curr_song);
-                        setMediaSessionPlaybackState(PlaybackStateCompat.STATE_SKIPPING_TO_NEXT, mediaPlayer.getCurrentPosition());
+                        try {
+                            // stop listening to the song progress
+                            setProgressListenerActive(false);
 
-                        // update notifications with next song
-                        MediaControllerCompat controller = mediaSession.getController();
-                        MediaMetadataCompat mediaMetadata = controller.getMetadata();
-                        MediaDescriptionCompat description = mediaMetadata.getDescription();
-                        notificationBuilder
-                                // add the metadata for the currently playing track
-                                .setContentTitle(description.getTitle())
-                                .setContentText(description.getSubtitle())
-                                .setLargeIcon(description.getIconBitmap());
+                            // update metadata and playback states with selected song
+                            Song curr_song = MainActivity.getCurrent_song();
+                            setMediaSessionMetadata(curr_song);
+                            setMediaSessionPlaybackState(PlaybackStateCompat.STATE_SKIPPING_TO_NEXT, mediaPlayer.getCurrentPosition());
+                            setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, 0);
 
-                        // display the notification and place the service in the foreground
-                        Notification notification = notificationBuilder.build();
-                        notificationManager.notify(1, notification);
-                        mService.startForeground(1, notification);
+                            // Register BECOME_NOISY BroadcastReceiver
+//                           registerReceiver(myNoisyAudioStreamReceiver, intentFilter);
 
-                        // recreate mediaplayer and play the song
-                        setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, 0);
-                        mService.recreateMediaPlayer(curr_song.getId());
-                        audioFocusToggleMedia();
+                            // display the notification and place the service in the foreground
+                            updateNotificationBuilder(NOTIFICATION_PLAY);
+                            Notification notification = notificationBuilder.build();
+                            notificationManager.notify(1, notification);
+                            mService.startForeground(1, notification);
 
-                        // start listening to the song progress
-                        setProgressListenerActive(true);
-                    } catch (Exception e) {
-                        Logger.logException(e, "MusicPlayerService");
-                    }
+                            // recreate mediaplayer and play the song
+                            mService.recreateMediaPlayer(curr_song.getId());
+                            toggleMedia();
+
+                            // start listening to the song progress
+                            setProgressListenerActive(true);
+                        } catch (Exception e) {
+                            Logger.logException(e, "MusicPlayerService");
+                        }
                 }
             }
         }

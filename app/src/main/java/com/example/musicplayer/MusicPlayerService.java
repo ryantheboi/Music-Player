@@ -177,6 +177,7 @@ implements OnCompletionListener, OnErrorListener {
                 for (String key : b.keySet()) {
                     switch (key) {
                         case "handshake":
+                            // receive messenger from main activity
                             mainActivity_messenger = intent.getParcelableExtra("handshake");
                             playerHandler.removeMessages(PREPARE_HANDSHAKE);
                             playerHandler.obtainMessage(PREPARE_HANDSHAKE).sendToTarget();

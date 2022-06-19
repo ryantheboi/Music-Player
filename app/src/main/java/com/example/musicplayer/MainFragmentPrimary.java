@@ -133,7 +133,7 @@ public class MainFragmentPrimary extends Fragment {
         SongListTab.toggleTabColor();
         PlaylistTab.toggleTabColor();
         updateTabLayoutColors();
-        updateViewPager();
+        updateViewPagerColors();
         updateSearchFilterColors();
         updateActionBarColors();
     }
@@ -405,7 +405,7 @@ public class MainFragmentPrimary extends Fragment {
         tabLayout.setSelectedTabIndicatorColor(ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR));
     }
 
-    private void updateViewPager(){
+    private void updateViewPagerColors(){
         viewPager.setBackgroundAsset(ThemeColors.getThemeBackgroundAssetResourceId());
     }
 

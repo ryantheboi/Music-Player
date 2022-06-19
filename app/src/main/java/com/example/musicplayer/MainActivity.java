@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private Intent musicServiceIntent;
     private boolean isViewModelReady = false;
     private boolean isSongListChanged = false;
+    private boolean isMusicPlayerServiceReady = false;
     public static boolean isActionMode = false;
     public static ActionMode actionMode = null;
     private Metadata metadata;
@@ -222,10 +223,14 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onConnected() {
                         try {
+                            // send main messenger to musicplayer service and start handshake process for the first time
+                            musicServiceIntent.putExtra("handshake", mainActivityMessenger);
+                            startService(musicServiceIntent);
+
                             // get the token for the MediaSession
+                            MediaSessionCompat.Token token = mediaBrowser.getSessionToken();
 
                             // create and save the controller to this activity
-                            MediaSessionCompat.Token token = mediaBrowser.getSessionToken();
                             MediaControllerCompat mediaController = new MediaControllerCompat(MainActivity.this, token);
                             MediaControllerCompat.setMediaController(MainActivity.this, mediaController);
 
@@ -238,18 +243,28 @@ public class MainActivity extends AppCompatActivity {
                             // initialize the UI with songs and playlists
                             initMusicList();
 
-                            // retrieve metadata values from database (blocks until db is available)
-                            databaseRepository.asyncGetMetadata();
+                            // no need to update main ui again if the viewmodel has already been established
+                            // or if no songs have been added/removed outside of app
+                            if (!isViewModelReady || isSongListChanged) {
+                                // retrieve metadata values from database (blocks until db is available)
+                                databaseRepository.asyncGetMetadata();
 
-                            // asynchronously gets all songs and playlists from database, then updates main activity
-                            databaseRepository.asyncGetAllSongMetadata();
-                            databaseRepository.asyncInitAllPlaylists();
+                                // asynchronously gets all songs and playlists from database, then updates main activity
+                                databaseRepository.asyncGetAllSongMetadata();
+                                databaseRepository.asyncInitAllPlaylists();
 
-                            if (!isViewModelReady) {
                                 // init listview functionality and playlist
                                 mainFragmentSecondary.initMainFragmentSecondaryUI();
                             }
-
+                            else{
+                                // update main display button depending on current song and playback state
+                                mainFragmentSecondary.updateMainSongDetails(current_song, current_playlist);
+                                if (mediaController.getPlaybackState().getState() == PlaybackStateCompat.STATE_PLAYING) {
+                                    mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_pause28dp, R.drawable.ic_pause24dp);
+                                } else {
+                                    mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_play28dp, R.drawable.ic_play24dp);
+                                }
+                            }
                         }catch (Exception e){
                             Logger.logException(e);
                         }
@@ -458,9 +473,11 @@ public class MainActivity extends AppCompatActivity {
         int songIndex = metadata.getSongIndex();
         int songtab_scrollindex = metadata.getSongtab_scrollindex();
         int songtab_scrolloffset = metadata.getSongtab_scrolloffset();
+        int seekPosition = metadata.getSeekPosition();
+        int themeResourceId = metadata.getThemeResourceId();
+        boolean isMediaStorePlaylistsImported = metadata.getIsMediaStorePlaylistsImported();
         isShuffled = metadata.getIsShuffled();
         repeat_status = metadata.getRepeatStatus();
-        boolean isMediaStorePlaylistsImported = metadata.getIsMediaStorePlaylistsImported();
         isAlbumArtCircular = metadata.getIsAlbumArtCircular();
         random_seed = metadata.getRandom_seed();
 
@@ -481,19 +498,38 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        // retrieve all playlists that exist in mediastore if this hasn't been done before
+        if (!isMediaStorePlaylistsImported){
+            getMusicPlaylistsAsync();
+        }
+
         // set shuffle button transparency using the isShuffled metadata
         mainFragmentSecondary.setShuffleBtnAlpha(isShuffled ? 255 : 40);
 
         // set repeat button appearance using repeatStatus metadata
         mainFragmentSecondary.toggleRepeatButton(repeat_status);
 
-        // retrieve all playlists that exist in mediastore if this hasn't been done before
-        if (!isMediaStorePlaylistsImported){
-            getMusicPlaylistsAsync();
-        }
-
         // update main ui scroll index
         SongListTab.setScrollSelection(songtab_scrollindex, songtab_scrolloffset);
+
+        // update main display button depending on current playback state
+        MediaControllerCompat mediaController = MediaControllerCompat.getMediaController(MainActivity.this);
+        mainFragmentSecondary.updateMainSongDetails(current_song, current_playlist);
+        if (mediaController.getPlaybackState().getState() == PlaybackStateCompat.STATE_PLAYING) {
+            mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_pause28dp, R.drawable.ic_pause24dp);
+        } else {
+            mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_play28dp, R.drawable.ic_play24dp);
+            mainFragmentSecondary.setSeekbarProgress(seekPosition);
+            mediaController.getTransportControls().seekTo(seekPosition);
+        }
+
+        // generate theme values and update main ui colors for the first time
+        setTheme(themeResourceId);
+        ThemeColors.generateThemeValues(MainActivity.this, themeResourceId);
+        mainFragmentPrimary.updateFragmentColors();
+        mainFragmentSecondary.updateFragmentColors();
+
+        isViewModelReady = true;
     }
 
     /**
@@ -510,12 +546,10 @@ public class MainActivity extends AppCompatActivity {
                     playlistList = (ArrayList<Playlist>) object;
                     cleanPlaylistDatabase();
 
-                    // update adapters if songs have been added/removed outside of app
-                    if (!isViewModelReady || isSongListChanged) {
-                        SongListAdapter songListadapter = new SongListAdapter(this, R.layout.adapter_song_layout, fullSongList, this);
-                        PlaylistAdapter playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this);
-                        mainFragmentPrimary.setAdapters(songListadapter, playlistAdapter);
-                    }
+                    // update adapters for ui
+                    SongListAdapter songListadapter = new SongListAdapter(this, R.layout.adapter_song_layout, fullSongList, this);
+                    PlaylistAdapter playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this);
+                    mainFragmentPrimary.setAdapters(songListadapter, playlistAdapter);
 
                     // initialize current playlist from database, if possible
                     databaseRepository.asyncGetCurrentPlaylist();
@@ -535,10 +569,6 @@ public class MainActivity extends AppCompatActivity {
 
                     // set up app components using the metadata already retrieved and the current playlist
                     setupMetadata();
-
-                    // send main messenger to musicplayer service and start handshake process for the first time
-                    musicServiceIntent.putExtra("handshake", mainActivityMessenger);
-                    startService(musicServiceIntent);
                     break;
                 case DatabaseRepository.ASYNC_INSERT_PLAYLIST:
                     mainFragmentPrimary.updateMainFragment(object, DatabaseRepository.ASYNC_INSERT_PLAYLIST);
@@ -669,35 +699,8 @@ public class MainActivity extends AppCompatActivity {
                 int updateOperation = (int) bundle.get("update");
                 switch (updateOperation) {
                     case MusicPlayerService.UPDATE_HANDSHAKE:
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    // update main display button depending on current playback state
-                                    MediaControllerCompat mediaController = MediaControllerCompat.getMediaController(MainActivity.this);
-                                    mainFragmentSecondary.updateMainSongDetails(current_song, current_playlist);
-                                    if (mediaController.getPlaybackState().getState() == PlaybackStateCompat.STATE_PLAYING) {
-                                        mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_pause28dp, R.drawable.ic_pause24dp);
-                                    } else {
-                                        mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_play28dp, R.drawable.ic_play24dp);
-                                        mainFragmentSecondary.setSeekbarProgress(metadata.getSeekPosition());
-                                        mediaController.getTransportControls().seekTo(metadata.getSeekPosition());
-                                    }
-
-                                    // generate theme values and update main ui colors for the first time
-                                    int themeResourceId = metadata.getThemeResourceId();
-                                    setTheme(themeResourceId);
-                                    ThemeColors.generateThemeValues(MainActivity.this, themeResourceId);
-                                    mainFragmentPrimary.updateFragmentColors();
-                                    mainFragmentSecondary.updateFragmentColors();
-
-                                    // handshake complete, the UI is now ready to be consumed
-                                    isViewModelReady = true;
-                                } catch (Exception e) {
-                                    Logger.logException(e);
-                                }
-                            }
-                        });
+                        // handshake complete; mp service can now communicate with main activity
+                        isMusicPlayerServiceReady = true;
                         break;
                     case MusicPlayerService.UPDATE_SEEKBAR_PROGRESS:
                         int musicCurrentPosition = (int) bundle.get("time");

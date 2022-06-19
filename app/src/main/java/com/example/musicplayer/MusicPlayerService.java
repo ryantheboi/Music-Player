@@ -753,35 +753,39 @@ implements OnCompletionListener, OnErrorListener {
         @Override
         public void onPlay() {
             super.onPlay();
-            int focusRequest = mAudioManager.requestAudioFocus(mAudioFocusRequest);
-            switch (focusRequest) {
-                case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
-                    break;
-                case AudioManager.AUDIOFOCUS_REQUEST_GRANTED:
-                    // create mediaplayer for the first time
-                    if (mediaPlayer == null){
-                        initMediaPlayer();
-                    }
+            try {
+                int focusRequest = mAudioManager.requestAudioFocus(mAudioFocusRequest);
+                switch (focusRequest) {
+                    case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
+                        break;
+                    case AudioManager.AUDIOFOCUS_REQUEST_GRANTED:
+                        // create mediaplayer for the first time
+                        if (mediaPlayer == null) {
+                            initMediaPlayer();
+                        }
 
-                    // set the session active
-                    mediaSession.setActive(true);
-                    continuePlaying = true;
+                        // set the session active
+                        mediaSession.setActive(true);
+                        continuePlaying = true;
 
-                    // start the player
-                    toggleMedia();
+                        // start the player
+                        toggleMedia();
 
-                    // update playback state
-                    setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition());
+                        // update playback state
+                        setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition());
 
-                    // Register BECOME_NOISY BroadcastReceiver
+                        // Register BECOME_NOISY BroadcastReceiver
 //                    registerReceiver(myNoisyAudioStreamReceiver, intentFilter);
 
-                    // display the notification and place the service in the foreground
-                    updateNotificationBuilder(NOTIFICATION_PLAY);
-                    Notification notification = notificationBuilder.build();
-                    notificationManager.notify(1, notification);
-                    mService.startForeground(1, notification);
-                    break;
+                        // display the notification and place the service in the foreground
+                        updateNotificationBuilder(NOTIFICATION_PLAY);
+                        Notification notification = notificationBuilder.build();
+                        notificationManager.notify(1, notification);
+                        mService.startForeground(1, notification);
+                        break;
+                }
+            } catch (Exception e){
+                Logger.logException(e, "MusicPlayerService");
             }
         }
 
@@ -789,33 +793,37 @@ implements OnCompletionListener, OnErrorListener {
         @Override
         public void onPause() {
             super.onPause();
-            continuePlaying = false;
+            try {
+                continuePlaying = false;
 
-            // pause the player
-            toggleMedia();
+                // pause the player
+                toggleMedia();
 
-            // update playback state
-            setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition());
+                // update playback state
+                setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition());
 
-            // unregister BECOME_NOISY BroadcastReceiver
+                // unregister BECOME_NOISY BroadcastReceiver
 //            unregisterReceiver(myNoisyAudioStreamReceiver);
 
-            // notify main messenger to update database with current position
-            sendUpdateMessage(mainActivity_messenger, UPDATE_SEEKBAR_PROGRESS);
+                // notify main messenger to update database with current position
+                sendUpdateMessage(mainActivity_messenger, UPDATE_SEEKBAR_PROGRESS);
 
-            updateNotificationBuilder(NOTIFICATION_PAUSE);
+                updateNotificationBuilder(NOTIFICATION_PAUSE);
 
-            mAudioManager = (AudioManager) MusicPlayerService.this.getSystemService(Context.AUDIO_SERVICE);
+                mAudioManager = (AudioManager) MusicPlayerService.this.getSystemService(Context.AUDIO_SERVICE);
 
-            // take service out of the foreground, retain the notification
-            mService.stopForeground(false);
+                // take service out of the foreground, retain the notification
+                mService.stopForeground(false);
+            } catch (Exception e){
+                Logger.logException(e, "MusicPlayerService");
+            }
         }
 
         @Override
         public void onSkipToNext() {
             super.onSkipToNext();
-            if (MainActivity.getCurrent_playlist().getSize() > 0) {
-                try {
+            try {
+                if (MainActivity.getCurrent_playlist().getSize() > 0) {
                     // stop listening to the song progress
                     setProgressListenerActive(false);
 
@@ -834,8 +842,7 @@ implements OnCompletionListener, OnErrorListener {
                         setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, 0);
                         mService.recreateMediaPlayer(next_song.getId());
                         audioFocusToggleMedia();
-                    }
-                    else{
+                    } else {
                         // notify main messenger to update database with current position
                         if (mediaPlayer != null) {
                             mService.recreateMediaPlayer(next_song.getId());
@@ -849,17 +856,17 @@ implements OnCompletionListener, OnErrorListener {
 
                     // start listening to the song progress
                     setProgressListenerActive(true);
-                } catch (Exception e) {
-                    Logger.logException(e, "MusicPlayerService");
                 }
+            } catch (Exception e) {
+                Logger.logException(e, "MusicPlayerService");
             }
         }
 
         @Override
         public void onSkipToPrevious() {
             super.onSkipToPrevious();
-            if (MainActivity.getCurrent_playlist().getSize() > 0) {
-                try {
+            try {
+                if (MainActivity.getCurrent_playlist().getSize() > 0) {
                     // stop listening to the song progress
                     setProgressListenerActive(false);
 
@@ -878,8 +885,7 @@ implements OnCompletionListener, OnErrorListener {
                         setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, 0);
                         mService.recreateMediaPlayer(prev_song.getId());
                         audioFocusToggleMedia();
-                    }
-                    else{
+                    } else {
                         // notify main messenger to update database with current position
                         if (mediaPlayer != null) {
                             mService.recreateMediaPlayer(prev_song.getId());
@@ -893,33 +899,47 @@ implements OnCompletionListener, OnErrorListener {
 
                     // start listening to the song progress
                     setProgressListenerActive(true);
-                } catch (Exception e) {
-                    Logger.logException(e, "MusicPlayerService");
                 }
+            } catch (Exception e) {
+                Logger.logException(e, "MusicPlayerService");
             }
         }
 
         @Override
         public void onSeekTo(long pos) {
             super.onSeekTo(pos);
-            song_progress = (int) pos;
+            try {
+                song_progress = (int) pos;
 
-            if (mediaPlayer != null) {
-                mediaPlayer.seekTo((int) pos);
+                if (mediaPlayer != null) {
+                    mediaPlayer.seekTo((int) pos);
 
-                // notify main messenger to update database with current position
-                sendUpdateMessage(mainActivity_messenger, UPDATE_SEEKBAR_PROGRESS);
+                    // notify main messenger to update database with current position
+                    sendUpdateMessage(mainActivity_messenger, UPDATE_SEEKBAR_PROGRESS);
+                }
+            } catch (Exception e){
+                Logger.logException(e, "MusicPlayerService");
             }
         }
 
         @Override
         public void onSetRepeatMode(int repeatMode) {
             super.onSetRepeatMode(repeatMode);
+            try{
+
+            } catch (Exception e){
+                Logger.logException(e, "MusicPlayerService");
+            }
         }
 
         @Override
         public void onSetShuffleMode(int shuffleMode) {
             super.onSetShuffleMode(shuffleMode);
+            try{
+
+            } catch (Exception e){
+                Logger.logException(e, "MusicPlayerService");
+            }
         }
 
         @Override
@@ -1013,22 +1033,22 @@ implements OnCompletionListener, OnErrorListener {
         @Override
         public void onCustomAction(String action, Bundle extras) {
             super.onCustomAction(action, extras);
-            if (action.equals(CUSTOM_ACTION_PLAY_SONG)){
-                int focusRequest = mAudioManager.requestAudioFocus(mAudioFocusRequest);
-                switch (focusRequest) {
-                    case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
-                        break;
-                    case AudioManager.AUDIOFOCUS_REQUEST_GRANTED:
-                        // create mediaplayer for the first time
-                        if (mediaPlayer == null) {
-                            initMediaPlayer();
-                        }
+            if (action.equals(CUSTOM_ACTION_PLAY_SONG)) {
+                try {
+                    int focusRequest = mAudioManager.requestAudioFocus(mAudioFocusRequest);
+                    switch (focusRequest) {
+                        case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
+                            break;
+                        case AudioManager.AUDIOFOCUS_REQUEST_GRANTED:
+                            // create mediaplayer for the first time
+                            if (mediaPlayer == null) {
+                                initMediaPlayer();
+                            }
 
-                        // set the session active
-                        mediaSession.setActive(true);
-                        continuePlaying = true;
+                            // set the session active
+                            mediaSession.setActive(true);
+                            continuePlaying = true;
 
-                        try {
                             // stop listening to the song progress
                             setProgressListenerActive(false);
 
@@ -1053,9 +1073,9 @@ implements OnCompletionListener, OnErrorListener {
 
                             // start listening to the song progress
                             setProgressListenerActive(true);
-                        } catch (Exception e) {
-                            Logger.logException(e, "MusicPlayerService");
-                        }
+                    }
+                } catch (Exception e) {
+                    Logger.logException(e, "MusicPlayerService");
                 }
             }
         }

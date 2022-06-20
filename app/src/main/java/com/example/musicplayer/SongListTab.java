@@ -1,7 +1,6 @@
 package com.example.musicplayer;
 
 import android.annotation.TargetApi;
-import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.RippleDrawable;
@@ -107,10 +106,6 @@ public class SongListTab extends Fragment {
      * listview onItemClick and onMultiChoice listeners
      */
     private void initListeners(){
-        // init intents for the listeners
-        final Intent musicListSelectIntent = new Intent(mainActivity, MusicPlayerService.class);
-        final Intent musicListQueueIntent = new Intent(mainActivity, MusicPlayerService.class);
-
         // init listview listeners
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -119,7 +114,7 @@ public class SongListTab extends Fragment {
                 Song song = (Song) listView.getItemAtPosition(position);
 
                 // redirect the current playlist to reference the full (original) playlist
-                MainActivity.setCurrent_playlist(MainActivity.getFullPlaylist());
+                MainActivity.setCurrent_playlist_shufflemode(MainActivity.getFullPlaylist());
 
                 // change current song
                 MainActivity.setCurrent_song(song);
@@ -221,7 +216,7 @@ public class SongListTab extends Fragment {
                     case R.id.menuitem_createqueue:
                         Playlist transient_playlist = Playlist.createTransientPlaylist(userSelection);
                         Song song = userSelection.get(0);
-                        MainActivity.setCurrent_transientPlaylist(transient_playlist);
+                        MainActivity.setCurrent_playlist_shufflemode(transient_playlist);
                         MainActivity.setCurrent_song(song);
 
                         // replace existing transient playlist with new current playlist

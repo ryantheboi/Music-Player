@@ -49,6 +49,7 @@ import androidx.media.session.MediaButtonReceiver;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -148,6 +149,7 @@ implements OnCompletionListener, OnErrorListener {
                             PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
                             PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
                             PlaybackStateCompat.ACTION_SEEK_TO |
+                            PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE |
                             PlaybackStateCompat.ACTION_STOP);
             mediaSession.setPlaybackState(playbackStateBuilder.build());
 
@@ -936,7 +938,17 @@ implements OnCompletionListener, OnErrorListener {
         public void onSetShuffleMode(int shuffleMode) {
             super.onSetShuffleMode(shuffleMode);
             try{
-
+                switch(shuffleMode){
+                    case PlaybackStateCompat.SHUFFLE_MODE_NONE:
+                        MainActivity.setShuffleMode(PlaybackStateCompat.SHUFFLE_MODE_NONE);
+                        MainActivity.setCurrent_playlist(MainActivity.getCurrent_playlist().unshufflePlaylist(MainActivity.getRandom_seed()));
+                        break;
+                    case PlaybackStateCompat.SHUFFLE_MODE_ALL:
+                        MainActivity.setRandom_seed(Math.abs(new Random().nextInt()));
+                        MainActivity.setShuffleMode(PlaybackStateCompat.SHUFFLE_MODE_ALL);
+                        MainActivity.setCurrent_playlist(MainActivity.getCurrent_playlist().shufflePlaylist(MainActivity.getRandom_seed()));
+                        break;
+                }
             } catch (Exception e){
                 Logger.logException(e, "MusicPlayerService");
             }

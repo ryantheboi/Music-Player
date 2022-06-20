@@ -159,7 +159,7 @@ public class PlaylistFragment extends Fragment {
                 Song song = (Song) m_listView.getItemAtPosition(position);
 
                 // redirect the current playlist to reference the songs in this playlist
-                MainActivity.setCurrent_playlist(new Playlist(m_playlist.getName(), m_playlist.getSongList()));
+                MainActivity.setCurrent_playlist_shufflemode(m_playlist);
 
                 // change current song
                 MainActivity.setCurrent_song(song);
@@ -261,7 +261,7 @@ public class PlaylistFragment extends Fragment {
                     case R.id.menuitem_createqueue:
                         Playlist transient_playlist = Playlist.createTransientPlaylist(m_userSelection);
                         Song song = m_userSelection.get(0);
-                        MainActivity.setCurrent_transientPlaylist(transient_playlist);
+                        MainActivity.setCurrent_playlist_shufflemode(transient_playlist);
                         MainActivity.setCurrent_song(song);
 
                         // replace existing transient playlist with new current playlist
@@ -435,7 +435,7 @@ public class PlaylistFragment extends Fragment {
                                 dialog.dismiss();
                                 // start current timer playlist and first song
                                 Song song = m_timerPlaylist.getSongList().get(0);
-                                MainActivity.setCurrent_playlist(m_timerPlaylist);
+                                MainActivity.setCurrent_playlist_shufflemode(m_timerPlaylist);
                                 MainActivity.setCurrent_song(song);
 
                                 // notify music player service about the current song change

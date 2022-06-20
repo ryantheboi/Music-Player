@@ -569,16 +569,13 @@ public class MainFragmentSecondary extends Fragment {
             @Override
             public void onClick(View v) {
                 // toggle shuffle button
-                if (MainActivity.getIsShuffled()){
-                    MainActivity.setIsShuffled(false);
+                if (MainActivity.getShuffleMode() == PlaybackStateCompat.SHUFFLE_MODE_ALL){
                     mainDisplay_shuffle_btn.setImageAlpha(40);
-                    MainActivity.setCurrent_playlist(MainActivity.getCurrent_playlist().unshufflePlaylist(MainActivity.getRandom_seed()));
+                    MediaControllerCompat.getMediaController(mainActivity).getTransportControls().setShuffleMode(PlaybackStateCompat.SHUFFLE_MODE_NONE);
                 }
                 else {
-                    MainActivity.setIsShuffled(true);
-                    MainActivity.setRandom_seed(Math.abs(new Random().nextInt()));
                     mainDisplay_shuffle_btn.setImageAlpha(255);
-                    MainActivity.setCurrent_playlist(MainActivity.getCurrent_playlist().shufflePlaylist(MainActivity.getRandom_seed()));
+                    MediaControllerCompat.getMediaController(mainActivity).getTransportControls().setShuffleMode(PlaybackStateCompat.SHUFFLE_MODE_ALL);
                 }
             }
         });

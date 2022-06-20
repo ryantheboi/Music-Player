@@ -31,6 +31,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -58,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
     private Metadata metadata;
     private static int random_seed;
     private static boolean isShuffled;
+    private static int shuffle_mode;
     private boolean isAlbumArtCircular;
     private static int repeat_status;
     private MessageHandler messageHandler;
@@ -630,6 +632,9 @@ public class MainActivity extends AppCompatActivity {
     public static boolean getIsShuffled(){
         return isShuffled;
     }
+    public static int getShuffleMode(){
+        return shuffle_mode;
+    }
     public static int getRepeat_status(){
         return repeat_status;
     }
@@ -660,6 +665,9 @@ public class MainActivity extends AppCompatActivity {
     public static void setIsShuffled(boolean shuffled){
         isShuffled = shuffled;
     }
+    public static void setShuffleMode(int mode){
+        shuffle_mode = mode;
+    }
     public static void setRepeat_status(int status){
         repeat_status = status;
     }
@@ -667,16 +675,15 @@ public class MainActivity extends AppCompatActivity {
         current_song = song;
     }
     public static void setCurrent_playlist(Playlist playlist){
-        if (!isShuffled) {
-            current_playlist = playlist;
-        }
-        else{
-            current_playlist = playlist.shufflePlaylist(random_seed);
-        }
+        current_playlist = playlist;
     }
-    public static void setCurrent_transientPlaylist(Playlist transient_playlist){
-        Playlist current_playlist = new Playlist(transient_playlist.getName(), transient_playlist.getSongList());
-        setCurrent_playlist(current_playlist);
+    public static void setCurrent_playlist_shufflemode(Playlist playlist){
+        if (shuffle_mode == PlaybackStateCompat.SHUFFLE_MODE_ALL) {
+            setRandom_seed(Math.abs(new Random().nextInt()));
+            setCurrent_playlist(playlist.shufflePlaylist(random_seed));
+        } else {
+            setCurrent_playlist(new Playlist(playlist.getName(), playlist.getSongList()));
+        }
     }
 
     /**

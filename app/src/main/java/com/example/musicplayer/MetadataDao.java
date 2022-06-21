@@ -35,10 +35,10 @@ public interface MetadataDao {
     void updateSongIndex(int id, int songIndex);
 
     /**
-     * Update only the isShuffled metadata, by id
+     * Update only the shuffle_mode metadata, by id
      */
-    @Query("UPDATE Metadata SET isShuffled = :isShuffled WHERE id =:id")
-    void updateIsShuffled(int id, boolean isShuffled);
+    @Query("UPDATE Metadata SET shuffle_mode = :shuffle_mode WHERE id =:id")
+    void updateShuffleMode(int id, int shuffle_mode);
 
     /**
      * Update only the repeatStatus metadata, by id

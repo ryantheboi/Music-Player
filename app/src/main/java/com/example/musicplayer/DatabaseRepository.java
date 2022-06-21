@@ -38,7 +38,7 @@ public class DatabaseRepository {
     public static final int UPDATE_METADATA_THEME = 10;
     public static final int UPDATE_METADATA_SONGTAB = 11;
     public static final int UPDATE_METADATA_SONGINDEX = 12;
-    public static final int UPDATE_METADATA_ISSHUFFLED = 13;
+    public static final int UPDATE_METADATA_SHUFFLEMODE = 13;
     public static final int UPDATE_METADATA_REPEATSTATUS = 14;
     public static final int UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED = 15;
     public static final int UPDATE_METADATA_ISPLAYING = 16;
@@ -242,8 +242,8 @@ public class DatabaseRepository {
                             case UPDATE_METADATA_SONGINDEX:
                                 metadataDao.updateSongIndex(0, (int) query.object);
                                 break;
-                            case UPDATE_METADATA_ISSHUFFLED:
-                                metadataDao.updateIsShuffled(0, (boolean) query.object);
+                            case UPDATE_METADATA_SHUFFLEMODE:
+                                metadataDao.updateShuffleMode(0, (int) query.object);
                                 break;
                             case UPDATE_METADATA_REPEATSTATUS:
                                 metadataDao.updateRepeatStatus(0, (int) query.object);
@@ -407,11 +407,12 @@ public class DatabaseRepository {
     }
 
     /**
-     * Queues message to update the isShuffled value in the metadata
-     * @param isShuffled true if playlist shuffling is enabled, false otherwise
+     * Queues message to update the shuffle_mode value in the metadata
+     * @param shuffleMode 0 for SHUFFLE_MODE_NONE (no shuffle)
+     *                    1 for SHUFFLE_MODE_ALL (shuffle)
      */
-    public synchronized void updateMetadataIsShuffled(boolean isShuffled){
-        messageQueue.offer(new Query(UPDATE_METADATA_ISSHUFFLED, isShuffled));
+    public synchronized void updateMetadataShuffleMode(int shuffleMode){
+        messageQueue.offer(new Query(UPDATE_METADATA_SHUFFLEMODE, shuffleMode));
     }
 
     /**

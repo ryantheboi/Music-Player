@@ -58,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
     public static ActionMode actionMode = null;
     private Metadata metadata;
     private static int random_seed;
-    private static boolean isShuffled;
     private static int shuffle_mode;
     private boolean isAlbumArtCircular;
     private static int repeat_status;
@@ -174,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
                 databaseRepository.updateMetadataRandomSeed(random_seed);
 
                 // save the current shuffle and repeat option
-                databaseRepository.updateMetadataIsShuffled(isShuffled);
+                databaseRepository.updateMetadataShuffleMode(shuffle_mode);
                 databaseRepository.updateMetadataRepeatStatus(repeat_status);
 
                 // save current song index and playlist to database
@@ -478,7 +477,7 @@ public class MainActivity extends AppCompatActivity {
         int seekPosition = metadata.getSeekPosition();
         int themeResourceId = metadata.getThemeResourceId();
         boolean isMediaStorePlaylistsImported = metadata.getIsMediaStorePlaylistsImported();
-        isShuffled = metadata.getIsShuffled();
+        shuffle_mode = metadata.getShuffle_mode();
         repeat_status = metadata.getRepeatStatus();
         isAlbumArtCircular = metadata.getIsAlbumArtCircular();
         random_seed = metadata.getRandom_seed();
@@ -505,8 +504,8 @@ public class MainActivity extends AppCompatActivity {
             getMusicPlaylistsAsync();
         }
 
-        // set shuffle button transparency using the isShuffled metadata
-        mainFragmentSecondary.setShuffleBtnAlpha(isShuffled ? 255 : 40);
+        // set shuffle button transparency using the shuffle mode metadata
+        mainFragmentSecondary.setShuffleBtnAlpha(shuffle_mode == PlaybackStateCompat.SHUFFLE_MODE_ALL ? 255 : 40);
 
         // set repeat button appearance using repeatStatus metadata
         mainFragmentSecondary.toggleRepeatButton(repeat_status);
@@ -629,9 +628,6 @@ public class MainActivity extends AppCompatActivity {
     public static int getRandom_seed(){
         return random_seed;
     }
-    public static boolean getIsShuffled(){
-        return isShuffled;
-    }
     public static int getShuffleMode(){
         return shuffle_mode;
     }
@@ -661,9 +657,6 @@ public class MainActivity extends AppCompatActivity {
     }
     public static void setRandom_seed(int seed){
         random_seed = seed;
-    }
-    public static void setIsShuffled(boolean shuffled){
-        isShuffled = shuffled;
     }
     public static void setShuffleMode(int mode){
         shuffle_mode = mode;

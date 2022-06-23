@@ -150,6 +150,7 @@ implements OnCompletionListener, OnErrorListener {
                             PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
                             PlaybackStateCompat.ACTION_SEEK_TO |
                             PlaybackStateCompat.ACTION_SET_SHUFFLE_MODE |
+                            PlaybackStateCompat.ACTION_SET_REPEAT_MODE |
                             PlaybackStateCompat.ACTION_STOP);
             mediaSession.setPlaybackState(playbackStateBuilder.build());
 
@@ -259,15 +260,14 @@ implements OnCompletionListener, OnErrorListener {
 
     /**
      * What to do when the current song finishes playing
-     * Behavior depends on the repeat status from MainActivity
+     * Behavior depends on the repeat mode from MainActivity
      * @param mp (unused) the mediaplayer object responsible for playing the song
      */
     @Override
     public void onCompletion(MediaPlayer mp) {
         try {
             switch (MainActivity.getRepeat_status()) {
-                // disable repeat
-                case 0:
+                case PlaybackStateCompat.REPEAT_MODE_NONE:
                     Playlist curr_playlist = MainActivity.getCurrent_playlist();
                     Song curr_song = MainActivity.getCurrent_song();
                     int curr_playlist_size = curr_playlist.getSize();
@@ -280,14 +280,7 @@ implements OnCompletionListener, OnErrorListener {
                         mediaSession.getController().getTransportControls().skipToNext();
                     }
                     break;
-
-                // repeat playlist
-                case 1:
-                    mediaSession.getController().getTransportControls().skipToNext();
-                    break;
-
-                // repeat one song
-                case 2:
+                case PlaybackStateCompat.REPEAT_MODE_ONE:
                     mediaPlayer.seekTo(0);
                     mediaPlayer.start();
 
@@ -299,6 +292,9 @@ implements OnCompletionListener, OnErrorListener {
                         setSong_secondsListened(0);
                         setSong_isListened(false);
                     }
+                    break;
+                case PlaybackStateCompat.REPEAT_MODE_ALL:
+                    mediaSession.getController().getTransportControls().skipToNext();
                     break;
             }
         }catch (Exception e){
@@ -928,7 +924,7 @@ implements OnCompletionListener, OnErrorListener {
         public void onSetRepeatMode(int repeatMode) {
             super.onSetRepeatMode(repeatMode);
             try{
-
+                MainActivity.setRepeat_status(repeatMode);
             } catch (Exception e){
                 Logger.logException(e, "MusicPlayerService");
             }

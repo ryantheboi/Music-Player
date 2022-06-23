@@ -168,6 +168,32 @@ public class MainFragmentSecondary extends Fragment {
     }
 
     /**
+     * Set the appearance of the repeat button, based on the repeat mode
+     * @param mode 0 for repeat none, 1 for repeat one song, 2 for repeat playlist
+     */
+    public void setRepeatButton(int mode){
+        switch (mode){
+            case PlaybackStateCompat.REPEAT_MODE_NONE:
+                mainDisplay_repeat_btn.setImageResource(R.drawable.ic_repeat28dp);
+                mainDisplay_repeat_btn.setImageAlpha(40);
+                break;
+            case PlaybackStateCompat.REPEAT_MODE_ONE:
+                mainDisplay_repeat_btn.setImageResource(R.drawable.ic_repeat_one28dp);
+                mainDisplay_repeat_btn.setImageAlpha(255);
+                break;
+            case PlaybackStateCompat.REPEAT_MODE_ALL:
+                mainDisplay_repeat_btn.setImageResource(R.drawable.ic_repeat28dp);
+                mainDisplay_repeat_btn.setImageAlpha(255);
+                break;
+        }
+
+        // set appropriate colors for the button
+        Drawable unwrappedDrawableRepeat = mainDisplay_repeat_btn.getDrawable();
+        Drawable wrappedDrawableRepeat = DrawableCompat.wrap(unwrappedDrawableRepeat);
+        DrawableCompat.setTint(wrappedDrawableRepeat, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
+    }
+
+    /**
      * Updates sliding up panel with details about the song and playlist,
      * using a mediametadata object from a mediacontroller
      * @param metadata title, artist, album, albumart, and duration of a song
@@ -238,34 +264,31 @@ public class MainFragmentSecondary extends Fragment {
     }
 
     /**
-     * Helper method to set the appearance of the repeat button, based on the repeat status
-     * @param repeatStatus 0 for disable, 1 for repeat playlist, 2 for repeat one song
+     * Helper method to set the next appearance of the repeat button, based on the repeat mode
+     * and set the next repeat mode through media controller
+     * Progression Loop: NONE -> ALL -> ONE -> NONE -> ...
+     * @param mode 0 for repeat none, 1 for repeat one song, 2 for repeat playlist
      */
-    public void toggleRepeatButton(int repeatStatus){
-        switch (repeatStatus){
-            // disable repeat
-            case 0:
-                mainDisplay_repeat_btn.setImageResource(R.drawable.ic_repeat28dp);
-                mainDisplay_repeat_btn.setImageAlpha(40);
+    public void toggleRepeatButton(int mode){
+        switch (mode){
+            // next state will repeat all
+            case PlaybackStateCompat.REPEAT_MODE_NONE:
+                setRepeatButton(PlaybackStateCompat.REPEAT_MODE_ALL);
+                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ALL);
                 break;
 
-            // repeat playlist
-            case 1:
-                mainDisplay_repeat_btn.setImageResource(R.drawable.ic_repeat28dp);
-                mainDisplay_repeat_btn.setImageAlpha(255);
+            // next state will disable repeat
+            case PlaybackStateCompat.REPEAT_MODE_ONE:
+                setRepeatButton(PlaybackStateCompat.REPEAT_MODE_NONE);
+                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().setRepeatMode(PlaybackStateCompat.REPEAT_MODE_NONE);
                 break;
 
-            // repeat one song
-            case 2:
-                mainDisplay_repeat_btn.setImageResource(R.drawable.ic_repeat_one28dp);
-                mainDisplay_repeat_btn.setImageAlpha(255);
+            // next state will repeat one song
+            case PlaybackStateCompat.REPEAT_MODE_ALL:
+                setRepeatButton(PlaybackStateCompat.REPEAT_MODE_ONE);
+                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ONE);
                 break;
         }
-
-        // set appropriate colors for the button
-        Drawable unwrappedDrawableRepeat = mainDisplay_repeat_btn.getDrawable();
-        Drawable wrappedDrawableRepeat = DrawableCompat.wrap(unwrappedDrawableRepeat);
-        DrawableCompat.setTint(wrappedDrawableRepeat, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
     }
 
     private void initViews(View view){
@@ -586,10 +609,7 @@ public class MainFragmentSecondary extends Fragment {
         mainDisplay_repeat_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int curr_repeat_status = MainActivity.getRepeat_status();
-                int next_repeat_status = curr_repeat_status + 1 > 2 ? 0 : curr_repeat_status + 1;
-                toggleRepeatButton(next_repeat_status);
-                MainActivity.setRepeat_status(next_repeat_status);
+                toggleRepeatButton(MainActivity.getRepeat_status());
             }
         });
     }

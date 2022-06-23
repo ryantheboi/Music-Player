@@ -508,7 +508,7 @@ public class MainActivity extends AppCompatActivity {
         mainFragmentSecondary.setShuffleBtnAlpha(shuffle_mode == PlaybackStateCompat.SHUFFLE_MODE_ALL ? 255 : 40);
 
         // set repeat button appearance using repeatStatus metadata
-        mainFragmentSecondary.toggleRepeatButton(repeat_status);
+        mainFragmentSecondary.setRepeatButton(repeat_status);
 
         // update main ui scroll index
         SongListTab.setScrollSelection(songtab_scrollindex, songtab_scrolloffset);

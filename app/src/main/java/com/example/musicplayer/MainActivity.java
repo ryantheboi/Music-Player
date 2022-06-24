@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private static int random_seed;
     private static int shuffle_mode;
     private boolean isAlbumArtCircular;
-    private static int repeat_status;
+    private static int repeat_mode;
     private MessageHandler messageHandler;
     private SlidingUpPanelLayout mainActivityLayout;
 
@@ -174,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // save the current shuffle and repeat option
                 databaseRepository.updateMetadataShuffleMode(shuffle_mode);
-                databaseRepository.updateMetadataRepeatStatus(repeat_status);
+                databaseRepository.updateMetadataRepeatMode(repeat_mode);
 
                 // save current song index and playlist to database
                 databaseRepository.insertPlaylist(current_playlist);
@@ -478,7 +478,7 @@ public class MainActivity extends AppCompatActivity {
         int themeResourceId = metadata.getThemeResourceId();
         boolean isMediaStorePlaylistsImported = metadata.getIsMediaStorePlaylistsImported();
         shuffle_mode = metadata.getShuffle_mode();
-        repeat_status = metadata.getRepeatStatus();
+        repeat_mode = metadata.getRepeat_mode();
         isAlbumArtCircular = metadata.getIsAlbumArtCircular();
         random_seed = metadata.getRandom_seed();
 
@@ -507,8 +507,8 @@ public class MainActivity extends AppCompatActivity {
         // set shuffle button transparency using the shuffle mode metadata
         mainFragmentSecondary.setShuffleBtnAlpha(shuffle_mode == PlaybackStateCompat.SHUFFLE_MODE_ALL ? 255 : 40);
 
-        // set repeat button appearance using repeatStatus metadata
-        mainFragmentSecondary.setRepeatButton(repeat_status);
+        // set repeat button appearance using repeat_mode metadata
+        mainFragmentSecondary.setRepeatButton(repeat_mode);
 
         // update main ui scroll index
         SongListTab.setScrollSelection(songtab_scrollindex, songtab_scrolloffset);
@@ -631,8 +631,8 @@ public class MainActivity extends AppCompatActivity {
     public static int getShuffleMode(){
         return shuffle_mode;
     }
-    public static int getRepeat_status(){
-        return repeat_status;
+    public static int getRepeat_mode(){
+        return repeat_mode;
     }
     public static Song getCurrent_song(){
         return current_song;
@@ -661,8 +661,8 @@ public class MainActivity extends AppCompatActivity {
     public static void setShuffleMode(int mode){
         shuffle_mode = mode;
     }
-    public static void setRepeat_status(int status){
-        repeat_status = status;
+    public static void setRepeat_mode(int status){
+        repeat_mode = status;
     }
     public static void setCurrent_song(Song song){
         current_song = song;

@@ -266,7 +266,7 @@ implements OnCompletionListener, OnErrorListener {
     @Override
     public void onCompletion(MediaPlayer mp) {
         try {
-            switch (MainActivity.getRepeat_status()) {
+            switch (MainActivity.getRepeat_mode()) {
                 case PlaybackStateCompat.REPEAT_MODE_NONE:
                     Playlist curr_playlist = MainActivity.getCurrent_playlist();
                     Song curr_song = MainActivity.getCurrent_song();
@@ -924,7 +924,7 @@ implements OnCompletionListener, OnErrorListener {
         public void onSetRepeatMode(int repeatMode) {
             super.onSetRepeatMode(repeatMode);
             try{
-                MainActivity.setRepeat_status(repeatMode);
+                MainActivity.setRepeat_mode(repeatMode);
             } catch (Exception e){
                 Logger.logException(e, "MusicPlayerService");
             }

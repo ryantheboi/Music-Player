@@ -34,7 +34,6 @@ import androidx.fragment.app.Fragment;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.io.InputStream;
-import java.util.Random;
 
 public class MainFragmentSecondary extends Fragment {
 
@@ -609,7 +608,7 @@ public class MainFragmentSecondary extends Fragment {
         mainDisplay_repeat_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                toggleRepeatButton(MainActivity.getRepeat_status());
+                toggleRepeatButton(MainActivity.getRepeat_mode());
             }
         });
     }

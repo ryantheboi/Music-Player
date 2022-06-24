@@ -19,7 +19,7 @@ public class Metadata {
     // values related to the behavior of playlists
     private int songIndex;
     private int shuffle_mode;
-    private int repeatStatus;
+    private int repeat_mode;
     private boolean isMediaStorePlaylistsImported;
 
     // values to determine how to init main ui components
@@ -42,13 +42,13 @@ public class Metadata {
     /**
      * Constructor used by database to create a metadata object
      */
-    public Metadata(int id, boolean isPlaying, int seekPosition, int songIndex, int shuffle_mode, int repeatStatus, boolean isMediaStorePlaylistsImported, int themeResourceId, int songtab_scrollindex, int songtab_scrolloffset, boolean isAlbumArtCircular, int random_seed, int numQueries) {
+    public Metadata(int id, boolean isPlaying, int seekPosition, int songIndex, int shuffle_mode, int repeat_mode, boolean isMediaStorePlaylistsImported, int themeResourceId, int songtab_scrollindex, int songtab_scrolloffset, boolean isAlbumArtCircular, int random_seed, int numQueries) {
         this.id = id;
         this.isPlaying = isPlaying;
         this.seekPosition = seekPosition;
         this.songIndex = songIndex;
         this.shuffle_mode = shuffle_mode;
-        this.repeatStatus = repeatStatus;
+        this.repeat_mode = repeat_mode;
         this.isMediaStorePlaylistsImported = isMediaStorePlaylistsImported;
         this.themeResourceId = themeResourceId;
         this.songtab_scrollindex = songtab_scrollindex;
@@ -78,8 +78,8 @@ public class Metadata {
         return shuffle_mode;
     }
 
-    public int getRepeatStatus(){
-        return repeatStatus;
+    public int getRepeat_mode(){
+        return repeat_mode;
     }
 
     public boolean getIsMediaStorePlaylistsImported(){

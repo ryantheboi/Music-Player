@@ -41,10 +41,10 @@ public interface MetadataDao {
     void updateShuffleMode(int id, int shuffle_mode);
 
     /**
-     * Update only the repeatStatus metadata, by id
+     * Update only the repeat_mode metadata, by id
      */
-    @Query("UPDATE Metadata SET repeatStatus = :repeatStatus WHERE id =:id")
-    void updateRepeatStatus(int id, int repeatStatus);
+    @Query("UPDATE Metadata SET repeat_mode = :repeat_mode WHERE id =:id")
+    void updateRepeatMode(int id, int repeat_mode);
 
     /**
      * Update only the isMediaStorePlaylistsImported metadata, by id

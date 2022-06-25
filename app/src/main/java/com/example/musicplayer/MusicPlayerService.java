@@ -358,10 +358,6 @@ implements OnCompletionListener, OnErrorListener {
                             // launch music player by clicking the notification
                             .setContentIntent(notificationIntent)
 
-                            // stop the service when the notification is swiped away
-                            .setDeleteIntent(MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
-                                    PlaybackStateCompat.ACTION_STOP))
-
                             // transport controls visible on the lockscreen
                             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 
@@ -950,11 +946,36 @@ implements OnCompletionListener, OnErrorListener {
             }
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
         public void onStop() {
             super.onStop();
-            System.out.println("stopped mediaplayer");
-            stopSelf();
+            try {
+                // abandon audio focus
+                mAudioManager.abandonAudioFocusRequest(mAudioFocusRequest);
+
+                // unregister BECOME_NOISY BroadcastReceiver
+//            unregisterReceiver(myNoisyAudioStreamReceiver);
+
+                // stop the service
+                MusicPlayerService.this.stopSelf();
+
+                // set the session inactive (and update metadata and state)
+                mediaSession.setActive(false);
+                setMediaSessionPlaybackState(PlaybackStateCompat.STATE_STOPPED, song_progress);
+
+                // stop the player (custom call)
+                if (mediaPlayer != null) {
+                    mediaPlayer.stop();
+                    mediaPlayer.release();
+                    mediaPlayer = null;
+                }
+
+                // take the service out of the foreground
+                MusicPlayerService.this.stopForeground(false);
+            } catch (Exception e){
+                Logger.logException(e, "MusicPlayerService");
+            }
         }
 
         @Override

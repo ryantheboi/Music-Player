@@ -13,7 +13,6 @@ public class Metadata {
     private int id;
 
     // values to determine the mediaplayer's status
-    private boolean isPlaying;
     private int seekPosition;
 
     // values related to the behavior of playlists
@@ -37,14 +36,13 @@ public class Metadata {
     private int numQueries;
 
     @Ignore
-    public static Metadata DEFAULT_METADATA = new Metadata(0, false, 0, 0, 0, 0, false, R.style.ThemeOverlay_AppCompat_MusicLight, 0, 0, false, 0, 0);
+    public static Metadata DEFAULT_METADATA = new Metadata(0, 0, 0, 0, 0, false, R.style.ThemeOverlay_AppCompat_MusicLight, 0, 0, false, 0, 0);
 
     /**
      * Constructor used by database to create a metadata object
      */
-    public Metadata(int id, boolean isPlaying, int seekPosition, int songIndex, int shuffle_mode, int repeat_mode, boolean isMediaStorePlaylistsImported, int themeResourceId, int songtab_scrollindex, int songtab_scrolloffset, boolean isAlbumArtCircular, int random_seed, int numQueries) {
+    public Metadata(int id, int seekPosition, int songIndex, int shuffle_mode, int repeat_mode, boolean isMediaStorePlaylistsImported, int themeResourceId, int songtab_scrollindex, int songtab_scrolloffset, boolean isAlbumArtCircular, int random_seed, int numQueries) {
         this.id = id;
-        this.isPlaying = isPlaying;
         this.seekPosition = seekPosition;
         this.songIndex = songIndex;
         this.shuffle_mode = shuffle_mode;
@@ -60,10 +58,6 @@ public class Metadata {
 
     public int getId() {
         return id;
-    }
-
-    public boolean getIsPlaying() {
-        return isPlaying;
     }
 
     public int getSeekPosition(){

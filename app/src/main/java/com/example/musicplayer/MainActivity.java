@@ -470,7 +470,6 @@ public class MainActivity extends AppCompatActivity {
      * E.g. views, random seed, current song, etc.
      */
     public void setupMetadata(){
-        boolean isPlaying = metadata.getIsPlaying();
         int songIndex = metadata.getSongIndex();
         int songtab_scrollindex = metadata.getSongtab_scrollindex();
         int songtab_scrolloffset = metadata.getSongtab_scrolloffset();

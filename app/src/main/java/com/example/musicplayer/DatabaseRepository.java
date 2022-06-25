@@ -41,13 +41,12 @@ public class DatabaseRepository {
     public static final int UPDATE_METADATA_SHUFFLEMODE = 13;
     public static final int UPDATE_METADATA_REPEATMODE = 14;
     public static final int UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED = 15;
-    public static final int UPDATE_METADATA_ISPLAYING = 16;
-    public static final int UPDATE_METADATA_SEEK = 17;
-    public static final int UPDATE_METADATA_ISALBUMARTCIRCULAR = 18;
-    public static final int UPDATE_METADATA_RANDOMSEED = 19;
-    public static final int UPDATE_METADATA_NUMQUERIES = 20;
-    public static final int UPDATE_SONGMETADATA_PLAYED = 21;
-    public static final int UPDATE_SONGMETADATA_LISTENED = 22;
+    public static final int UPDATE_METADATA_SEEK = 16;
+    public static final int UPDATE_METADATA_ISALBUMARTCIRCULAR = 17;
+    public static final int UPDATE_METADATA_RANDOMSEED = 18;
+    public static final int UPDATE_METADATA_NUMQUERIES = 19;
+    public static final int UPDATE_SONGMETADATA_PLAYED = 20;
+    public static final int UPDATE_SONGMETADATA_LISTENED = 21;
 
     /**
      * Holds the query message and the object involved (if exists)
@@ -251,9 +250,6 @@ public class DatabaseRepository {
                             case UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED:
                                 metadataDao.updateIsMediaStorePlaylistsImported(0, (boolean) query.object);
                                 break;
-                            case UPDATE_METADATA_ISPLAYING:
-                                metadataDao.updateIsPlaying(0, (boolean) query.object);
-                                break;
                             case UPDATE_METADATA_SEEK:
                                 metadataDao.updateSeekPosition(0, (int) query.object);
                                 break;
@@ -429,14 +425,6 @@ public class DatabaseRepository {
      */
     public synchronized void updateMetadataIsMediaStorePlaylistsImported(boolean isMediaStorePlaylistsImported){
         messageQueue.offer(new Query(UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED, isMediaStorePlaylistsImported));
-    }
-
-    /**
-     * Queues message to update the isPlaying value in the metadata
-     * @param isPlaying true if the mediaplayer is playing, false otherwise
-     */
-    public synchronized void updateMetadataIsPlaying(boolean isPlaying){
-        messageQueue.offer(new Query(UPDATE_METADATA_ISPLAYING, isPlaying));
     }
 
     /**

@@ -17,12 +17,6 @@ public interface MetadataDao {
     Metadata findById(int id);
 
     /**
-     * Update only the isPlaying metadata, by id
-     */
-    @Query("UPDATE Metadata SET isPlaying = :isPlaying WHERE id =:id")
-    void updateIsPlaying(int id, boolean isPlaying);
-
-    /**
      * Update only the seekPosition metadata, by id
      */
     @Query("UPDATE Metadata SET seekPosition = :seekPosition WHERE id =:id")

@@ -109,6 +109,7 @@ implements OnCompletionListener, OnErrorListener {
     private static final int NOTIFICATION_PAUSE = 1;
     private static final int NOTIFICATION_NEXT = 2;
     private static final int NOTIFICATION_PREV = 3;
+    private static final int NOTIFICATION_CUSTOM_PLAY_SONG = 4;
 
     @Override
     @TargetApi(26)
@@ -331,72 +332,12 @@ implements OnCompletionListener, OnErrorListener {
             case NOTIFICATION_PLAY:
                 // initialize notification builder and appropriate intents for the first time
                 if (notificationBuilder == null) {
-                    notificationPlay_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
-                            PlaybackStateCompat.ACTION_PLAY);
-                    notificationPause_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
-                            PlaybackStateCompat.ACTION_PAUSE);
-                    notificationNext_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
-                            PlaybackStateCompat.ACTION_SKIP_TO_NEXT);
-                    notificationPrev_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
-                            PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS);
-
-                    // init intent for launching main activity from notifications (or resuming if not destroyed)
-                    Intent mainActivityIntent = new Intent(MusicPlayerService.this, MainActivity.class);
-                    mainActivityIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                    PendingIntent notificationIntent = PendingIntent.getActivity(MusicPlayerService.this, 0, mainActivityIntent, PendingIntent.FLAG_IMMUTABLE);
-
-                    // update notification builder with current song
-                    Song song = MainActivity.getCurrent_song();
-
-                    notificationBuilder = new NotificationCompat.Builder(MusicPlayerService.this, Notifications.CHANNEL_ID_1);
-                    notificationBuilder
-                            // Add the metadata for the currently playing track
-                            .setContentTitle(song.getTitle())
-                            .setContentText(song.getArtist())
-                            .setLargeIcon(getSongAlbumArtBitmap(song))
-
-                            // launch music player by clicking the notification
-                            .setContentIntent(notificationIntent)
-
-                            // transport controls visible on the lockscreen
-                            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-
-                            // hide time when app was started
-                            .setShowWhen(false)
-
-                            // add app icon
-                            .setSmallIcon(R.drawable.ic_notification24dp)
-
-                            // add prev, pause, next buttons in order
-                            .addAction(new NotificationCompat.Action(
-                                    R.drawable.ic_prev24dp, getString(R.string.Previous),
-                                    notificationPrev_intent))
-                            .addAction(new NotificationCompat.Action(
-                                    R.drawable.ic_pause24dp, getString(R.string.Pause),
-                                    notificationPause_intent))
-                            .addAction(new NotificationCompat.Action(
-                                    R.drawable.ic_next24dp, getString(R.string.Next),
-                                    notificationNext_intent))
-
-                            // do not alert for every notification update
-                            .setOnlyAlertOnce(true)
-
-                            // no notification sound or vibrate
-                            .setSilent(true)
-
-                            // notification cannot be dismissed by swipe
-                            .setOngoing(true)
-                            .setPriority(NotificationCompat.PRIORITY_MAX)
-                            // Take advantage of MediaStyle features
-                            .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
-                                    .setMediaSession(mediaSession.getSessionToken())
-                                    .setShowActionsInCompactView(0, 1, 2));
+                    initNotificationBuilder();
                 }
 
                 // update notification pause/play button
                 notificationBuilder
                         .setOngoing(true)
-                        // Add the metadata for the currently playing track
                         .mActions.set(1, new NotificationCompat.Action(
                                 R.drawable.ic_pause24dp, getString(R.string.Pause),
                                 notificationPause_intent));
@@ -406,7 +347,6 @@ implements OnCompletionListener, OnErrorListener {
                     // update notification pause/play button
                     notificationBuilder
                             .setOngoing(false)
-                            // Add the metadata for the currently playing track
                             .mActions.set(1, new NotificationCompat.Action(
                                     R.drawable.ic_play24dp, getString(R.string.Play),
                                     notificationPlay_intent));
@@ -426,6 +366,37 @@ implements OnCompletionListener, OnErrorListener {
                             .setContentText(description.getSubtitle())
                             .setLargeIcon(description.getIconBitmap());
                     notificationManager.notify(1, notificationBuilder.build());
+                }
+                break;
+            case NOTIFICATION_CUSTOM_PLAY_SONG:
+                // initialize notification builder and appropriate intents for the first time
+                if (notificationBuilder == null) {
+                    initNotificationBuilder();
+
+                    // update notification pause/play button
+                    notificationBuilder
+                            .setOngoing(true)
+                            .mActions.set(1, new NotificationCompat.Action(
+                                    R.drawable.ic_pause24dp, getString(R.string.Pause),
+                                    notificationPause_intent));
+                }
+
+                else {
+                    // update notifications with new song
+                    MediaControllerCompat controller = mediaSession.getController();
+                    MediaMetadataCompat mediaMetadata = controller.getMetadata();
+                    MediaDescriptionCompat description = mediaMetadata.getDescription();
+                    notificationBuilder
+                            // add the metadata for the currently playing track
+                            .setContentTitle(description.getTitle())
+                            .setContentText(description.getSubtitle())
+                            .setLargeIcon(description.getIconBitmap())
+
+                            // update notification pause/play button
+                            .setOngoing(true)
+                            .mActions.set(1, new NotificationCompat.Action(
+                                    R.drawable.ic_pause24dp, getString(R.string.Pause),
+                                    notificationPause_intent));
                 }
                 break;
         }
@@ -637,6 +608,73 @@ implements OnCompletionListener, OnErrorListener {
 
         // seek to the progress that was saved before
         mediaPlayer.seekTo(song_progress);
+    }
+
+    /**
+     * Initialize notification builder for the first time with proper intents, current song data,
+     * and other necessary configurations that will remain for every notification update
+     */
+    private void initNotificationBuilder(){
+        notificationPlay_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
+                PlaybackStateCompat.ACTION_PLAY);
+        notificationPause_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
+                PlaybackStateCompat.ACTION_PAUSE);
+        notificationNext_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
+                PlaybackStateCompat.ACTION_SKIP_TO_NEXT);
+        notificationPrev_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
+                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS);
+
+        // init intent for launching main activity from notifications (or resuming if not destroyed)
+        Intent mainActivityIntent = new Intent(MusicPlayerService.this, MainActivity.class);
+        mainActivityIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent notificationIntent = PendingIntent.getActivity(MusicPlayerService.this, 0, mainActivityIntent, PendingIntent.FLAG_IMMUTABLE);
+
+        // update notification builder with current song
+        Song song = MainActivity.getCurrent_song();
+
+        notificationBuilder = new NotificationCompat.Builder(MusicPlayerService.this, Notifications.CHANNEL_ID_1);
+        notificationBuilder
+                // Add the metadata for the currently playing track
+                .setContentTitle(song.getTitle())
+                .setContentText(song.getArtist())
+                .setLargeIcon(getSongAlbumArtBitmap(song))
+
+                // launch music player by clicking the notification
+                .setContentIntent(notificationIntent)
+
+                // transport controls visible on the lockscreen
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+
+                // hide time when app was started
+                .setShowWhen(false)
+
+                // add app icon
+                .setSmallIcon(R.drawable.ic_notification24dp)
+
+                // add prev, pause, next buttons in order
+                .addAction(new NotificationCompat.Action(
+                        R.drawable.ic_prev24dp, getString(R.string.Previous),
+                        notificationPrev_intent))
+                .addAction(new NotificationCompat.Action(
+                        R.drawable.ic_pause24dp, getString(R.string.Pause),
+                        notificationPause_intent))
+                .addAction(new NotificationCompat.Action(
+                        R.drawable.ic_next24dp, getString(R.string.Next),
+                        notificationNext_intent))
+
+                // do not alert for every notification update
+                .setOnlyAlertOnce(true)
+
+                // no notification sound or vibrate
+                .setSilent(true)
+
+                // notification cannot be dismissed by swipe
+                .setOngoing(true)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                // Take advantage of MediaStyle features
+                .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
+                        .setMediaSession(mediaSession.getSessionToken())
+                        .setShowActionsInCompactView(0, 1, 2));
     }
 
     /**
@@ -904,7 +942,7 @@ implements OnCompletionListener, OnErrorListener {
             super.onSeekTo(pos);
             try {
                 song_progress = (int) pos;
-
+                setMediaSessionPlaybackState(mediaSession.getController().getPlaybackState().getState(), song_progress);
                 if (mediaPlayer != null) {
                     mediaPlayer.seekTo((int) pos);
 
@@ -1091,7 +1129,7 @@ implements OnCompletionListener, OnErrorListener {
 //                           registerReceiver(myNoisyAudioStreamReceiver, intentFilter);
 
                             // display the notification and place the service in the foreground
-                            updateNotificationBuilder(NOTIFICATION_PLAY);
+                            updateNotificationBuilder(NOTIFICATION_CUSTOM_PLAY_SONG);
                             Notification notification = notificationBuilder.build();
                             notificationManager.notify(1, notification);
                             mService.startForeground(1, notification);
@@ -1099,6 +1137,9 @@ implements OnCompletionListener, OnErrorListener {
                             // recreate mediaplayer and play the song
                             mService.recreateMediaPlayer(curr_song.getId());
                             toggleMedia();
+
+                            // notify main activity to update song index in database
+                            sendUpdateMessage(mainActivity_messenger, UPDATE_SONG_INDEX);
 
                             // start listening to the song progress
                             setProgressListenerActive(true);

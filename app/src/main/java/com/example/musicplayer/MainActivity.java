@@ -244,6 +244,7 @@ public class MainActivity extends AppCompatActivity {
                             else{
                                 // update main display button depending on current song and playback state
                                 mainFragmentSecondary.updateMainSongDetails(current_song, current_playlist);
+                                mainFragmentSecondary.updateFragmentColors();
                                 if (mediaController.getPlaybackState().getState() == PlaybackStateCompat.STATE_PLAYING) {
                                     mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_pause28dp, R.drawable.ic_pause24dp);
                                 } else {
@@ -660,6 +661,8 @@ public class MainActivity extends AppCompatActivity {
     }
     public static void setCurrent_playlist(Playlist playlist){
         current_playlist = playlist;
+
+        // TODO might be better to place this database write somewhere else
         databaseRepository.insertPlaylist(current_playlist);
     }
     public static void setCurrent_playlist_shufflemode(Playlist playlist){
@@ -772,10 +775,10 @@ public class MainActivity extends AppCompatActivity {
     private class MusicPlayerControllerCallback extends MediaControllerCompat.Callback{
         @Override
         public void onMetadataChanged(MediaMetadataCompat metadata) {
+            // TODO nothing should be done if current song is unchanged
             // update main display details including album art palette colors
             mainFragmentSecondary.updateMainSongDetails(MediaControllerCompat.getMediaController(MainActivity.this).getMetadata(), current_playlist);
 
-            // this will be called twice on app launch for the handshake
             // update palette swatch colors for the animated gradients
             mainFragmentSecondary.updateFragmentColors();
         }

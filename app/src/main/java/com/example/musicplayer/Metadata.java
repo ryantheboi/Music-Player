@@ -103,4 +103,45 @@ public class Metadata {
     public int getNumQueries(){
         return numQueries;
     }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setSeekPosition(int seekPosition) {
+        this.seekPosition = seekPosition;
+    }
+
+    public void setSongIndex(int songIndex) {
+        this.songIndex = songIndex;
+    }
+
+    public void setShuffle_mode(int shuffle_mode) {
+        this.shuffle_mode = shuffle_mode;
+    }
+
+    public void setRepeat_mode(int repeat_mode) {
+        this.repeat_mode = repeat_mode;
+    }
+
+    public void setMediaStorePlaylistsImported(boolean mediaStorePlaylistsImported) {
+        isMediaStorePlaylistsImported = mediaStorePlaylistsImported;
+    }
+
+    public void setThemeResourceId(int themeResourceId) {
+        this.themeResourceId = themeResourceId;
+    }
+
+    public void setAlbumArtCircular(boolean albumArtCircular) {
+        isAlbumArtCircular = albumArtCircular;
+    }
+
+    public void setSongtab_values(int songtab_scrollindex, int songtab_scrolloffset) {
+        this.songtab_scrollindex = songtab_scrollindex;
+        this.songtab_scrolloffset = songtab_scrolloffset;
+    }
+
+    public void setRandom_seed(int random_seed) {
+        this.random_seed = random_seed;
+    }
 }

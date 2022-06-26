@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isMusicPlayerServiceReady = false;
     public static boolean isActionMode = false;
     public static ActionMode actionMode = null;
-    private Metadata metadata;
+    private static Metadata metadata;
     private static int random_seed;
     private static int shuffle_mode;
     private boolean isAlbumArtCircular;
@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
     private SlidingUpPanelLayout mainActivityLayout;
 
     // database
-    private DatabaseRepository databaseRepository;
+    private static DatabaseRepository databaseRepository;
 
     // fragments
     private MainFragmentPrimary mainFragmentPrimary;
@@ -161,28 +161,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         try {
             System.out.println("paused");
-            if (isPermissionGranted && isViewModelReady) {
-                // update current metadata values in database
-                int theme_resourceid = ThemeColors.getThemeResourceId();
-                int songtab_scrollindex = SongListTab.getScrollIndex();
-                int songtab_scrolloffset = SongListTab.getScrollOffset();
-                databaseRepository.updateMetadataTheme(theme_resourceid);
-                databaseRepository.updateMetadataSongtab(songtab_scrollindex, songtab_scrolloffset);
-
-                // save the current random seed
-                databaseRepository.updateMetadataRandomSeed(random_seed);
-
-                // save the current shuffle and repeat option
-                databaseRepository.updateMetadataShuffleMode(shuffle_mode);
-                databaseRepository.updateMetadataRepeatMode(repeat_mode);
-
-                // save current song index and playlist to database
-                databaseRepository.insertPlaylist(current_playlist);
-                databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
-
-                // save current seekbar position to database
-                databaseRepository.updateMetadataSeek(mainFragmentSecondary.getSeekbarProgress());
-            }
             super.onPause();
         }catch (Exception e){
             Logger.logException(e);
@@ -193,11 +171,17 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         try {
             System.out.println("stopped");
+
+            // save metadata values to database
+            metadata.setSongtab_values(SongListTab.getScrollIndex(), SongListTab.getScrollOffset());
+            databaseRepository.insertMetadata(metadata);
+
+            // unregister mediacontroller callback and disconnect this client from MusicPlayerService
             if (MediaControllerCompat.getMediaController(this) != null) {
                 MediaControllerCompat.getMediaController(this).unregisterCallback(mediaControllerCallback);
             }
-            // disconnect this client from MusicPlayerService
             mediaBrowser.disconnect();
+
             if (isPermissionGranted) {
                 databaseRepository.finish();
             }
@@ -403,10 +387,11 @@ public class MainActivity extends AppCompatActivity {
                             // update the viewpager adapter with the mediastore playlists
                             mainFragmentPrimary.addPlaylist(mediastorePlaylist);
                         }
+
+                        // update metadata to notify that mediastore playlists (if any) have been imported
+                        metadata.setMediaStorePlaylistsImported(true);
                     }
                 });
-                // update db to notify that mediastore playlists (if any) have been imported
-                databaseRepository.updateMetadataIsMediaStorePlaylistsImported(true);
             }
         });
     }
@@ -502,6 +487,9 @@ public class MainActivity extends AppCompatActivity {
         if (!isMediaStorePlaylistsImported){
             getMusicPlaylistsAsync();
         }
+
+        // set album art roundness
+        mainFragmentSecondary.setAlbumArtCircular(isAlbumArtCircular);
 
         // set shuffle button transparency using the shuffle mode metadata
         mainFragmentSecondary.setShuffleBtnAlpha(shuffle_mode == PlaybackStateCompat.SHUFFLE_MODE_ALL ? 255 : 40);
@@ -646,6 +634,7 @@ public class MainActivity extends AppCompatActivity {
         return fullPlaylist;
     }
     public void setIsAlbumArtCircular(boolean isAlbumArtCircular){
+        metadata.setAlbumArtCircular(isAlbumArtCircular);
         this.isAlbumArtCircular = isAlbumArtCircular;
     }
     public void setIsInfoDisplaying(boolean isInfoDisplaying){
@@ -655,19 +644,23 @@ public class MainActivity extends AppCompatActivity {
         mainActivityLayout.setTouchEnabled(status);
     }
     public static void setRandom_seed(int seed){
+        metadata.setRandom_seed(seed);
         random_seed = seed;
     }
     public static void setShuffleMode(int mode){
+        metadata.setShuffle_mode(mode);
         shuffle_mode = mode;
     }
-    public static void setRepeat_mode(int status){
-        repeat_mode = status;
+    public static void setRepeat_mode(int mode){
+        metadata.setRepeat_mode(mode);
+        repeat_mode = mode;
     }
     public static void setCurrent_song(Song song){
         current_song = song;
     }
     public static void setCurrent_playlist(Playlist playlist){
         current_playlist = playlist;
+        databaseRepository.insertPlaylist(current_playlist);
     }
     public static void setCurrent_playlist_shufflemode(Playlist playlist){
         if (shuffle_mode == PlaybackStateCompat.SHUFFLE_MODE_ALL) {
@@ -709,10 +702,12 @@ public class MainActivity extends AppCompatActivity {
                                 mainFragmentSecondary.setSeekbarProgress(musicCurrentPosition);
                             }
                         });
+                        metadata.setSeekPosition(musicCurrentPosition);
                         databaseRepository.updateMetadataSeek(musicCurrentPosition);
                         break;
                     case ChooseThemeFragment.THEME_SELECTED:
                         final int theme_resid = ThemeColors.getThemeResourceId();
+                        metadata.setThemeResourceId(theme_resid);
 
                         // change theme colors and button image to match the current theme
                         runOnUiThread(new Runnable() {
@@ -749,7 +744,9 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case MusicPlayerService.UPDATE_SONG_INDEX:
                         // update index for current song
-                        databaseRepository.updateMetadataSongIndex(current_playlist.getSongList().indexOf(current_song));
+                        int songIndex = current_playlist.getSongList().indexOf(current_song);
+                        metadata.setSongIndex(songIndex);
+                        databaseRepository.updateMetadataSongIndex(songIndex);
                         break;
                     case MusicPlayerService.UPDATE_SONG_PLAYED:
                         // increment played counter for the song metadata in memory and in database

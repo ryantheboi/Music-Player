@@ -193,6 +193,28 @@ public class MainFragmentSecondary extends Fragment {
     }
 
     /**
+     * Set the scaling of album art and visibility of song name & artist
+     * based on isAlbumArtCircular boolean flag
+     * @param isAlbumArtCircular
+     *      false - album art is not large and song name & artist are visible
+     *      true - album art is large and hides song name & artist
+     */
+    public void setAlbumArtCircular(boolean isAlbumArtCircular){
+        if (isAlbumArtCircular) {
+            // set main display album art circular
+            mainDisplay_albumArt_cardView.setScaleX(0.95f);
+            mainDisplay_albumArt_cardView.setScaleY(0.95f);
+            mainDisplay_albumArt_cardView.setRadius((float) mainDisplay_albumArt_cardView.getWidth() / 2);
+        }
+        else{
+            // set main display album art rounded rectangular
+            mainDisplay_albumArt_cardView.setScaleX(1f);
+            mainDisplay_albumArt_cardView.setScaleY(1f);
+            mainDisplay_albumArt_cardView.setRadius((float) mainDisplay_albumArt_cardView.getWidth() / 10);
+        }
+    }
+
+    /**
      * Updates sliding up panel with details about the song and playlist,
      * using a mediametadata object from a mediacontroller
      * @param metadata title, artist, album, albumart, and duration of a song
@@ -260,34 +282,6 @@ public class MainFragmentSecondary extends Fragment {
 
         // generate appropriate palette swatch colors using this song's album art
         ThemeColors.generatePaletteColors(albumArt);
-    }
-
-    /**
-     * Helper method to set the next appearance of the repeat button, based on the repeat mode
-     * and set the next repeat mode through media controller
-     * Progression Loop: NONE -> ALL -> ONE -> NONE -> ...
-     * @param mode 0 for repeat none, 1 for repeat one song, 2 for repeat playlist
-     */
-    public void toggleRepeatButton(int mode){
-        switch (mode){
-            // next state will repeat all
-            case PlaybackStateCompat.REPEAT_MODE_NONE:
-                setRepeatButton(PlaybackStateCompat.REPEAT_MODE_ALL);
-                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ALL);
-                break;
-
-            // next state will disable repeat
-            case PlaybackStateCompat.REPEAT_MODE_ONE:
-                setRepeatButton(PlaybackStateCompat.REPEAT_MODE_NONE);
-                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().setRepeatMode(PlaybackStateCompat.REPEAT_MODE_NONE);
-                break;
-
-            // next state will repeat one song
-            case PlaybackStateCompat.REPEAT_MODE_ALL:
-                setRepeatButton(PlaybackStateCompat.REPEAT_MODE_ONE);
-                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ONE);
-                break;
-        }
     }
 
     private void initViews(View view){
@@ -501,19 +495,11 @@ public class MainFragmentSecondary extends Fragment {
             mainDisplay_albumArt_cardView.getLayoutParams().width *= shrink_factor;
         }
 
-        // init main display album art circular if different from xml (less rounded corners)
-        if (mainActivity.getIsAlbumArtCircular()) {
-            mainDisplay_albumArt_cardView.setScaleX(0.95f);
-            mainDisplay_albumArt_cardView.setScaleY(0.95f);
-            mainDisplay_albumArt_cardView.setRadius((float) mainDisplay_albumArt_cardView.getWidth() / 2);
-        }
-
         // init album art size toggle button
         mainDisplay_albumArt_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 toggleLargeAlbumArt();
-                mainActivity.getDatabaseRepository().updateMetadataIsAlbumArtCircular(mainActivity.getIsAlbumArtCircular());
             }
         });
 
@@ -771,6 +757,34 @@ public class MainFragmentSecondary extends Fragment {
             mainActivity.setIsAlbumArtCircular(true);
             mainDisplay_albumArt_cardView.animate().scaleX(0.95f).scaleY(0.95f);
             mainDisplay_albumArt_cardView_animator_round.start();
+        }
+    }
+
+    /**
+     * Helper method to set the next appearance of the repeat button, based on the repeat mode
+     * and set the next repeat mode through media controller
+     * Progression Loop: NONE -> ALL -> ONE -> NONE -> ...
+     * @param mode 0 for repeat none, 1 for repeat one song, 2 for repeat playlist
+     */
+    private void toggleRepeatButton(int mode){
+        switch (mode){
+            // next state will repeat all
+            case PlaybackStateCompat.REPEAT_MODE_NONE:
+                setRepeatButton(PlaybackStateCompat.REPEAT_MODE_ALL);
+                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ALL);
+                break;
+
+            // next state will disable repeat
+            case PlaybackStateCompat.REPEAT_MODE_ONE:
+                setRepeatButton(PlaybackStateCompat.REPEAT_MODE_NONE);
+                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().setRepeatMode(PlaybackStateCompat.REPEAT_MODE_NONE);
+                break;
+
+            // next state will repeat one song
+            case PlaybackStateCompat.REPEAT_MODE_ALL:
+                setRepeatButton(PlaybackStateCompat.REPEAT_MODE_ONE);
+                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ONE);
+                break;
         }
     }
 }

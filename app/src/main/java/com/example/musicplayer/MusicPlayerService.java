@@ -4,10 +4,12 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.AudioAttributes;
@@ -66,6 +68,8 @@ implements OnCompletionListener, OnErrorListener {
     private MediaMetadataCompat.Builder metadataBuilder;
     private PlaybackStateCompat.Builder playbackStateBuilder;
     private MusicPlayerSessionCallback mediaPlayerSessionCallback;
+    private final IntentFilter noisyIntentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
+    private final MusicPlayerNoisyReceiver noisyAudioStreamReceiver = new MusicPlayerNoisyReceiver();
     private static MediaPlayer mediaPlayer;
     private static AudioManager mAudioManager;
     private static AudioAttributes mAudioAttributes;
@@ -74,10 +78,10 @@ implements OnCompletionListener, OnErrorListener {
     private static Messenger mainActivity_messenger;
     private NotificationManagerCompat notificationManager;
     private NotificationCompat.Builder notificationBuilder;
-    PendingIntent notificationPause_intent;
-    PendingIntent notificationPlay_intent;
-    PendingIntent notificationNext_intent;
-    PendingIntent notificationPrev_intent;
+    private PendingIntent notificationPause_intent;
+    private PendingIntent notificationPlay_intent;
+    private PendingIntent notificationNext_intent;
+    private PendingIntent notificationPrev_intent;
     private HandlerThread musicPlayerHandlerThread;
     private PlaybackHandler playerHandler;
     private static boolean continuePlaying = false;
@@ -772,6 +776,16 @@ implements OnCompletionListener, OnErrorListener {
         }
     }
 
+    private class MusicPlayerNoisyReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
+                // pause the playback
+                mediaSession.getController().getTransportControls().pause();
+            }
+        }
+    }
+
     private class MusicPlayerSessionCallback extends MediaSessionCompat.Callback{
 
         private MusicPlayerService mService;
@@ -786,35 +800,32 @@ implements OnCompletionListener, OnErrorListener {
         public void onPlay() {
             super.onPlay();
             try {
+                mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
                 int focusRequest = mAudioManager.requestAudioFocus(mAudioFocusRequest);
-                switch (focusRequest) {
-                    case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
-                        break;
-                    case AudioManager.AUDIOFOCUS_REQUEST_GRANTED:
-                        // create mediaplayer for the first time
-                        if (mediaPlayer == null) {
-                            initMediaPlayer();
-                        }
+                if (focusRequest == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                    // create mediaplayer for the first time
+                    if (mediaPlayer == null) {
+                        initMediaPlayer();
+                    }
 
-                        // set the session active
-                        mediaSession.setActive(true);
-                        continuePlaying = true;
+                    // set the session active
+                    mediaSession.setActive(true);
+                    continuePlaying = true;
 
-                        // start the player
-                        toggleMedia();
+                    // start the player
+                    toggleMedia();
 
-                        // update playback state
-                        setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition());
+                    // update playback state
+                    setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, mediaPlayer.getCurrentPosition());
 
-                        // Register BECOME_NOISY BroadcastReceiver
-//                    registerReceiver(myNoisyAudioStreamReceiver, intentFilter);
+                    // Register BECOME_NOISY BroadcastReceiver
+                    registerReceiver(noisyAudioStreamReceiver, noisyIntentFilter);
 
-                        // display the notification and place the service in the foreground
-                        updateNotificationBuilder(NOTIFICATION_PLAY);
-                        Notification notification = notificationBuilder.build();
-                        notificationManager.notify(1, notification);
-                        mService.startForeground(1, notification);
-                        break;
+                    // display the notification and place the service in the foreground
+                    updateNotificationBuilder(NOTIFICATION_PLAY);
+                    Notification notification = notificationBuilder.build();
+                    notificationManager.notify(1, notification);
+                    mService.startForeground(1, notification);
                 }
             } catch (Exception e){
                 Logger.logException(e, "MusicPlayerService");
@@ -826,6 +837,8 @@ implements OnCompletionListener, OnErrorListener {
         public void onPause() {
             super.onPause();
             try {
+                mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
                 continuePlaying = false;
 
                 // pause the player
@@ -835,14 +848,12 @@ implements OnCompletionListener, OnErrorListener {
                 setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition());
 
                 // unregister BECOME_NOISY BroadcastReceiver
-//            unregisterReceiver(myNoisyAudioStreamReceiver);
+                unregisterReceiver(noisyAudioStreamReceiver);
 
                 // notify main messenger to update database with current position
                 sendUpdateMessage(mainActivity_messenger, UPDATE_SEEKBAR_PROGRESS);
 
                 updateNotificationBuilder(NOTIFICATION_PAUSE);
-
-                mAudioManager = (AudioManager) MusicPlayerService.this.getSystemService(Context.AUDIO_SERVICE);
 
                 // take service out of the foreground, retain the notification
                 mService.stopForeground(false);
@@ -989,11 +1000,13 @@ implements OnCompletionListener, OnErrorListener {
         public void onStop() {
             super.onStop();
             try {
+                mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
                 // abandon audio focus
                 mAudioManager.abandonAudioFocusRequest(mAudioFocusRequest);
 
                 // unregister BECOME_NOISY BroadcastReceiver
-//            unregisterReceiver(myNoisyAudioStreamReceiver);
+                unregisterReceiver(noisyAudioStreamReceiver);
 
                 // stop the service
                 MusicPlayerService.this.stopSelf();
@@ -1102,47 +1115,45 @@ implements OnCompletionListener, OnErrorListener {
             super.onCustomAction(action, extras);
             if (action.equals(CUSTOM_ACTION_PLAY_SONG)) {
                 try {
+                    mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
                     int focusRequest = mAudioManager.requestAudioFocus(mAudioFocusRequest);
-                    switch (focusRequest) {
-                        case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
-                            break;
-                        case AudioManager.AUDIOFOCUS_REQUEST_GRANTED:
-                            // create mediaplayer for the first time
-                            if (mediaPlayer == null) {
-                                initMediaPlayer();
-                            }
+                    if (focusRequest == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                        // create mediaplayer for the first time
+                        if (mediaPlayer == null) {
+                            initMediaPlayer();
+                        }
 
-                            // set the session active
-                            mediaSession.setActive(true);
-                            continuePlaying = true;
+                        // set the session active
+                        mediaSession.setActive(true);
+                        continuePlaying = true;
 
-                            // stop listening to the song progress
-                            setProgressListenerActive(false);
+                        // stop listening to the song progress
+                        setProgressListenerActive(false);
 
-                            // update metadata and playback states with selected song
-                            Song curr_song = MainActivity.getCurrent_song();
-                            setMediaSessionMetadata(curr_song);
-                            setMediaSessionPlaybackState(PlaybackStateCompat.STATE_SKIPPING_TO_NEXT, mediaPlayer.getCurrentPosition());
-                            setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, 0);
+                        // update metadata and playback states with selected song
+                        Song curr_song = MainActivity.getCurrent_song();
+                        setMediaSessionMetadata(curr_song);
+                        setMediaSessionPlaybackState(PlaybackStateCompat.STATE_SKIPPING_TO_NEXT, mediaPlayer.getCurrentPosition());
+                        setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, 0);
 
-                            // Register BECOME_NOISY BroadcastReceiver
-//                           registerReceiver(myNoisyAudioStreamReceiver, intentFilter);
+                        // Register BECOME_NOISY BroadcastReceiver
+                        registerReceiver(noisyAudioStreamReceiver, noisyIntentFilter);
 
-                            // display the notification and place the service in the foreground
-                            updateNotificationBuilder(NOTIFICATION_CUSTOM_PLAY_SONG);
-                            Notification notification = notificationBuilder.build();
-                            notificationManager.notify(1, notification);
-                            mService.startForeground(1, notification);
+                        // display the notification and place the service in the foreground
+                        updateNotificationBuilder(NOTIFICATION_CUSTOM_PLAY_SONG);
+                        Notification notification = notificationBuilder.build();
+                        notificationManager.notify(1, notification);
+                        mService.startForeground(1, notification);
 
-                            // recreate mediaplayer and play the song
-                            mService.recreateMediaPlayer(curr_song.getId());
-                            toggleMedia();
+                        // recreate mediaplayer and play the song
+                        mService.recreateMediaPlayer(curr_song.getId());
+                        toggleMedia();
 
-                            // notify main activity to update song index in database
-                            sendUpdateMessage(mainActivity_messenger, UPDATE_SONG_INDEX);
+                        // notify main activity to update song index in database
+                        sendUpdateMessage(mainActivity_messenger, UPDATE_SONG_INDEX);
 
-                            // start listening to the song progress
-                            setProgressListenerActive(true);
+                        // start listening to the song progress
+                        setProgressListenerActive(true);
                     }
                 } catch (Exception e) {
                     Logger.logException(e, "MusicPlayerService");

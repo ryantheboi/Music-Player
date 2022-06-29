@@ -1,9 +1,17 @@
 package com.example.musicplayer;
 
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
+
+import java.io.InputStream;
 
 public class Song implements Parcelable {
 
@@ -219,4 +227,21 @@ public class Song implements Parcelable {
             return new Song[size];
         }
     };
+
+    public static Bitmap getAlbumArtBitmap(Context context, String albumID){
+        long albumID_long = Long.parseLong(albumID);
+        Bitmap albumArtBitmap;
+        Uri albumArtURI = ContentUris.withAppendedId(MusicPlayerService.artURI, albumID_long);
+        ContentResolver res = context.getContentResolver();
+        try {
+            InputStream in = res.openInputStream(albumArtURI);
+            albumArtBitmap = BitmapFactory.decodeStream(in);
+            if (in != null) {
+                in.close();
+            }
+        } catch (Exception e) {
+            albumArtBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.default_albumart);
+        }
+        return albumArtBitmap;
+    }
 }

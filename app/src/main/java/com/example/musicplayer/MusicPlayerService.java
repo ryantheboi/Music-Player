@@ -5,13 +5,10 @@ import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
@@ -48,7 +45,6 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.media.session.MediaButtonReceiver;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -139,13 +135,21 @@ implements OnCompletionListener, OnErrorListener {
                             MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
 
             // init mediametadata builder with default metadata keys and values
-            metadataBuilder = new MediaMetadataCompat.Builder()
-                    .putString(MediaMetadataCompat.METADATA_KEY_TITLE, Song.EMPTY_SONG.getTitle())
-                    .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, Song.EMPTY_SONG.getArtist())
-                    .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, Song.EMPTY_SONG.getAlbum())
-                    .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, BitmapFactory.decodeResource(getResources(), R.drawable.default_albumart))
-                    .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, Song.EMPTY_SONG.getDuration());
-            mediaSession.setMetadata(metadataBuilder.build());
+            metadataBuilder = new MediaMetadataCompat.Builder();
+            Song current_song = MainActivity.getCurrent_song();
+            if (current_song.equals(Song.EMPTY_SONG)) {
+                metadataBuilder
+                        .putString(MediaMetadataCompat.METADATA_KEY_TITLE, Song.EMPTY_SONG.getTitle())
+                        .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, Song.EMPTY_SONG.getArtist())
+                        .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, Song.EMPTY_SONG.getAlbum())
+                        .putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, String.valueOf(R.drawable.default_albumart))
+                        .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, Song.EMPTY_SONG.getDuration());
+                mediaSession.setMetadata(metadataBuilder.build());
+            }
+            else{
+                // use existing song to set media session metadata
+                setMediaSessionMetadata(current_song);
+            }
 
             // init playbackstate builder with supported actions
             playbackStateBuilder = new PlaybackStateCompat.Builder()
@@ -305,23 +309,6 @@ implements OnCompletionListener, OnErrorListener {
         }catch (Exception e){
             Logger.logException(e, "MusicPlayerService");
         }
-    }
-
-    private Bitmap getSongAlbumArtBitmap(Song song){
-        long albumID_long = Long.parseLong(song.getAlbumID());
-        Bitmap albumArtBitmap;
-        Uri albumArtURI = ContentUris.withAppendedId(MusicPlayerService.artURI, albumID_long);
-        ContentResolver res = getContentResolver();
-        try {
-            InputStream in = res.openInputStream(albumArtURI);
-            albumArtBitmap = BitmapFactory.decodeStream(in);
-            if (in != null) {
-                in.close();
-            }
-        } catch (Exception e) {
-            albumArtBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.default_albumart);
-        }
-        return albumArtBitmap;
     }
 
     /**
@@ -641,7 +628,7 @@ implements OnCompletionListener, OnErrorListener {
                 // Add the metadata for the currently playing track
                 .setContentTitle(song.getTitle())
                 .setContentText(song.getArtist())
-                .setLargeIcon(getSongAlbumArtBitmap(song))
+                .setLargeIcon(Song.getAlbumArtBitmap(this, song.getAlbumID()))
 
                 // launch music player by clicking the notification
                 .setContentIntent(notificationIntent)
@@ -704,7 +691,7 @@ implements OnCompletionListener, OnErrorListener {
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, song.getTitle())
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, song.getArtist())
                 .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, song.getAlbum())
-                .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, getSongAlbumArtBitmap(song))
+                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, song.getAlbumID())
                 .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, song.getDuration());
         mediaSession.setMetadata(metadataBuilder.build());
     }
@@ -1013,14 +1000,16 @@ implements OnCompletionListener, OnErrorListener {
 
                 // set the session inactive (and update metadata and state)
                 mediaSession.setActive(false);
-                setMediaSessionPlaybackState(PlaybackStateCompat.STATE_STOPPED, song_progress);
 
                 // stop the player (custom call)
                 if (mediaPlayer != null) {
+                    song_progress = mediaPlayer.getCurrentPosition();
                     mediaPlayer.stop();
                     mediaPlayer.release();
                     mediaPlayer = null;
                 }
+
+                setMediaSessionPlaybackState(PlaybackStateCompat.STATE_STOPPED, song_progress);
 
                 // take the service out of the foreground
                 MusicPlayerService.this.stopForeground(false);

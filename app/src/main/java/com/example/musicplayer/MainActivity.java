@@ -242,13 +242,17 @@ public class MainActivity extends AppCompatActivity {
                                 mainFragmentSecondary.initMainFragmentSecondaryUI();
                             }
                             else{
-                                // update main display button depending on current song and playback state
+                                // update main display depending on current song and playback state
                                 mainFragmentSecondary.updateMainSongDetails(current_song, current_playlist);
-                                mainFragmentSecondary.updateFragmentColors();
                                 if (mediaController.getPlaybackState().getState() == PlaybackStateCompat.STATE_PLAYING) {
                                     mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_pause28dp, R.drawable.ic_pause24dp);
                                 } else {
                                     mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_play28dp, R.drawable.ic_play24dp);
+
+                                    // update seek progress back to where it was previously
+                                    int seekPosition = metadata.getSeekPosition();
+                                    mainFragmentSecondary.setSeekbarProgress(seekPosition);
+                                    mediaController.getTransportControls().seekTo(seekPosition);
                                 }
                             }
                         }catch (Exception e){
@@ -792,7 +796,9 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onPlaybackStateChanged(PlaybackStateCompat state) {
             try {
-                // update the seekbar position in main UI
+                // update the seekbar position in main UI and metadata
+                int seekPosition = (int) state.getPosition();
+                metadata.setSeekPosition(seekPosition);
                 mainFragmentSecondary.setSeekbarProgress((int) state.getPosition());
 
                 switch (state.getState()) {

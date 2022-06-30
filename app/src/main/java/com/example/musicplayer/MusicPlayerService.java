@@ -9,6 +9,7 @@ import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.BitmapFactory;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
@@ -143,6 +144,7 @@ implements OnCompletionListener, OnErrorListener {
                         .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, Song.EMPTY_SONG.getArtist())
                         .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, Song.EMPTY_SONG.getAlbum())
                         .putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, String.valueOf(R.drawable.default_albumart))
+                        .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, BitmapFactory.decodeResource(getResources(), R.drawable.default_albumart))
                         .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, Song.EMPTY_SONG.getDuration());
                 mediaSession.setMetadata(metadataBuilder.build());
             }
@@ -692,6 +694,7 @@ implements OnCompletionListener, OnErrorListener {
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, song.getArtist())
                 .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, song.getAlbum())
                 .putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, song.getAlbumID())
+                .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, Song.getAlbumArtBitmap(this, song.getAlbumID()))
                 .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, song.getDuration());
         mediaSession.setMetadata(metadataBuilder.build());
     }

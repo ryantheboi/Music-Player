@@ -2,13 +2,9 @@ package com.example.musicplayer;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +12,6 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -96,7 +91,7 @@ public class SongListAdapter extends ArrayAdapter implements SectionIndexer {
                     String artist = song.getArtist();
                     String album = song.getAlbum();
                     String albumID = song.getAlbumID();
-                    Bitmap albumArt = getAlbumArt(albumID);
+                    Bitmap albumArt = Song.getAlbumArtBitmap(mContext, albumID);
 
                     // asynchronously find the views and hold them for immediate access later
                     item.title = cv.findViewById(R.id.textView1);
@@ -129,7 +124,7 @@ public class SongListAdapter extends ArrayAdapter implements SectionIndexer {
                     String artist = song.getArtist();
                     String album = song.getAlbum();
                     String albumID = song.getAlbumID();
-                    Bitmap albumArt = getAlbumArt(albumID);
+                    Bitmap albumArt = Song.getAlbumArtBitmap(mContext, albumID);
                     ViewHolder item = (ViewHolder) cv.getTag();
 
                     arr[0] = title;
@@ -175,25 +170,6 @@ public class SongListAdapter extends ArrayAdapter implements SectionIndexer {
         });
 
         return convertView;
-    }
-
-    public Bitmap getAlbumArt(String albumId){
-        long albumId_long = Long.parseLong(albumId);
-        Bitmap albumArt = null;
-        // get album art for song
-        Uri albumArtURI = ContentUris.withAppendedId(MusicPlayerService.artURI, albumId_long);
-        ContentResolver res = mContext.getContentResolver();
-        try {
-            InputStream in = res.openInputStream(albumArtURI);
-            albumArt = BitmapFactory.decodeStream(in);
-            if (in != null) {
-                in.close();
-            }
-        }catch(Exception e){
-            System.out.println("Album Art cannot be found by adapter");
-        }
-
-        return albumArt;
     }
 
     /**

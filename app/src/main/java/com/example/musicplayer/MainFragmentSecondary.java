@@ -3,16 +3,12 @@ package com.example.musicplayer;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
-import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.RippleDrawable;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Messenger;
 import android.support.v4.media.MediaMetadataCompat;
@@ -32,8 +28,6 @@ import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.fragment.app.Fragment;
 
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
-
-import java.io.InputStream;
 
 public class MainFragmentSecondary extends Fragment {
 
@@ -223,8 +217,8 @@ public class MainFragmentSecondary extends Fragment {
     public void updateMainSongDetails(MediaMetadataCompat metadata, Playlist playlist){
         String songTitle = metadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
         String songArtist = metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
-        Bitmap albumArt = metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART);
         int songDuration = (int) metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
+        Bitmap albumArt = Song.getAlbumArtBitmap(mainActivity, metadata.getString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI));
 
         // update sliding menu details
         slidingUp_songName.setText(songTitle);
@@ -253,19 +247,7 @@ public class MainFragmentSecondary extends Fragment {
         String songTitle = song.getTitle();
         String songArtist = song.getArtist();
         int songDuration = song.getDuration();
-        Bitmap albumArt;
-        long albumID_long = Long.parseLong(song.getAlbumID());
-        Uri albumArtURI = ContentUris.withAppendedId(MusicPlayerService.artURI, albumID_long);
-        ContentResolver res = mainActivity.getContentResolver();
-        try {
-            InputStream in = res.openInputStream(albumArtURI);
-            albumArt = BitmapFactory.decodeStream(in);
-            if (in != null) {
-                in.close();
-            }
-        } catch (Exception e) {
-            albumArt = BitmapFactory.decodeResource(getResources(), R.drawable.default_albumart);
-        }
+        Bitmap albumArt = Song.getAlbumArtBitmap(mainActivity, song.getAlbumID());
 
         // update sliding menu details
         slidingUp_songName.setText(songTitle);

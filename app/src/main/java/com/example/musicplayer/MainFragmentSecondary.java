@@ -210,6 +210,7 @@ public class MainFragmentSecondary extends Fragment {
 
     /**
      * Updates sliding up panel with details about the song and playlist,
+     * only if they changed (while ui is still active),
      * using a mediametadata object from a mediacontroller
      * @param metadata title, artist, album, albumart, and duration of a song
      * @param playlist the playlist the current song is from
@@ -220,15 +221,24 @@ public class MainFragmentSecondary extends Fragment {
         int songDuration = (int) metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
         Bitmap albumArt = Song.getAlbumArtBitmap(mainActivity, metadata.getString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI));
 
-        // update sliding menu details
-        slidingUp_songName.setText(songTitle);
-        slidingUp_artistName.setText(songArtist);
+        // update the title, artist, and playlist textviews only if they have changed
+        if (!slidingUp_songName.getText().toString().equals(songTitle)){
+            slidingUp_songName.setText(songTitle);
+            mainDisplay_songTitle.setText(songTitle);
+        }
+        if (!slidingUp_artistName.getText().toString().equals(songArtist)){
+            slidingUp_artistName.setText(songArtist);
+            mainDisplay_songArtist.setText(songArtist);
+        }
+        String playlistName = playlist.getName();
+        if (!mainDisplay_playlistHeader.getText().toString().equals(playlistName)){
+            mainDisplay_playlistHeader.setText(playlistName);
+        }
+
+        // update sliding menu album art
         slidingUp_albumArt.setImageBitmap(albumArt);
 
-        // update main activity details
-        mainDisplay_playlistHeader.setText(playlist.getName());
-        mainDisplay_songTitle.setText(songTitle);
-        mainDisplay_songArtist.setText(songArtist);
+        // update main activity album art and seekbar details
         mainDisplay_albumArt.setImageBitmap(albumArt);
         mainDisplay_seekBar.setMax(songDuration);
         mainDisplay_musicDuration.setText(SongHelper.convertTime(songDuration));

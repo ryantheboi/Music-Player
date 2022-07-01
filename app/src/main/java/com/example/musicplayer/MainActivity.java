@@ -3,6 +3,8 @@ package com.example.musicplayer;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.Lifecycle;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -54,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isViewModelReady = false;
     private boolean isSongListChanged = false;
     private boolean isMusicPlayerServiceReady = false;
+    private boolean isMediaBrowserConnected = false;
     public static boolean isActionMode = false;
     public static ActionMode actionMode = null;
     private static Metadata metadata;
@@ -177,6 +180,7 @@ public class MainActivity extends AppCompatActivity {
             databaseRepository.insertMetadata(metadata);
 
             // unregister mediacontroller callback and disconnect this client from MusicPlayerService
+            isMediaBrowserConnected = false;
             if (MediaControllerCompat.getMediaController(this) != null) {
                 MediaControllerCompat.getMediaController(this).unregisterCallback(mediaControllerCallback);
             }
@@ -211,6 +215,8 @@ public class MainActivity extends AppCompatActivity {
                             // send main messenger to musicplayer service and start handshake process for the first time
                             musicServiceIntent.putExtra("handshake", mainActivityMessenger);
                             startService(musicServiceIntent);
+
+                            isMediaBrowserConnected = true;
 
                             // get the token for the MediaSession
                             MediaSessionCompat.Token token = mediaBrowser.getSessionToken();
@@ -754,6 +760,17 @@ public class MainActivity extends AppCompatActivity {
                         int songIndex = current_playlist.getSongList().indexOf(current_song);
                         metadata.setSongIndex(songIndex);
                         databaseRepository.updateMetadataSongIndex(songIndex);
+
+                        // update fragment with song details since media controller callbacks are now unregistered
+                        if (!isMediaBrowserConnected && getLifecycle().getCurrentState() != Lifecycle.State.DESTROYED){
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mainFragmentSecondary.updateMainSongDetails(current_song, current_playlist);
+                                    mainFragmentSecondary.updateFragmentColors();
+                                }
+                            });
+                        }
                         break;
                     case MusicPlayerService.UPDATE_SONG_PLAYED:
                         // increment played counter for the song metadata in memory and in database

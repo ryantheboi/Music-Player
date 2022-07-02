@@ -358,7 +358,6 @@ implements OnCompletionListener, OnErrorListener {
                             .setContentTitle(description.getTitle())
                             .setContentText(description.getSubtitle())
                             .setLargeIcon(description.getIconBitmap());
-                    notificationManager.notify(1, notificationBuilder.build());
                 }
                 break;
             case NOTIFICATION_CUSTOM_PLAY_SONG:
@@ -866,9 +865,11 @@ implements OnCompletionListener, OnErrorListener {
 
                     // update metadata and playback states
                     setMediaSessionMetadata(next_song);
-                    setMediaSessionPlaybackState(PlaybackStateCompat.STATE_SKIPPING_TO_NEXT, 0);
 
                     updateNotificationBuilder(NOTIFICATION_NEXT);
+                    Notification notification = notificationBuilder.build();
+                    notificationManager.notify(1, notification);
+                    mService.startForeground(1, notification);
 
                     // recreate mp and play next song only if mediaplayer was playing before
                     if (continuePlaying) {
@@ -876,11 +877,14 @@ implements OnCompletionListener, OnErrorListener {
                         mService.recreateMediaPlayer(next_song.getId());
                         audioFocusToggleMedia();
                     } else {
+                        setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PAUSED, 0);
+
                         // notify main messenger to update database with current position
                         if (mediaPlayer != null) {
                             mService.recreateMediaPlayer(next_song.getId());
                             sendUpdateMessage(mainActivity_messenger, UPDATE_SEEKBAR_PROGRESS);
                         }
+                        mService.stopForeground(false);
                         song_progress = 0;
                     }
 
@@ -909,9 +913,11 @@ implements OnCompletionListener, OnErrorListener {
 
                     // update metadata and playback states
                     setMediaSessionMetadata(prev_song);
-                    setMediaSessionPlaybackState(PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS, 0);
 
                     updateNotificationBuilder(NOTIFICATION_PREV);
+                    Notification notification = notificationBuilder.build();
+                    notificationManager.notify(1, notification);
+                    mService.startForeground(1, notification);
 
                     // recreate mp and play prev song only if mediaplayer was playing before
                     if (continuePlaying) {
@@ -919,11 +925,14 @@ implements OnCompletionListener, OnErrorListener {
                         mService.recreateMediaPlayer(prev_song.getId());
                         audioFocusToggleMedia();
                     } else {
+                        setMediaSessionPlaybackState(PlaybackStateCompat.STATE_PAUSED, 0);
+
                         // notify main messenger to update database with current position
                         if (mediaPlayer != null) {
                             mService.recreateMediaPlayer(prev_song.getId());
                             sendUpdateMessage(mainActivity_messenger, UPDATE_SEEKBAR_PROGRESS);
                         }
+                        mService.stopForeground(false);
                         song_progress = 0;
                     }
 

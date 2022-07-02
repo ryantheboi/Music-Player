@@ -2,14 +2,9 @@ package com.example.musicplayer;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,9 +12,6 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.core.graphics.drawable.DrawableCompat;
-
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
@@ -73,7 +65,7 @@ public class PlaylistAdapter extends ArrayAdapter {
                     Bitmap albumArt;
                     if (!size.equals("0")) {
                         String albumID = playlist.getSongList().get(0).getAlbumID();
-                        albumArt = getAlbumArt(albumID);
+                        albumArt = Song.getAlbumArtBitmap(mContext, albumID);
                     }
                     else{
                         albumArt = null;
@@ -109,7 +101,7 @@ public class PlaylistAdapter extends ArrayAdapter {
                     Bitmap albumArt;
                     if (!size.equals("0")) {
                         String albumID = playlist.getSongList().get(0).getAlbumID();
-                        albumArt = getAlbumArt(albumID);
+                        albumArt = Song.getAlbumArtBitmap(mContext, albumID);
                     }
                     else{
                         albumArt = null;
@@ -156,25 +148,6 @@ public class PlaylistAdapter extends ArrayAdapter {
         });
 
         return convertView;
-    }
-
-    public Bitmap getAlbumArt(String albumId){
-        long albumId_long = Long.parseLong(albumId);
-        Bitmap albumArt = null;
-        // get album art for song
-        Uri albumArtURI = ContentUris.withAppendedId(MusicPlayerService.artURI, albumId_long);
-        ContentResolver res = mContext.getContentResolver();
-        try {
-            InputStream in = res.openInputStream(albumArtURI);
-            albumArt = BitmapFactory.decodeStream(in);
-            if (in != null) {
-                in.close();
-            }
-        }catch(Exception e){
-            System.out.println("Album Art cannot be found by adapter");
-        }
-
-        return albumArt;
     }
 
     /**

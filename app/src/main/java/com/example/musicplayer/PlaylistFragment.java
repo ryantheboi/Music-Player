@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.text.Editable;
 import android.text.SpannableString;
 import android.text.TextUtils;
@@ -158,14 +159,15 @@ public class PlaylistFragment extends Fragment {
                 Song song = (Song) m_listView.getItemAtPosition(position);
 
                 // redirect the current playlist to reference the songs in this playlist
-                MainActivity.setCurrent_playlist(new Playlist(m_playlist.getName(), m_playlist.getSongList()));
+                MainActivity.setCurrent_playlist_shufflemode(m_playlist);
 
                 // change current song
                 MainActivity.setCurrent_song(song);
 
                 // notify music player service about the current song change
-                musicListSelectIntent.putExtra("musicListSong", "");
-                getActivity().startService(musicListSelectIntent);
+                Bundle song_bundle = new Bundle();
+                song_bundle.putParcelable("song", song);
+                MediaControllerCompat.getMediaController(getActivity()).getTransportControls().sendCustomAction(MusicPlayerService.CUSTOM_ACTION_PLAY_SONG, song_bundle);
             }
         });
 
@@ -258,8 +260,9 @@ public class PlaylistFragment extends Fragment {
                 switch (item.getItemId()) {
                     case R.id.menuitem_createqueue:
                         Playlist transient_playlist = Playlist.createTransientPlaylist(m_userSelection);
-                        MainActivity.setCurrent_transientPlaylist(transient_playlist);
-                        MainActivity.setCurrent_song(m_userSelection.get(0));
+                        Song song = m_userSelection.get(0);
+                        MainActivity.setCurrent_playlist_shufflemode(transient_playlist);
+                        MainActivity.setCurrent_song(song);
 
                         // replace existing transient playlist with new current playlist
                         if (Playlist.isNumTransientsMaxed()){
@@ -272,8 +275,9 @@ public class PlaylistFragment extends Fragment {
                         }
 
                         // notify music player service to start the new song in the new playlist (queue)
-                        musicListQueueIntent.putExtra("musicListSong", "");
-                        getActivity().startService(musicListQueueIntent);
+                        Bundle song_bundle = new Bundle();
+                        song_bundle.putParcelable("song", song);
+                        MediaControllerCompat.getMediaController(getActivity()).getTransportControls().sendCustomAction(MusicPlayerService.CUSTOM_ACTION_PLAY_SONG, song_bundle);
 
                         mode.finish(); // Action picked, so close the CAB
                         return true;
@@ -295,8 +299,7 @@ public class PlaylistFragment extends Fragment {
                         // construct alert dialog for removing playlist
                         AlertDialog.Builder removeSong_dialogBuilder = new AlertDialog.Builder(getActivity(), ThemeColors.getAlertDialogStyleResourceId());
                         if (m_userSelection.size() == 1) {
-                            Song song = m_userSelection.get(0);
-                            removeSong_dialogBuilder.setTitle("Remove Song " + song.getTitle() + "?");
+                            removeSong_dialogBuilder.setTitle("Remove Song " + m_userSelection.get(0).getTitle() + "?");
                         }
                         else{
                             removeSong_dialogBuilder.setTitle("Remove " + m_userSelection.size() + " songs?");
@@ -432,13 +435,13 @@ public class PlaylistFragment extends Fragment {
                                 dialog.dismiss();
                                 // start current timer playlist and first song
                                 Song song = m_timerPlaylist.getSongList().get(0);
-                                MainActivity.setCurrent_playlist(m_timerPlaylist);
+                                MainActivity.setCurrent_playlist_shufflemode(m_timerPlaylist);
                                 MainActivity.setCurrent_song(song);
 
                                 // notify music player service about the current song change
-                                musicListSelectIntent.putExtra("musicListSong", "");
-                                getActivity().startService(musicListSelectIntent);
-
+                                Bundle song_bundle = new Bundle();
+                                song_bundle.putParcelable("song", song);
+                                MediaControllerCompat.getMediaController(getActivity()).getTransportControls().sendCustomAction(MusicPlayerService.CUSTOM_ACTION_PLAY_SONG, song_bundle);
                             }
                         });
 

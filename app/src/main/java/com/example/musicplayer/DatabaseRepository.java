@@ -38,16 +38,15 @@ public class DatabaseRepository {
     public static final int UPDATE_METADATA_THEME = 10;
     public static final int UPDATE_METADATA_SONGTAB = 11;
     public static final int UPDATE_METADATA_SONGINDEX = 12;
-    public static final int UPDATE_METADATA_ISSHUFFLED = 13;
-    public static final int UPDATE_METADATA_REPEATSTATUS = 14;
+    public static final int UPDATE_METADATA_SHUFFLEMODE = 13;
+    public static final int UPDATE_METADATA_REPEATMODE = 14;
     public static final int UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED = 15;
-    public static final int UPDATE_METADATA_ISPLAYING = 16;
-    public static final int UPDATE_METADATA_SEEK = 17;
-    public static final int UPDATE_METADATA_ISALBUMARTCIRCULAR = 18;
-    public static final int UPDATE_METADATA_RANDOMSEED = 19;
-    public static final int UPDATE_METADATA_NUMQUERIES = 20;
-    public static final int UPDATE_SONGMETADATA_PLAYED = 21;
-    public static final int UPDATE_SONGMETADATA_LISTENED = 22;
+    public static final int UPDATE_METADATA_SEEK = 16;
+    public static final int UPDATE_METADATA_ISALBUMARTCIRCULAR = 17;
+    public static final int UPDATE_METADATA_RANDOMSEED = 18;
+    public static final int UPDATE_METADATA_NUMQUERIES = 19;
+    public static final int UPDATE_SONGMETADATA_PLAYED = 20;
+    public static final int UPDATE_SONGMETADATA_LISTENED = 21;
 
     /**
      * Holds the query message and the object involved (if exists)
@@ -242,17 +241,14 @@ public class DatabaseRepository {
                             case UPDATE_METADATA_SONGINDEX:
                                 metadataDao.updateSongIndex(0, (int) query.object);
                                 break;
-                            case UPDATE_METADATA_ISSHUFFLED:
-                                metadataDao.updateIsShuffled(0, (boolean) query.object);
+                            case UPDATE_METADATA_SHUFFLEMODE:
+                                metadataDao.updateShuffleMode(0, (int) query.object);
                                 break;
-                            case UPDATE_METADATA_REPEATSTATUS:
-                                metadataDao.updateRepeatStatus(0, (int) query.object);
+                            case UPDATE_METADATA_REPEATMODE:
+                                metadataDao.updateRepeatMode(0, (int) query.object);
                                 break;
                             case UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED:
                                 metadataDao.updateIsMediaStorePlaylistsImported(0, (boolean) query.object);
-                                break;
-                            case UPDATE_METADATA_ISPLAYING:
-                                metadataDao.updateIsPlaying(0, (boolean) query.object);
                                 break;
                             case UPDATE_METADATA_SEEK:
                                 metadataDao.updateSeekPosition(0, (int) query.object);
@@ -407,19 +403,20 @@ public class DatabaseRepository {
     }
 
     /**
-     * Queues message to update the isShuffled value in the metadata
-     * @param isShuffled true if playlist shuffling is enabled, false otherwise
+     * Queues message to update the shuffle_mode value in the metadata
+     * @param shuffleMode 0 for SHUFFLE_MODE_NONE (no shuffle)
+     *                    1 for SHUFFLE_MODE_ALL (shuffle)
      */
-    public synchronized void updateMetadataIsShuffled(boolean isShuffled){
-        messageQueue.offer(new Query(UPDATE_METADATA_ISSHUFFLED, isShuffled));
+    public synchronized void updateMetadataShuffleMode(int shuffleMode){
+        messageQueue.offer(new Query(UPDATE_METADATA_SHUFFLEMODE, shuffleMode));
     }
 
     /**
-     * Queues message to update the repeatStatus value in the metadata
-     * @param repeatStatus 0 for disable, 1 for repeat playlist, 2 for repeat one song
+     * Queues message to update the repeat_mode value in the metadata
+     * @param repeat_mode 0 for REPEAT_NONE, 1 for REPEAT_ONE, 2 for REPEAT_ALL
      */
-    public synchronized void updateMetadataRepeatStatus(int repeatStatus){
-        messageQueue.offer(new Query(UPDATE_METADATA_REPEATSTATUS, repeatStatus));
+    public synchronized void updateMetadataRepeatMode(int repeat_mode){
+        messageQueue.offer(new Query(UPDATE_METADATA_REPEATMODE, repeat_mode));
     }
 
     /**
@@ -428,14 +425,6 @@ public class DatabaseRepository {
      */
     public synchronized void updateMetadataIsMediaStorePlaylistsImported(boolean isMediaStorePlaylistsImported){
         messageQueue.offer(new Query(UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED, isMediaStorePlaylistsImported));
-    }
-
-    /**
-     * Queues message to update the isPlaying value in the metadata
-     * @param isPlaying true if the mediaplayer is playing, false otherwise
-     */
-    public synchronized void updateMetadataIsPlaying(boolean isPlaying){
-        messageQueue.offer(new Query(UPDATE_METADATA_ISPLAYING, isPlaying));
     }
 
     /**

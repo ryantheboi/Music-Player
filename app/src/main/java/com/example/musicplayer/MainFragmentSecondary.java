@@ -11,6 +11,9 @@ import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Bundle;
 import android.os.Messenger;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -25,8 +28,6 @@ import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.fragment.app.Fragment;
 
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
-
-import java.util.Random;
 
 public class MainFragmentSecondary extends Fragment {
 
@@ -65,7 +66,6 @@ public class MainFragmentSecondary extends Fragment {
     private Intent mainDisplay_PausePlayIntent;
     private Intent mainDisplay_PrevIntent;
     private Intent mainDisplay_NextIntent;
-    private Intent seekBar_seekIntent;
     private boolean seekBar_isTracking;
     private RelativeLayout mainDisplay_mainLayout;
     private RelativeLayout slidingUpMenuLayout;
@@ -107,12 +107,12 @@ public class MainFragmentSecondary extends Fragment {
         mainActivity = (MainActivity) getActivity();
         slidingUpPanelLayout = (SlidingUpPanelLayout) mainActivity.getMainActivityLayout();
         initViews(view);
-        initButtons();
     }
 
     public void initMainFragmentSecondaryUI(){
         initMainGradient();
         initMainDisplay();
+        initMainDisplayButtons();
         initSeekbar();
         initSlidingUpPanel();
     }
@@ -131,19 +131,14 @@ public class MainFragmentSecondary extends Fragment {
         return seekBar_isTracking;
     }
 
-    public void setSeekbarMaxDuration(int musicMaxDuration){
-        final String time = SongHelper.convertTime(musicMaxDuration);
-        mainDisplay_seekBar.setMax(musicMaxDuration);
-        mainDisplay_musicDuration.setText(time);
-    }
-
-
     /**
-     * Sets the seekbar progress without informing music service (implies this seekPosition came from the service)
+     * Sets the seekbar progress
      * @param seekPosition the progress position in the seekbar
      */
     public void setSeekbarProgress(int seekPosition){
-        mainDisplay_seekBar.setProgress(seekPosition);
+        if (!seekBar_isTracking) {
+            mainDisplay_seekBar.setProgress(seekPosition);
+        }
     }
 
     public void setPausePlayBtns(int mainBtnId, int slidingBtnId){
@@ -166,60 +161,21 @@ public class MainFragmentSecondary extends Fragment {
     }
 
     /**
-     * Informs the music service about the seekbar's new position in addition to setting it
-     * @param seekPosition the progress position in the seekbar
+     * Set the appearance of the repeat button, based on the repeat mode
+     * @param mode 0 for repeat none, 1 for repeat one song, 2 for repeat playlist
      */
-    public void updateSeekbarProgress(int seekPosition){
-        // inform the music service about the seekbar's position
-        seekBar_seekIntent.putExtra("seekbarSeek", seekPosition);
-        mainActivity.startService(seekBar_seekIntent);
-        mainDisplay_seekBar.setProgress(seekPosition);
-    }
-
-    /**
-     * Updates sliding up panel with details about the song and playlist
-     * @param song the song currently playing
-     * @param playlist the playlist the current song is from
-     * @param albumImage the album art corresponding to the song
-     */
-    public void updateMainSongDetails(Song song, Playlist playlist, Bitmap albumImage){
-        final int songDuration = song.getDuration();
-
-        // update sliding menu details
-        slidingUp_songName.setText(song.getTitle());
-        slidingUp_artistName.setText(song.getArtist());
-        slidingUp_albumArt.setImageBitmap(albumImage);
-
-        // update main activity details
-        mainDisplay_playlistHeader.setText(playlist.getName());
-        mainDisplay_songTitle.setText(song.getTitle());
-        mainDisplay_songArtist.setText(song.getArtist());
-        mainDisplay_albumArt.setImageBitmap(albumImage);
-        mainDisplay_seekBar.setMax(songDuration);
-        mainDisplay_musicDuration.setText(SongHelper.convertTime(songDuration));
-    }
-
-    /**
-     * Helper method to set the appearance of the repeat button, based on the repeat status
-     * @param repeatStatus 0 for disable, 1 for repeat playlist, 2 for repeat one song
-     */
-    public void toggleRepeatButton(int repeatStatus){
-        switch (repeatStatus){
-            // disable repeat
-            case 0:
+    public void setRepeatButton(int mode){
+        switch (mode){
+            case PlaybackStateCompat.REPEAT_MODE_NONE:
                 mainDisplay_repeat_btn.setImageResource(R.drawable.ic_repeat28dp);
                 mainDisplay_repeat_btn.setImageAlpha(40);
                 break;
-
-            // repeat playlist
-            case 1:
-                mainDisplay_repeat_btn.setImageResource(R.drawable.ic_repeat28dp);
+            case PlaybackStateCompat.REPEAT_MODE_ONE:
+                mainDisplay_repeat_btn.setImageResource(R.drawable.ic_repeat_one28dp);
                 mainDisplay_repeat_btn.setImageAlpha(255);
                 break;
-
-            // repeat one song
-            case 2:
-                mainDisplay_repeat_btn.setImageResource(R.drawable.ic_repeat_one28dp);
+            case PlaybackStateCompat.REPEAT_MODE_ALL:
+                mainDisplay_repeat_btn.setImageResource(R.drawable.ic_repeat28dp);
                 mainDisplay_repeat_btn.setImageAlpha(255);
                 break;
         }
@@ -228,6 +184,96 @@ public class MainFragmentSecondary extends Fragment {
         Drawable unwrappedDrawableRepeat = mainDisplay_repeat_btn.getDrawable();
         Drawable wrappedDrawableRepeat = DrawableCompat.wrap(unwrappedDrawableRepeat);
         DrawableCompat.setTint(wrappedDrawableRepeat, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
+    }
+
+    /**
+     * Set the scaling of album art and visibility of song name & artist
+     * based on isAlbumArtCircular boolean flag
+     * @param isAlbumArtCircular
+     *      false - album art is not large and song name & artist are visible
+     *      true - album art is large and hides song name & artist
+     */
+    public void setAlbumArtCircular(boolean isAlbumArtCircular){
+        if (isAlbumArtCircular) {
+            // set main display album art circular
+            mainDisplay_albumArt_cardView.setScaleX(0.95f);
+            mainDisplay_albumArt_cardView.setScaleY(0.95f);
+            mainDisplay_albumArt_cardView.setRadius((float) mainDisplay_albumArt_cardView.getWidth() / 2);
+        }
+        else{
+            // set main display album art rounded rectangular
+            mainDisplay_albumArt_cardView.setScaleX(1f);
+            mainDisplay_albumArt_cardView.setScaleY(1f);
+            mainDisplay_albumArt_cardView.setRadius((float) mainDisplay_albumArt_cardView.getWidth() / 10);
+        }
+    }
+
+    /**
+     * Updates sliding up panel with details about the song and playlist,
+     * only if they changed (while ui is still active),
+     * using a mediametadata object from a mediacontroller
+     * @param metadata title, artist, album, albumart, and duration of a song
+     * @param playlist the playlist the current song is from
+     */
+    public void updateMainSongDetails(MediaMetadataCompat metadata, Playlist playlist){
+        String songTitle = metadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
+        String songArtist = metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
+        int songDuration = (int) metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
+        Bitmap albumArt = Song.getAlbumArtBitmap(mainActivity, metadata.getString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI));
+
+        // update the title, artist, and playlist textviews only if they have changed
+        if (!slidingUp_songName.getText().toString().equals(songTitle)){
+            slidingUp_songName.setText(songTitle);
+            mainDisplay_songTitle.setText(songTitle);
+        }
+        if (!slidingUp_artistName.getText().toString().equals(songArtist)){
+            slidingUp_artistName.setText(songArtist);
+            mainDisplay_songArtist.setText(songArtist);
+        }
+        String playlistName = playlist.getName();
+        if (!mainDisplay_playlistHeader.getText().toString().equals(playlistName)){
+            mainDisplay_playlistHeader.setText(playlistName);
+        }
+
+        // update sliding menu album art
+        slidingUp_albumArt.setImageBitmap(albumArt);
+
+        // update main activity album art and seekbar details
+        mainDisplay_albumArt.setImageBitmap(albumArt);
+        mainDisplay_seekBar.setMax(songDuration);
+        mainDisplay_musicDuration.setText(SongHelper.convertTime(songDuration));
+
+        // generate appropriate palette swatch colors using this song's album art
+        ThemeColors.generatePaletteColors(albumArt);
+    }
+
+    /**
+     * Overloaded method to updates sliding up panel with details about the song and playlist,
+     * using a song object (without relying on media metadata change)
+     * @param song the song to update this fragment's details with
+     * @param playlist the playlist the current song is from
+     */
+    public void updateMainSongDetails(Song song, Playlist playlist){
+        String songTitle = song.getTitle();
+        String songArtist = song.getArtist();
+        int songDuration = song.getDuration();
+        Bitmap albumArt = Song.getAlbumArtBitmap(mainActivity, song.getAlbumID());
+
+        // update sliding menu details
+        slidingUp_songName.setText(songTitle);
+        slidingUp_artistName.setText(songArtist);
+        slidingUp_albumArt.setImageBitmap(albumArt);
+
+        // update main activity details
+        mainDisplay_playlistHeader.setText(playlist.getName());
+        mainDisplay_songTitle.setText(songTitle);
+        mainDisplay_songArtist.setText(songArtist);
+        mainDisplay_albumArt.setImageBitmap(albumArt);
+        mainDisplay_seekBar.setMax(songDuration);
+        mainDisplay_musicDuration.setText(SongHelper.convertTime(songDuration));
+
+        // generate appropriate palette swatch colors using this song's album art
+        ThemeColors.generatePaletteColors(albumArt);
     }
 
     private void initViews(View view){
@@ -257,7 +303,7 @@ public class MainFragmentSecondary extends Fragment {
         mainDisplay_playlistHeader = view.findViewById(R.id.playlist_header);
     }
 
-    private void initButtons(){
+    private void initMainDisplayButtons(){
         initMainButtons();
         initInfoButton();
     }
@@ -363,7 +409,12 @@ public class MainFragmentSecondary extends Fragment {
         slidingUp_pauseplay_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mainActivity.startService(slidingUp_pauseplayIntent);
+                int pbState = MediaControllerCompat.getMediaController(mainActivity).getPlaybackState().getState();
+                if (pbState == PlaybackStateCompat.STATE_PLAYING) {
+                    MediaControllerCompat.getMediaController(mainActivity).getTransportControls().pause();
+                } else {
+                    MediaControllerCompat.getMediaController(mainActivity).getTransportControls().play();
+                }
             }
         });
 
@@ -376,7 +427,7 @@ public class MainFragmentSecondary extends Fragment {
         slidingUp_next_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mainActivity.startService(slidingUp_nextIntent);
+                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().skipToNext();
             }
         });
 
@@ -389,7 +440,7 @@ public class MainFragmentSecondary extends Fragment {
         slidingUp_prev_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mainActivity.startService(slidingUp_prevIntent);
+                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().skipToPrevious();
             }
         });
     }
@@ -436,19 +487,11 @@ public class MainFragmentSecondary extends Fragment {
             mainDisplay_albumArt_cardView.getLayoutParams().width *= shrink_factor;
         }
 
-        // init main display album art circular if different from xml (less rounded corners)
-        if (mainActivity.getIsAlbumArtCircular()) {
-            mainDisplay_albumArt_cardView.setScaleX(0.95f);
-            mainDisplay_albumArt_cardView.setScaleY(0.95f);
-            mainDisplay_albumArt_cardView.setRadius((float) mainDisplay_albumArt_cardView.getWidth() / 2);
-        }
-
         // init album art size toggle button
         mainDisplay_albumArt_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 toggleLargeAlbumArt();
-                mainActivity.getDatabaseRepository().updateMetadataIsAlbumArtCircular(mainActivity.getIsAlbumArtCircular());
             }
         });
 
@@ -474,7 +517,12 @@ public class MainFragmentSecondary extends Fragment {
         mainDisplay_pauseplay_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mainActivity.startService(mainDisplay_PausePlayIntent);
+                int pbState = MediaControllerCompat.getMediaController(mainActivity).getPlaybackState().getState();
+                if (pbState == PlaybackStateCompat.STATE_PLAYING) {
+                    MediaControllerCompat.getMediaController(mainActivity).getTransportControls().pause();
+                } else {
+                    MediaControllerCompat.getMediaController(mainActivity).getTransportControls().play();
+                }
             }
         });
 
@@ -487,7 +535,7 @@ public class MainFragmentSecondary extends Fragment {
         mainDisplay_next_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mainActivity.startService(mainDisplay_NextIntent);
+                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().skipToNext();
             }
         });
 
@@ -500,7 +548,7 @@ public class MainFragmentSecondary extends Fragment {
         mainDisplay_prev_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mainActivity.startService(mainDisplay_PrevIntent);
+                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().skipToPrevious();
             }
         });
 
@@ -521,16 +569,13 @@ public class MainFragmentSecondary extends Fragment {
             @Override
             public void onClick(View v) {
                 // toggle shuffle button
-                if (MainActivity.getIsShuffled()){
-                    MainActivity.setIsShuffled(false);
+                if (MainActivity.getShuffleMode() == PlaybackStateCompat.SHUFFLE_MODE_ALL){
                     mainDisplay_shuffle_btn.setImageAlpha(40);
-                    MainActivity.setCurrent_playlist(MainActivity.getCurrent_playlist().unshufflePlaylist(MainActivity.getRandom_seed()));
+                    MediaControllerCompat.getMediaController(mainActivity).getTransportControls().setShuffleMode(PlaybackStateCompat.SHUFFLE_MODE_NONE);
                 }
                 else {
-                    MainActivity.setIsShuffled(true);
-                    MainActivity.setRandom_seed(Math.abs(new Random().nextInt()));
                     mainDisplay_shuffle_btn.setImageAlpha(255);
-                    MainActivity.setCurrent_playlist(MainActivity.getCurrent_playlist().shufflePlaylist(MainActivity.getRandom_seed()));
+                    MediaControllerCompat.getMediaController(mainActivity).getTransportControls().setShuffleMode(PlaybackStateCompat.SHUFFLE_MODE_ALL);
                 }
             }
         });
@@ -541,14 +586,10 @@ public class MainFragmentSecondary extends Fragment {
         mainDisplay_repeat_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int curr_repeat_status = MainActivity.getRepeat_status();
-                int next_repeat_status = curr_repeat_status + 1 > 2 ? 0 : curr_repeat_status + 1;
-                toggleRepeatButton(next_repeat_status);
-                MainActivity.setRepeat_status(next_repeat_status);
+                toggleRepeatButton(MainActivity.getRepeat_mode());
             }
         });
     }
-
 
     /**
      * Initializes the seekbar and the textviews for current position and max duration
@@ -557,11 +598,6 @@ public class MainFragmentSecondary extends Fragment {
      */
     private void initSeekbar() {
         // set the seekbar & textview duration and sync with mediaplayer
-        Intent seekBarDurationIntent = new Intent(mainActivity, MusicPlayerService.class);
-        seekBar_seekIntent = new Intent(mainActivity, MusicPlayerService.class);
-        seekBarDurationIntent.putExtra("seekbarDuration", mainActivityMessenger);
-        mainActivity.startService(seekBarDurationIntent);
-
         mainDisplay_seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -576,12 +612,7 @@ public class MainFragmentSecondary extends Fragment {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                seekBar_seekIntent.putExtra("seekbarSeek", seekBar.getProgress());
-                mainActivity.startService(seekBar_seekIntent);
-
-                // update the seekPosition value in the local metadata
-                mainActivity.getDatabaseRepository().updateMetadataSeek(seekBar.getProgress());
-
+                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().seekTo(seekBar.getProgress());
                 seekBar_isTracking = false;
             }
         });
@@ -718,6 +749,34 @@ public class MainFragmentSecondary extends Fragment {
             mainActivity.setIsAlbumArtCircular(true);
             mainDisplay_albumArt_cardView.animate().scaleX(0.95f).scaleY(0.95f);
             mainDisplay_albumArt_cardView_animator_round.start();
+        }
+    }
+
+    /**
+     * Helper method to set the next appearance of the repeat button, based on the repeat mode
+     * and set the next repeat mode through media controller
+     * Progression Loop: NONE -> ALL -> ONE -> NONE -> ...
+     * @param mode 0 for repeat none, 1 for repeat one song, 2 for repeat playlist
+     */
+    private void toggleRepeatButton(int mode){
+        switch (mode){
+            // next state will repeat all
+            case PlaybackStateCompat.REPEAT_MODE_NONE:
+                setRepeatButton(PlaybackStateCompat.REPEAT_MODE_ALL);
+                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ALL);
+                break;
+
+            // next state will disable repeat
+            case PlaybackStateCompat.REPEAT_MODE_ONE:
+                setRepeatButton(PlaybackStateCompat.REPEAT_MODE_NONE);
+                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().setRepeatMode(PlaybackStateCompat.REPEAT_MODE_NONE);
+                break;
+
+            // next state will repeat one song
+            case PlaybackStateCompat.REPEAT_MODE_ALL:
+                setRepeatButton(PlaybackStateCompat.REPEAT_MODE_ONE);
+                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ONE);
+                break;
         }
     }
 }

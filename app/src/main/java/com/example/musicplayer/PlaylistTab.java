@@ -299,10 +299,10 @@ public class PlaylistTab extends Fragment {
                         AlertDialog.Builder exportPlaylist_dialogBuilder = new AlertDialog.Builder(m_mainActivity, ThemeColors.getAlertDialogStyleResourceId());
 
                         if (m_userSelection.size() == 1) {
-                            exportPlaylist_dialogBuilder.setTitle("Export Playlist to '/storage/emulated/0/Playlists' ?");
+                            exportPlaylist_dialogBuilder.setTitle("Export Playlist to " + M3U.EXPORT_DIRECTORY + "?");
                         }
                         else{
-                            exportPlaylist_dialogBuilder.setTitle("Export " + m_userSelection.size() + " playlists to '/storage/emulated/0/Playlists' ?");
+                            exportPlaylist_dialogBuilder.setTitle("Export " + m_userSelection.size() + M3U.EXPORT_DIRECTORY + "?");
                         }
 
                         // ok (export) button
@@ -315,7 +315,7 @@ public class PlaylistTab extends Fragment {
                                 for (Playlist playlist : m_userSelection){
                                     M3U.exportM3U(playlist);
                                 }
-                                Toast.makeText(m_mainActivity.getApplicationContext(), "Exported to /storage/emulated/0/Playlists/", Toast.LENGTH_LONG).show();
+                                Toast.makeText(m_mainActivity.getApplicationContext(), "Exported to " + M3U.EXPORT_DIRECTORY, Toast.LENGTH_LONG).show();
                                 mode.finish(); // Action picked, so close the CAB
                             }
                         });

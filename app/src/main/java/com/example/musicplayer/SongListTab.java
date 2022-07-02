@@ -1,12 +1,12 @@
 package com.example.musicplayer;
 
 import android.annotation.TargetApi;
-import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Bundle;
 import android.os.Messenger;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.view.LayoutInflater;
@@ -106,10 +106,6 @@ public class SongListTab extends Fragment {
      * listview onItemClick and onMultiChoice listeners
      */
     private void initListeners(){
-        // init intents for the listeners
-        final Intent musicListSelectIntent = new Intent(mainActivity, MusicPlayerService.class);
-        final Intent musicListQueueIntent = new Intent(mainActivity, MusicPlayerService.class);
-
         // init listview listeners
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -118,14 +114,15 @@ public class SongListTab extends Fragment {
                 Song song = (Song) listView.getItemAtPosition(position);
 
                 // redirect the current playlist to reference the full (original) playlist
-                MainActivity.setCurrent_playlist(MainActivity.getFullPlaylist());
+                MainActivity.setCurrent_playlist_shufflemode(MainActivity.getFullPlaylist());
 
                 // change current song
                 MainActivity.setCurrent_song(song);
 
                 // notify music player service about the current song change
-                musicListSelectIntent.putExtra("musicListSong", mainActivityMessenger);
-                mainActivity.startService(musicListSelectIntent);
+                Bundle song_bundle = new Bundle();
+                song_bundle.putParcelable("song", song);
+                MediaControllerCompat.getMediaController(mainActivity).getTransportControls().sendCustomAction(MusicPlayerService.CUSTOM_ACTION_PLAY_SONG, song_bundle);
             }
         });
 
@@ -218,8 +215,9 @@ public class SongListTab extends Fragment {
                 switch (item.getItemId()) {
                     case R.id.menuitem_createqueue:
                         Playlist transient_playlist = Playlist.createTransientPlaylist(userSelection);
-                        MainActivity.setCurrent_transientPlaylist(transient_playlist);
-                        MainActivity.setCurrent_song(userSelection.get(0));
+                        Song song = userSelection.get(0);
+                        MainActivity.setCurrent_playlist_shufflemode(transient_playlist);
+                        MainActivity.setCurrent_song(song);
 
                         // replace existing transient playlist with new current playlist
                         if (Playlist.isNumTransientsMaxed()){
@@ -232,8 +230,9 @@ public class SongListTab extends Fragment {
                         }
 
                         // notify music player service to start the new song in the new playlist (queue)
-                        musicListQueueIntent.putExtra("musicListSong", mainActivityMessenger);
-                        mainActivity.startService(musicListQueueIntent);
+                        Bundle song_bundle = new Bundle();
+                        song_bundle.putParcelable("song", song);
+                        MediaControllerCompat.getMediaController(mainActivity).getTransportControls().sendCustomAction(MusicPlayerService.CUSTOM_ACTION_PLAY_SONG, song_bundle);
 
                         mode.finish(); // Action picked, so close the CAB
                         return true;

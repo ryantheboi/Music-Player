@@ -1,5 +1,6 @@
 package com.example.musicplayer;
 
+import android.os.Environment;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -11,7 +12,7 @@ import java.util.Locale;
 
 public class Logger {
 
-    private static final String LOGGING_DIRECTORY = "/storage/emulated/0/Playlists";
+    private static final String LOGGING_DIRECTORY = Environment.getExternalStorageDirectory() + "/" + Environment.DIRECTORY_DOWNLOADS + "/MusicPlayerLogs";
     private static final String LOG_EXTENSION = ".txt";
     private static final String LOG_PREFIX = "crashlog";
     private static final boolean enableLogging = true; // set true to enable error logging, false to disable
@@ -23,13 +24,12 @@ public class Logger {
     public static void logException(Exception exception, String prefix){
         if (enableLogging) {
             try {
-                File f = new File(LOGGING_DIRECTORY);
-                if (!f.exists()) {
-                    f.mkdir();
+                File directory = new File(LOGGING_DIRECTORY);
+                if (!directory.exists()) {
+                    directory.mkdir();
                 }
-
                 long exceptionTime = System.currentTimeMillis();
-                SimpleDateFormat sdf = new SimpleDateFormat("MMM-dd-yyyy-HH:mm", Locale.US);
+                SimpleDateFormat sdf = new SimpleDateFormat("MMM-dd-yyyy-HH-mm", Locale.US);
                 Date exceptionDate = new Date(exceptionTime);
 
                 StringWriter stringWriter = new StringWriter();
@@ -49,7 +49,6 @@ public class Logger {
                 writer.close();
             } catch (Exception e) {
                 e.printStackTrace();
-                Logger.logException(e, "Logger");
             }
         }
         else{

@@ -17,12 +17,6 @@ public interface MetadataDao {
     Metadata findById(int id);
 
     /**
-     * Update only the isPlaying metadata, by id
-     */
-    @Query("UPDATE Metadata SET isPlaying = :isPlaying WHERE id =:id")
-    void updateIsPlaying(int id, boolean isPlaying);
-
-    /**
      * Update only the seekPosition metadata, by id
      */
     @Query("UPDATE Metadata SET seekPosition = :seekPosition WHERE id =:id")
@@ -35,16 +29,16 @@ public interface MetadataDao {
     void updateSongIndex(int id, int songIndex);
 
     /**
-     * Update only the isShuffled metadata, by id
+     * Update only the shuffle_mode metadata, by id
      */
-    @Query("UPDATE Metadata SET isShuffled = :isShuffled WHERE id =:id")
-    void updateIsShuffled(int id, boolean isShuffled);
+    @Query("UPDATE Metadata SET shuffle_mode = :shuffle_mode WHERE id =:id")
+    void updateShuffleMode(int id, int shuffle_mode);
 
     /**
-     * Update only the repeatStatus metadata, by id
+     * Update only the repeat_mode metadata, by id
      */
-    @Query("UPDATE Metadata SET repeatStatus = :repeatStatus WHERE id =:id")
-    void updateRepeatStatus(int id, int repeatStatus);
+    @Query("UPDATE Metadata SET repeat_mode = :repeat_mode WHERE id =:id")
+    void updateRepeatMode(int id, int repeat_mode);
 
     /**
      * Update only the isMediaStorePlaylistsImported metadata, by id

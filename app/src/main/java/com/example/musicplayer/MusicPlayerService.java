@@ -980,6 +980,9 @@ implements OnCompletionListener, OnErrorListener {
                         MainActivity.setCurrent_playlist(MainActivity.getCurrent_playlist().shufflePlaylist(MainActivity.getRandom_seed()));
                         break;
                 }
+
+                // notify main activity to update song index in database after shuffling or unshuffling
+                sendUpdateMessage(mainActivity_messenger, UPDATE_SONG_INDEX);
             } catch (Exception e){
                 Logger.logException(e, "MusicPlayerService");
             }

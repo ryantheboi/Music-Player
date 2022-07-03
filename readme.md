@@ -17,8 +17,10 @@
 ## Multiple Themes
 ![Multiple Themes Selection](./app/src/main/Screenshots/themes.png "Selection palette for a variety of themes")
 
+![Multiple Themes Display](./app/src/main/Screenshots/themes_secondary.png "Secondary display for a variety of themes")
+
 ## Main Display
-![Main Activity Expanded](./app/src/main/Screenshots/maindisplay2.gif "Main Activity Expanded")
+![Main Activity Expanded](./app/src/main/Screenshots/maindisplay.gif "Main Activity Expanded")
 
 ## Playlists Tab
 ![Playlists](./app/src/main/Screenshots/playlists.gif "Playlist Tab")
@@ -27,7 +29,7 @@
 ![Playlists](./app/src/main/Screenshots/fastscroll.gif "Indexed Scrolling")
 
 ## Music Details
-![Music Details](./app/src/main/Screenshots/musicdetails2.gif "Music Details")
+![Music Details](./app/src/main/Screenshots/musicdetails.gif "Music Details")
 
 ## Timed Playlists
 ![Action Mode](./app/src/main/Screenshots/timedplaylist.gif "Generate Timed Playlists")

@@ -17,13 +17,9 @@ public class DatabaseRepository {
     private MetadataDao metadataDao;
     private MainActivity mainActivity;
     private LinkedBlockingQueue<Query> messageQueue;
-    private boolean isActive = false;
 
     // playlist objects
     private static int playlist_maxid = 0;
-
-    // TODO: not optimal for queries from previous process that take longer than 3 sec
-    private static final int MAX_SECONDS_POLLING = 3;
 
     public static final int ASYNC_INIT_ALL_PLAYLISTS = 0;
     public static final int ASYNC_GET_CURRENT_PLAYLIST = 1;
@@ -185,21 +181,9 @@ public class DatabaseRepository {
                                     insertMetadata(availableMetadata);
                                 }
 
-                                // keep polling every second for metadata until db is available or until a fixed time passes
                                 else {
-                                    if (!isActive) {
-                                        int seconds_waited = 0;
-                                        while ( (seconds_waited < MAX_SECONDS_POLLING) && (temp_metadata.getNumQueries() > 0) ) {
-                                            temp_metadata = metadataDao.findById(0);
-                                            Thread.sleep(1000);
-                                            seconds_waited += 1;
-                                        }
-                                    }
                                     availableMetadata = temp_metadata;
                                 }
-
-                                // remain active while app is still paused
-                                isActive = true;
 
                                 mainActivity.runOnUiThread(new Runnable() {
                                     @Override

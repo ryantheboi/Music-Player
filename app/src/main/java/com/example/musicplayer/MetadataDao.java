@@ -5,6 +5,7 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Transaction;
 
 import java.util.List;
 
@@ -13,6 +14,7 @@ public interface MetadataDao {
     @Query("SELECT * FROM Metadata")
     List<Metadata> getAll();
 
+    @Transaction
     @Query("SELECT * FROM Metadata WHERE id = :id")
     Metadata findById(int id);
 

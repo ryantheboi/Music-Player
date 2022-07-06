@@ -40,9 +40,8 @@ public class DatabaseRepository {
     public static final int UPDATE_METADATA_SEEK = 16;
     public static final int UPDATE_METADATA_ISALBUMARTCIRCULAR = 17;
     public static final int UPDATE_METADATA_RANDOMSEED = 18;
-    public static final int UPDATE_METADATA_NUMQUERIES = 19;
-    public static final int UPDATE_SONGMETADATA_PLAYED = 20;
-    public static final int UPDATE_SONGMETADATA_LISTENED = 21;
+    public static final int UPDATE_SONGMETADATA_PLAYED = 19;
+    public static final int UPDATE_SONGMETADATA_LISTENED = 20;
 
     /**
      * Holds the query message and the object involved (if exists)
@@ -111,9 +110,6 @@ public class DatabaseRepository {
                         // update metadata with the current size of the query queue
                         // current size includes current query, unless it is to get the metadata
                         int message = query.message;
-                        if (message != ASYNC_GET_METADATA && message != UPDATE_METADATA_NUMQUERIES) {
-                            metadataDao.updateNumQueries(0, messageQueue.size() + 1);
-                        }
                         switch (message) {
                             case ASYNC_INIT_ALL_PLAYLISTS:
                                 final ArrayList<Playlist> allPlaylists = new ArrayList<>(playlistDao.getAll());
@@ -243,9 +239,6 @@ public class DatabaseRepository {
                             case UPDATE_METADATA_RANDOMSEED:
                                 metadataDao.updateRandomSeed(0, (int) query.object);
                                 break;
-                            case UPDATE_METADATA_NUMQUERIES:
-                                metadataDao.updateNumQueries(0, (int) query.object);
-                                break;
                             case UPDATE_SONGMETADATA_PLAYED:
                                 int played_id = ((SongMetadata) query.object).getId();
                                 int played = songMetadataDao.findPlayedById(played_id);
@@ -257,7 +250,6 @@ public class DatabaseRepository {
                                 songMetadataDao.updateListened(listened_id, listened + 1, (String) query.extra);
                                 break;
                         }
-                        metadataDao.updateNumQueries(0, messageQueue.size());
                     } catch (InterruptedException e) {
                         System.out.println("Taking from db query queue was interrupted");
                         Logger.logException(e, "DatabaseRepository");
@@ -454,12 +446,10 @@ public class DatabaseRepository {
 
     /**
      * Informs message thread to clear up all remaining queries for the db in the message queue
-     * Then lastly indicate that there are no pending queries for the db
      * It is not necessary to close the db connection because that will be handled by Android
      */
     public synchronized void finish(){
-        // last query being offered, numqueries will be 0 after completion
+        // last query being offered, empty the queue
         messageQueue.clear();
-        messageQueue.offer(new Query(UPDATE_METADATA_NUMQUERIES, 0));
     }
 }

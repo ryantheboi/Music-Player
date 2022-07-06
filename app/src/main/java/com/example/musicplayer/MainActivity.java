@@ -154,6 +154,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         try {
             System.out.println("resumed");
+            isViewActive = true;
             super.onResume();
             setVolumeControlStream(AudioManager.STREAM_MUSIC);
         }catch (Exception e){
@@ -239,7 +240,7 @@ public class MainActivity extends AppCompatActivity {
                             // no need to update main ui again if the viewmodel has already been established
                             // or if no songs have been added/removed outside of app
                             if (!isViewModelReady || isSongListChanged) {
-                                // retrieve metadata values from database (blocks until db is available)
+                                // retrieve metadata values from database
                                 databaseRepository.asyncGetMetadata();
 
                                 // asynchronously gets all songs and playlists from database, then updates main activity
@@ -250,17 +251,11 @@ public class MainActivity extends AppCompatActivity {
                                 mainFragmentSecondary.initMainFragmentSecondaryUI();
                             }
                             else{
-                                // update main display depending on current song and playback state
-                                mainFragmentSecondary.updateMainSongDetails(current_song, current_playlist);
+                                // update pauseplay button depending on current playback state
                                 if (mediaController.getPlaybackState().getState() == PlaybackStateCompat.STATE_PLAYING) {
                                     mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_pause28dp, R.drawable.ic_pause24dp);
                                 } else {
                                     mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_play28dp, R.drawable.ic_play24dp);
-
-                                    // update seek progress back to where it was previously
-                                    int seekPosition = metadata.getSeekPosition();
-                                    mainFragmentSecondary.setSeekbarProgress(seekPosition);
-                                    mediaController.getTransportControls().seekTo(seekPosition);
                                 }
                             }
                         }catch (Exception e){

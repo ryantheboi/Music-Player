@@ -53,7 +53,6 @@ public class MainActivity extends AppCompatActivity {
     private static Playlist fullPlaylist;
     private Messenger mainActivityMessenger;
     private Intent musicServiceIntent;
-    private boolean isViewActive = true;
     private boolean isViewModelReady = false;
     private boolean isSongListChanged = false;
     private boolean isMusicPlayerServiceReady = false;
@@ -154,7 +153,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         try {
             System.out.println("resumed");
-            isViewActive = true;
             super.onResume();
             setVolumeControlStream(AudioManager.STREAM_MUSIC);
         }catch (Exception e){
@@ -183,7 +181,6 @@ public class MainActivity extends AppCompatActivity {
 
             // unregister mediacontroller callback and disconnect this client from MusicPlayerService
             isMediaBrowserConnected = false;
-            isViewActive = false;
             if (MediaControllerCompat.getMediaController(this) != null) {
                 MediaControllerCompat.getMediaController(this).unregisterCallback(mediaControllerCallback);
             }
@@ -714,13 +711,12 @@ public class MainActivity extends AppCompatActivity {
                         });
 
                         // update seek position outside of app
-                        if (!isViewActive) {
+                        if (getLifecycle().getCurrentState() == Lifecycle.State.DESTROYED) {
                             databaseRepository.updateMetadataSeek(musicCurrentPosition);
                         }
+
                         // update seek position in memory while app is still active
-                        else{
-                            metadata.setSeekPosition(musicCurrentPosition);
-                        }
+                        metadata.setSeekPosition(musicCurrentPosition);
                         break;
                     case ChooseThemeFragment.THEME_SELECTED:
                         final int theme_resid = ThemeColors.getThemeResourceId();
@@ -764,13 +760,12 @@ public class MainActivity extends AppCompatActivity {
                         int songIndex = current_playlist.getSongList().indexOf(current_song);
 
                         // update song index outside of app
-                        if (!isViewActive) {
+                        if (getLifecycle().getCurrentState() == Lifecycle.State.DESTROYED) {
                             databaseRepository.updateMetadataSongIndex(songIndex);
                         }
+
                         // update song index in memory while app is still active
-                        else{
-                            metadata.setSongIndex(songIndex);
-                        }
+                        metadata.setSongIndex(songIndex);
 
                         // update fragment with song details since media controller callbacks are now unregistered
                         if (!isMediaBrowserConnected && getLifecycle().getCurrentState() != Lifecycle.State.DESTROYED){

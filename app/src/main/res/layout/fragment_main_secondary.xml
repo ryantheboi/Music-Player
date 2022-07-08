@@ -230,6 +230,38 @@
             android:layout_alignEnd="@+id/seekBar"
             android:textSize="16sp" />
 
+        <LinearLayout
+            android:id="@+id/bluetooth_layout"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:layout_alignStart="@id/btn_repeat"
+            android:orientation="horizontal"
+            android:layout_marginBottom="25dp"
+            android:layout_above="@+id/btn_repeat"
+            android:layout_centerHorizontal="true"
+            android:alpha="0">
+
+            <ImageView
+                android:id="@+id/bluetooth_imageview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_bluetooth20dp" />
+
+            <TextView
+                android:id="@+id/bluetooth_textview"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:singleLine="true"
+                android:ellipsize="marquee"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:textColor="@color/generalTextDark"
+                android:text="@string/Bluetooth"
+                android:layout_marginStart="7dp"
+                android:layout_marginBottom="2dp"
+                android:textSize="16sp" />
+        </LinearLayout>
+
         <ImageButton
             android:id="@+id/btn_shuffle"
             android:layout_width="wrap_content"

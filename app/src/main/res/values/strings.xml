@@ -35,5 +35,6 @@
     <string name="Play">Play</string>
     <string name="Next">Next</string>
     <string name="Previous">Previous</string>
+    <string name="Bluetooth">Bluetooth</string>
 
 </resources>

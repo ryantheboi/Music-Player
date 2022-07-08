@@ -18,6 +18,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -51,6 +52,7 @@ public class MainFragmentSecondary extends Fragment {
     private ImageButton mainDisplay_prev_btn;
     private ImageButton mainDisplay_shuffle_btn;
     private ImageButton mainDisplay_repeat_btn;
+    private ImageView mainDisplay_bluetooth_image;
     private RippleDrawable mainDisplay_slidedown_btn_ripple;
     private RippleDrawable mainDisplay_info_btn_ripple;
     private RippleDrawable mainDisplay_prev_btn_ripple;
@@ -63,12 +65,14 @@ public class MainFragmentSecondary extends Fragment {
     private TextView mainDisplay_musicDuration;
     private TextView mainDisplay_songTitle;
     private TextView mainDisplay_songArtist;
+    private TextView mainDisplay_bluetooth_tv;
     private Intent mainDisplay_PausePlayIntent;
     private Intent mainDisplay_PrevIntent;
     private Intent mainDisplay_NextIntent;
     private boolean seekBar_isTracking;
     private RelativeLayout mainDisplay_mainLayout;
     private RelativeLayout slidingUpMenuLayout;
+    private LinearLayout mainDisplay_bluetoothLayout;
     private ImageView slidingUp_albumArt;
     private TextView slidingUp_songName;
     private TextView slidingUp_artistName;
@@ -158,6 +162,19 @@ public class MainFragmentSecondary extends Fragment {
 
     public void setShuffleBtnAlpha(int alpha){
         mainDisplay_shuffle_btn.setImageAlpha(alpha);
+    }
+
+    public void setBluetoothTransparent(boolean isTransparent){
+        if (isTransparent) {
+            mainDisplay_bluetoothLayout.setAlpha(0);
+        }
+        else {
+            mainDisplay_bluetoothLayout.setAlpha(0.8f);
+        }
+    }
+
+    public void setBluetoothDeviceName(String name){
+        mainDisplay_bluetooth_tv.setText(name);
     }
 
     /**
@@ -298,6 +315,9 @@ public class MainFragmentSecondary extends Fragment {
         mainDisplay_prev_btn = view.findViewById(R.id.btn_prev);
         mainDisplay_shuffle_btn = view.findViewById(R.id.btn_shuffle);
         mainDisplay_repeat_btn = view.findViewById(R.id.btn_repeat);
+        mainDisplay_bluetoothLayout = view.findViewById(R.id.bluetooth_layout);
+        mainDisplay_bluetooth_image = view.findViewById(R.id.bluetooth_imageview);
+        mainDisplay_bluetooth_tv = view.findViewById(R.id.bluetooth_textview);
         mainDisplay_musicPosition = view.findViewById(R.id.music_position);
         mainDisplay_musicDuration = view.findViewById(R.id.music_duration);
         mainDisplay_playlistHeader = view.findViewById(R.id.playlist_header);
@@ -495,10 +515,11 @@ public class MainFragmentSecondary extends Fragment {
             }
         });
 
-        // enable playlist header, song title, and song artist text with marquee scrolling
+        // enable playlist header, song title, song artist, and bluetooth text with marquee scrolling
         mainDisplay_playlistHeader.setSelected(true);
         mainDisplay_songTitle.setSelected(true);
         mainDisplay_songArtist.setSelected(true);
+        mainDisplay_bluetooth_tv.setSelected(true);
     }
 
     /**
@@ -652,6 +673,7 @@ public class MainFragmentSecondary extends Fragment {
         int textSongColor = ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR);
         int textArtistColor = ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR);
         int textSeekbarColor = ThemeColors.getColor(ThemeColors.TITLE_TEXT_COLOR);
+        int altColor = getResources().getColor(ThemeColors.getDrawableVectorColorId());
         int primaryColor = ThemeColors.getColor(ThemeColors.COLOR_PRIMARY);
         int secondaryColor= ThemeColors.getGradientColor();
 
@@ -660,6 +682,8 @@ public class MainFragmentSecondary extends Fragment {
         mainDisplay_musicPosition.setTextColor(textSeekbarColor);
         mainDisplay_musicDuration.setTextColor(textSeekbarColor);
         mainDisplay_playlistHeader.setTextColor(textSongColor);
+        mainDisplay_bluetooth_tv.setTextColor(altColor);
+
         mainDisplay_mainGradient.setColors(new int[]{primaryColor, secondaryColor});
         mainDisplay_mainGradient.setOrientation(GradientDrawable.Orientation.BL_TR);
 
@@ -671,6 +695,7 @@ public class MainFragmentSecondary extends Fragment {
         Drawable unwrappedDrawablePrev = mainDisplay_prev_btn.getDrawable();
         Drawable unwrappedDrawableShuffle = mainDisplay_shuffle_btn.getDrawable();
         Drawable unwrappedDrawableRepeat = mainDisplay_repeat_btn.getDrawable();
+        Drawable unwrappedDrawableBluetooth = mainDisplay_bluetooth_image.getDrawable();
         Drawable wrappedDrawableSlideDown = DrawableCompat.wrap(unwrappedDrawableSlideDown);
         Drawable wrappedDrawableInfo = DrawableCompat.wrap(unwrappedDrawableInfo);
         Drawable wrappedDrawablePauseplay = DrawableCompat.wrap(unwrappedDrawablePauseplay);
@@ -678,6 +703,7 @@ public class MainFragmentSecondary extends Fragment {
         Drawable wrappedDrawablePrev = DrawableCompat.wrap(unwrappedDrawablePrev);
         Drawable wrappedDrawableShuffle = DrawableCompat.wrap(unwrappedDrawableShuffle);
         Drawable wrappedDrawableRepeat = DrawableCompat.wrap(unwrappedDrawableRepeat);
+        Drawable wrappedDrawableBluetooth = DrawableCompat.wrap(unwrappedDrawableBluetooth);
         DrawableCompat.setTint(wrappedDrawableSlideDown, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
         DrawableCompat.setTint(wrappedDrawableInfo, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
         DrawableCompat.setTint(wrappedDrawablePauseplay, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
@@ -685,6 +711,7 @@ public class MainFragmentSecondary extends Fragment {
         DrawableCompat.setTint(wrappedDrawablePrev, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
         DrawableCompat.setTint(wrappedDrawableShuffle, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
         DrawableCompat.setTint(wrappedDrawableRepeat, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
+        DrawableCompat.setTint(wrappedDrawableBluetooth, altColor);
 
         // update ripple colors
         mainDisplay_slidedown_btn_ripple.setColor(ColorStateList.valueOf(getResources().getColor(ThemeColors.getMainRippleDrawableColorId())));

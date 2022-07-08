@@ -883,6 +883,9 @@ implements OnCompletionListener, OnErrorListener {
                     if (bluetoothProxy == null) {
                         bluetoothAdapter.getProfileProxy(MusicPlayerService.this, bluetoothServiceListener, BluetoothProfile.A2DP);
                     }
+                    else if (bluetoothConnectedDevices.size() > 0) {
+                        sendUpdateMessage(mainActivity_messenger, UPDATE_BLUETOOTH_CONNECTED);
+                    }
 
                     // send update to main messenger to complete handshake
                     sendUpdateMessage(mainActivity_messenger, UPDATE_HANDSHAKE);

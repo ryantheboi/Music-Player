@@ -253,6 +253,7 @@ public class MainActivity extends AppCompatActivity {
                                     mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_pause28dp, R.drawable.ic_pause24dp);
                                 } else {
                                     mainFragmentSecondary.setPausePlayBtns(R.drawable.ic_play28dp, R.drawable.ic_play24dp);
+                                    mediaController.getTransportControls().seekTo(metadata.getSeekPosition());
                                 }
                             }
                         }catch (Exception e){
@@ -791,6 +792,28 @@ public class MainActivity extends AppCompatActivity {
                         listened_songMetadata.setListened(listened_songMetadata.getListened() + 1);
                         listened_songMetadata.setDateListened(date_listened);
                         databaseRepository.updateSongMetadataListened(listened_songMetadata, date_listened);
+                        break;
+                    case MusicPlayerService.UPDATE_BLUETOOTH_CONNECTED:
+                        String bluetooth_deviceName = (String) bundle.get("name");
+                        if (getLifecycle().getCurrentState() != Lifecycle.State.DESTROYED) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mainFragmentSecondary.setBluetoothDeviceName(bluetooth_deviceName);
+                                    mainFragmentSecondary.setBluetoothTransparent(false);
+                                }
+                            });
+                        }
+                        break;
+                    case MusicPlayerService.UPDATE_BLUETOOTH_DISCONNECTED:
+                        if (getLifecycle().getCurrentState() != Lifecycle.State.DESTROYED) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mainFragmentSecondary.setBluetoothTransparent(true);
+                                }
+                            });
+                        }
                         break;
                 }
             }catch (Exception e){

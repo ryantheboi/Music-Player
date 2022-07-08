@@ -8,10 +8,12 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.graphics.BitmapFactory;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
@@ -127,6 +129,10 @@ implements OnCompletionListener, OnErrorListener {
     private static final int NOTIFICATION_PREV = 3;
     private static final int NOTIFICATION_CUSTOM_PLAY_SONG = 4;
 
+    private ServiceConnection musicPlayerServiceConnection;
+    private MusicPlayerService musicPlayerService;
+    private boolean isBound = false;
+
     @Override
     @TargetApi(26)
     public void onCreate() {
@@ -240,6 +246,7 @@ implements OnCompletionListener, OnErrorListener {
             progress_listener.shutdownNow();
             bluetoothAdapter.closeProfileProxy(BluetoothProfile.A2DP, bluetoothProxy);
             unregisterReceiver(bluetoothReceiver);
+            doUnbindService();
             stopSelf();
             super.onDestroy();
         }catch (Exception e){
@@ -467,6 +474,23 @@ implements OnCompletionListener, OnErrorListener {
     }
 
     private void initBluetooth(){
+        // define callbacks for music player service binding, passed to bindService()
+        musicPlayerServiceConnection = new ServiceConnection() {
+
+            @Override
+            public void onServiceConnected(ComponentName className,
+                                           IBinder service) {
+                // bound to MusicPlayerService, cast the IBinder and get service instance
+                MusicPlayerService.LocalBinder binder = (MusicPlayerService.LocalBinder) service;
+                musicPlayerService = binder.getService();
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName arg0) {
+                musicPlayerService = null;
+            }
+        };
+
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         bluetoothServiceListener = new BluetoothProfile.ServiceListener() {
 
@@ -478,6 +502,9 @@ implements OnCompletionListener, OnErrorListener {
                     bluetoothConnectedDevices.addAll(proxy.getConnectedDevices());
                     bluetoothConnectedDevice = connectedDevices.get(0);
 
+                    // bind to prevent system from destroying service while device still connected
+                    doBindService();
+
                     // notify main activity that bluetooth device(s) already connected
                     sendUpdateMessage(mainActivity_messenger, UPDATE_BLUETOOTH_CONNECTED);
                 }
@@ -486,6 +513,7 @@ implements OnCompletionListener, OnErrorListener {
             @Override
             public void onServiceDisconnected(int profile) {
                 bluetoothProxy = null;
+                doUnbindService();
             }
         };
 
@@ -504,6 +532,28 @@ implements OnCompletionListener, OnErrorListener {
             // enable Bluetooth through the system settings
 //                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 //                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
+    }
+
+    /**
+     * Bind this service to prevent it from being destroyed by system
+     */
+    protected void doBindService(){
+        Intent bluetooth_intent = new Intent(MusicPlayerService.this, MusicPlayerService.class);
+        bluetooth_intent.setAction(BLUETOOTH_SERVICE);
+
+        // attempt to establish a connection with the service
+        // isBound will remain false if an error occurred
+        if (bindService(bluetooth_intent, musicPlayerServiceConnection, Context.BIND_AUTO_CREATE)) {
+            isBound = true;
+        }
+    }
+
+    protected void doUnbindService(){
+        if (isBound) {
+            // release information about the service's state
+            unbindService(musicPlayerServiceConnection);
+            isBound = false;
         }
     }
 
@@ -830,7 +880,9 @@ implements OnCompletionListener, OnErrorListener {
             switch (msg.what) {
                 case PREPARE_HANDSHAKE:
                     // get bluetooth proxy to find any bluetooth devices already connected
-                    bluetoothAdapter.getProfileProxy(MusicPlayerService.this, bluetoothServiceListener, BluetoothProfile.A2DP);
+                    if (bluetoothProxy == null) {
+                        bluetoothAdapter.getProfileProxy(MusicPlayerService.this, bluetoothServiceListener, BluetoothProfile.A2DP);
+                    }
 
                     // send update to main messenger to complete handshake
                     sendUpdateMessage(mainActivity_messenger, UPDATE_HANDSHAKE);
@@ -866,11 +918,14 @@ implements OnCompletionListener, OnErrorListener {
                 bluetoothConnectedDevices.add(device);
                 bluetoothConnectedDevice = device;
 
+                doBindService();
+
                 // notify main activity that bluetooth connected
                 if (mainActivity_messenger != null) {
                     sendUpdateMessage(mainActivity_messenger, UPDATE_BLUETOOTH_CONNECTED);
                 }
             }
+
             else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
                 //Device has disconnected
                 bluetoothConnectedDevices.remove(device);
@@ -880,6 +935,8 @@ implements OnCompletionListener, OnErrorListener {
                 else {
                     bluetoothConnectedDevice = null;
                 }
+
+                doUnbindService();
 
                 // notify main activity that bluetooth disconnected
                 if (mainActivity_messenger != null) {
@@ -1295,4 +1352,10 @@ implements OnCompletionListener, OnErrorListener {
         }
     }
 
+    public class LocalBinder extends Binder {
+        MusicPlayerService getService() {
+            // return this instance of LocalService so clients can call public methods
+            return MusicPlayerService.this;
+        }
+    }
 }

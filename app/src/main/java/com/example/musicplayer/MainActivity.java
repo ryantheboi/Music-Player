@@ -138,11 +138,11 @@ public class MainActivity extends AppCompatActivity {
                     Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
                 // present rationale to user and then request for permissions
                 ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.BLUETOOTH}, MY_PERMISSION_REQUEST);
             } else {
                 // request for permissions
                 ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSION_REQUEST);
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.BLUETOOTH}, MY_PERMISSION_REQUEST);
             }
         }catch (Exception e){
             Logger.logException(e);

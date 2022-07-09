@@ -80,6 +80,7 @@ implements OnCompletionListener, OnErrorListener {
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothDevice bluetoothConnectedDevice;
     private BluetoothProfile.ServiceListener bluetoothServiceListener;
+    private boolean isBluetoothEnabled = false;
     private static MediaPlayer mediaPlayer;
     private static AudioManager mAudioManager;
     private static AudioAttributes mAudioAttributes;
@@ -390,6 +391,8 @@ implements OnCompletionListener, OnErrorListener {
                             .setContentTitle(description.getTitle())
                             .setContentText(description.getSubtitle())
                             .setLargeIcon(description.getIconBitmap());
+                    Notification notification = notificationBuilder.build();
+                    notificationManager.notify(1, notification);
                 }
                 break;
             case NOTIFICATION_CUSTOM_PLAY_SONG:
@@ -491,7 +494,17 @@ implements OnCompletionListener, OnErrorListener {
             }
         };
 
+        // register broadcast receiver to listen for bluetooth changes
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        registerReceiver(bluetoothReceiver, filter);
+
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        // define service listener for getting bluetooth profile proxy
         bluetoothServiceListener = new BluetoothProfile.ServiceListener() {
 
             @Override
@@ -518,20 +531,17 @@ implements OnCompletionListener, OnErrorListener {
         };
 
         if (bluetoothAdapter == null) {
-            // Device doesn't support Bluetooth
+            // device doesn't support Bluetooth
+            isBluetoothEnabled = false;
         }
 
         else if (bluetoothAdapter.isEnabled()) {
-            IntentFilter filter = new IntentFilter();
-            filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
-            filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
-            filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-            registerReceiver(bluetoothReceiver, filter);
+            isBluetoothEnabled = true;
         }
         else{
-            // enable Bluetooth through the system settings
-//                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-//                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            // request to enable Bluetooth through the system settings
+            // Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            // startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
     }
 
@@ -880,7 +890,7 @@ implements OnCompletionListener, OnErrorListener {
             switch (msg.what) {
                 case PREPARE_HANDSHAKE:
                     // get bluetooth proxy to find any bluetooth devices already connected
-                    if (bluetoothProxy == null) {
+                    if (isBluetoothEnabled && bluetoothProxy == null) {
                         bluetoothAdapter.getProfileProxy(MusicPlayerService.this, bluetoothServiceListener, BluetoothProfile.A2DP);
                     }
                     else if (bluetoothConnectedDevices.size() > 0) {
@@ -916,8 +926,20 @@ implements OnCompletionListener, OnErrorListener {
             String action = intent.getAction();
             BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
-            if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
-                //Device is now connected
+            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                switch (state) {
+                    case BluetoothAdapter.STATE_OFF:
+                        isBluetoothEnabled = false;
+                        break;
+                    case BluetoothAdapter.STATE_ON:
+                        isBluetoothEnabled = true;
+                        break;
+                }
+            }
+
+            else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
+                // device is now connected
                 bluetoothConnectedDevices.add(device);
                 bluetoothConnectedDevice = device;
 
@@ -930,7 +952,7 @@ implements OnCompletionListener, OnErrorListener {
             }
 
             else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
-                //Device has disconnected
+                // device has disconnected
                 bluetoothConnectedDevices.remove(device);
                 if (bluetoothConnectedDevices.size() > 0) {
                     bluetoothConnectedDevice = bluetoothConnectedDevices.iterator().next();
@@ -1041,9 +1063,6 @@ implements OnCompletionListener, OnErrorListener {
                     setMediaSessionMetadata(next_song);
 
                     updateNotificationBuilder(NOTIFICATION_NEXT);
-                    Notification notification = notificationBuilder.build();
-                    notificationManager.notify(1, notification);
-                    mService.startForeground(1, notification);
 
                     // recreate mp and play next song only if mediaplayer was playing before
                     if (continuePlaying) {
@@ -1089,9 +1108,6 @@ implements OnCompletionListener, OnErrorListener {
                     setMediaSessionMetadata(prev_song);
 
                     updateNotificationBuilder(NOTIFICATION_PREV);
-                    Notification notification = notificationBuilder.build();
-                    notificationManager.notify(1, notification);
-                    mService.startForeground(1, notification);
 
                     // recreate mp and play prev song only if mediaplayer was playing before
                     if (continuePlaying) {

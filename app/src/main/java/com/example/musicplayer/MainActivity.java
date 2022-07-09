@@ -29,6 +29,7 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.view.ActionMode;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -111,6 +112,25 @@ public class MainActivity extends AppCompatActivity {
             }
 
             setContentView(R.layout.activity_main);
+
+            // delay splashscreen until metadata is loaded and UI is ready
+            final View content = findViewById(android.R.id.content);
+            content.getViewTreeObserver().addOnPreDrawListener(
+                    new ViewTreeObserver.OnPreDrawListener() {
+                        @Override
+                        public boolean onPreDraw() {
+                            // check if initial data is ready
+                            if (isViewModelReady) {
+                                // content is ready; start drawing
+                                content.getViewTreeObserver().removeOnPreDrawListener(this);
+                                return true;
+                            } else {
+                                // content is not ready; suspend
+                                return false;
+                            }
+                        }
+                    });
+
             mainActivityLayout = findViewById(R.id.slidingPanel);
 
         }catch (Exception e){

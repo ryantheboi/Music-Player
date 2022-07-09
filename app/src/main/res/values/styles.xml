@@ -30,6 +30,11 @@
         <item name="android:fastScrollPreviewBackgroundRight">@drawable/ic_fastscroll_bubble</item>
     </style>
 
+    <style name="SplashScreenTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="android:windowSplashScreenBackground">@color/subaruCharcoal100</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ram</item>
+    </style>
+
     <style name="ToolbarActionMode" parent="@style/Widget.AppCompat.ActionMode">
         <item name="android:paddingRight">10dp</item>
     </style>

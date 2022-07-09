@@ -21,7 +21,8 @@
         android:requestLegacyExternalStorage="true"
         tools:ignore="GoogleAppIndexingWarning">
 
-        <receiver android:name="androidx.media.session.MediaButtonReceiver" >
+        <receiver android:name="androidx.media.session.MediaButtonReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
@@ -29,6 +30,7 @@
 
         <service
             android:name=".MusicPlayerService"
+            android:exported="true"
             android:enabled="true">
             <intent-filter>
                 <action android:name="android.media.browse.MediaBrowserService" />
@@ -39,7 +41,8 @@
         </service>
 
         <activity android:name=".MainActivity"
-                android:exported="true">
+            android:theme="@style/SplashScreenTheme"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

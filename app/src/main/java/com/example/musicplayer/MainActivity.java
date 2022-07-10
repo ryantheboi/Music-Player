@@ -15,6 +15,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.media.AudioManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -125,24 +126,31 @@ public class MainActivity extends AppCompatActivity {
             super.onStart();
             System.out.println("started");
 
+            // check and request for necessary permissions
             isPermissionGranted = ContextCompat.checkSelfPermission(MainActivity.this,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
-            // check and request for read permissions
+
             if (isPermissionGranted) {
                 setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
                 musicServiceIntent = new Intent(this, MusicPlayerService.class);
 
                 mediaBrowser.connect();
-            } else if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                // present rationale to user and then request for permissions
-                ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.BLUETOOTH}, MY_PERMISSION_REQUEST);
-            } else {
+            }
+
+            // necessary permissions have not been granted yet, request for them
+            else {
+                String[] permissions = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ?
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.BLUETOOTH_CONNECT} :
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.BLUETOOTH};
+
+                if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                    // TODO present rationale to user and then request for permissions
+                }
+
                 // request for permissions
-                ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.BLUETOOTH}, MY_PERMISSION_REQUEST);
+                ActivityCompat.requestPermissions(MainActivity.this, permissions, MY_PERMISSION_REQUEST);
             }
         }catch (Exception e){
             Logger.logException(e);

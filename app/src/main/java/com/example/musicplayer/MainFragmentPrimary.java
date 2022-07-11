@@ -10,8 +10,6 @@ import android.os.Bundle;
 import android.os.Messenger;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,7 +17,6 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -60,7 +57,6 @@ public class MainFragmentPrimary extends Fragment {
     private RippleDrawable theme_btn_ripple;
     private boolean isThemeSelecting;
     private PagerAdapter pagerAdapter;
-    private boolean isCreated = false;
 
     public MainFragmentPrimary() {
         super(R.layout.fragment_main_primary);
@@ -89,39 +85,14 @@ public class MainFragmentPrimary extends Fragment {
         musicListRelativeLayout = view.findViewById(R.id.layout_mainfragment);
         toolbar = view.findViewById(R.id.toolbar);
         toolbar_title = view.findViewById(R.id.toolbar_title);
+        theme_btn = view.findViewById(R.id.toolbar_theme_btn);
+        searchFilter_btn = view.findViewById(R.id.toolbar_searchFilter_btn);
         searchFilter_editText = view.findViewById(R.id.toolbar_searchFilter);
         tabLayout = view.findViewById(R.id.tabLayout);
         viewPager = view.findViewById(R.id.viewPager);
-        setHasOptionsMenu(true);
-        initActionBar();
-
-        if (isCreated){
-            initViewPagerTabs();
-        }
-        else{
-            isCreated = true;
-        }
-    }
-
-    @Override
-    @TargetApi(23)
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        // inflate the menu for the actionbar, if it is present.
-        inflater.inflate(R.menu.toolbar_menu, menu);
-
-        // theme button menu item
-        FrameLayout menuitem_theme_layout = (FrameLayout) menu.findItem(R.id.menuitem_theme).getActionView();
-        theme_btn = menuitem_theme_layout.findViewById(R.id.icon);
-        theme_btn_ripple = (RippleDrawable) theme_btn.getBackground();
-        theme_btn_ripple.setRadius((int) getResources().getDimension(R.dimen.theme_button_ripple));
         initThemeButton();
-
-        // search filter button menu item and its corresponding edittext
-        FrameLayout menuitem_searchfilter_layout = (FrameLayout) menu.findItem(R.id.menuitem_searchfilter).getActionView();
-        searchFilter_btn = menuitem_searchfilter_layout.findViewById(R.id.icon);
-        searchFilter_btn_ripple = (RippleDrawable) searchFilter_btn.getBackground();
-        searchFilter_btn_ripple.setRadius((int) getResources().getDimension(R.dimen.searchfilter_button_ripple));
-        super.onCreateOptionsMenu(menu,inflater);
+        initActionBar();
+        initViewPagerTabs();
     }
 
     /**
@@ -231,6 +202,9 @@ public class MainFragmentPrimary extends Fragment {
     @TargetApi(23)
     @SuppressLint("ClickableViewAccessibility")
     private void initFilterSearch() {
+        searchFilter_btn_ripple = (RippleDrawable) searchFilter_btn.getBackground();
+        searchFilter_btn_ripple.setRadius((int) getResources().getDimension(R.dimen.searchfilter_button_ripple));
+
         // set this click listener to manually call the action mode's click listener
         searchFilter_btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -307,6 +281,9 @@ public class MainFragmentPrimary extends Fragment {
     private void initThemeButton() {
         isThemeSelecting = false;
         final Animation rotate = AnimationUtils.loadAnimation(getContext(), R.anim.rotate_themebtn_animation);
+
+        theme_btn_ripple = (RippleDrawable) theme_btn.getBackground();
+        theme_btn_ripple.setRadius((int) getResources().getDimension(R.dimen.theme_button_ripple));
 
         theme_btn.setOnClickListener(new View.OnClickListener() {
             @Override

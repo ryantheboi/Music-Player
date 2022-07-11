@@ -16,8 +16,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:layout_scrollFlags="scroll|enterAlways"
-            android:paddingEnd="10dp">
+            app:layout_scrollFlags="scroll|enterAlways">
 
             <TextView
                 android:id="@+id/toolbar_title"
@@ -39,6 +38,23 @@
                 android:hint="@string/Search"
                 android:textColor="?attr/itemTextColor"
                 android:visibility="invisible"/>
+            <ImageView
+                android:id="@+id/toolbar_searchFilter_btn"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="15dp"
+                android:layout_marginStart="5dp"
+                android:src="@drawable/ic_search24dp"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
+            <ImageView
+                android:id="@+id/toolbar_theme_btn"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_gravity="center"
+                android:layout_marginStart="10dp"
+                android:src="@drawable/light"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
         </androidx.appcompat.widget.Toolbar>
 
         <com.google.android.material.tabs.TabLayout

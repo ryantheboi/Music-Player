@@ -3,6 +3,7 @@ package com.example.musicplayer;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.splashscreen.SplashScreen;
 import androidx.lifecycle.Lifecycle;
 
 import android.Manifest;
@@ -30,6 +31,7 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.view.ActionMode;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -83,6 +85,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         try {
+            // replicate Android 12 Splash Screen behavior prior to API 31+
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                SplashScreen.installSplashScreen(this);
+            }
             super.onCreate(savedInstanceState);
             setTheme(R.style.ThemeOverlay_AppCompat_MusicLight);
             ThemeColors.generateThemeValues(this, R.style.ThemeOverlay_AppCompat_MusicLight);
@@ -112,6 +118,25 @@ public class MainActivity extends AppCompatActivity {
             }
 
             setContentView(R.layout.activity_main);
+
+            // delay splashscreen until metadata is loaded and UI is ready
+            final View content = findViewById(android.R.id.content);
+            content.getViewTreeObserver().addOnPreDrawListener(
+                    new ViewTreeObserver.OnPreDrawListener() {
+                        @Override
+                        public boolean onPreDraw() {
+                            // check if initial data is ready
+                            if (isViewModelReady) {
+                                // content is ready; start drawing
+                                content.getViewTreeObserver().removeOnPreDrawListener(this);
+                                return true;
+                            } else {
+                                // content is not ready; suspend
+                                return false;
+                            }
+                        }
+                    });
+
             mainActivityLayout = findViewById(R.id.slidingPanel);
 
         }catch (Exception e){
@@ -160,8 +185,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         try {
-            System.out.println("resumed");
             super.onResume();
+            System.out.println("resumed");
             setVolumeControlStream(AudioManager.STREAM_MUSIC);
         }catch (Exception e){
             Logger.logException(e);
@@ -171,8 +196,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         try {
-            System.out.println("paused");
             super.onPause();
+            System.out.println("paused");
         }catch (Exception e){
             Logger.logException(e);
         }
@@ -181,6 +206,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         try {
+            super.onStop();
             System.out.println("stopped");
 
             // save metadata values to database
@@ -197,7 +223,6 @@ public class MainActivity extends AppCompatActivity {
             if (isPermissionGranted) {
                 databaseRepository.finish();
             }
-            super.onStop();
         }catch (Exception e){
             Logger.logException(e);
         }
@@ -206,8 +231,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         try {
-            System.out.println("destroyed");
             super.onDestroy();
+            System.out.println("destroyed");
         }catch (Exception e){
             Logger.logException(e);
         }

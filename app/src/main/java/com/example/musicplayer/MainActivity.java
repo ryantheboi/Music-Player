@@ -46,7 +46,8 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 public class MainActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSION_REQUEST = 1;
-    private boolean isPermissionGranted = false;
+    private boolean isStoragePermissionGranted = false;
+    public static boolean isBluetoothPermissionGranted = false;
     private boolean isInfoDisplaying;
     private static Song current_song = Song.EMPTY_SONG;
     private ArrayList<Song> fullSongList;
@@ -152,10 +153,16 @@ public class MainActivity extends AppCompatActivity {
             System.out.println("started");
 
             // check and request for necessary permissions
-            isPermissionGranted = ContextCompat.checkSelfPermission(MainActivity.this,
+            isStoragePermissionGranted = ContextCompat.checkSelfPermission(MainActivity.this,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
 
-            if (isPermissionGranted) {
+            isBluetoothPermissionGranted = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ?
+                    ContextCompat.checkSelfPermission(MainActivity.this,
+                    Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED :
+                    ContextCompat.checkSelfPermission(MainActivity.this,
+                    Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED;
+
+            if (isStoragePermissionGranted) {
                 setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
                 musicServiceIntent = new Intent(this, MusicPlayerService.class);
@@ -220,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
             }
             mediaBrowser.disconnect();
 
-            if (isPermissionGranted) {
+            if (isStoragePermissionGranted) {
                 databaseRepository.finish();
             }
         }catch (Exception e){
@@ -740,7 +747,9 @@ public class MainActivity extends AppCompatActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                mainFragmentSecondary.setSeekbarProgress(musicCurrentPosition);
+                                if (getLifecycle().getCurrentState() != Lifecycle.State.DESTROYED) {
+                                    mainFragmentSecondary.setSeekbarProgress(musicCurrentPosition);
+                                }
                             }
                         });
 

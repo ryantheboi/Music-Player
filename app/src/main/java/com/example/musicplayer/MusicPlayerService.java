@@ -63,7 +63,7 @@ import java.util.concurrent.TimeUnit;
 
 public class MusicPlayerService
         extends MediaBrowserServiceCompat
-implements OnCompletionListener, OnErrorListener {
+        implements OnCompletionListener, OnErrorListener {
 
     private static final String MEDIA_ROOT_ID = "media_root_id";
     private static final String EMPTY_MEDIA_ROOT_ID = "empty_root_id";
@@ -170,8 +170,7 @@ implements OnCompletionListener, OnErrorListener {
                         .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, BitmapFactory.decodeResource(getResources(), R.drawable.default_albumart))
                         .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, Song.EMPTY_SONG.getDuration());
                 mediaSession.setMetadata(metadataBuilder.build());
-            }
-            else{
+            } else {
                 // use existing song to set media session metadata
                 setMediaSessionMetadata(current_song);
             }
@@ -196,7 +195,7 @@ implements OnCompletionListener, OnErrorListener {
             setSessionToken(mediaSession.getSessionToken());
 
             initAudioFocus();
-        }catch (Exception e){
+        } catch (Exception e) {
             Logger.logException(e, "MusicPlayerService");
         }
     }
@@ -222,7 +221,7 @@ implements OnCompletionListener, OnErrorListener {
                     }
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Logger.logException(e, "MusicPlayerService");
         }
 
@@ -250,7 +249,7 @@ implements OnCompletionListener, OnErrorListener {
             doUnbindService();
             stopSelf();
             super.onDestroy();
-        }catch (Exception e){
+        } catch (Exception e) {
             Logger.logException(e, "MusicPlayerService");
         }
     }
@@ -260,8 +259,7 @@ implements OnCompletionListener, OnErrorListener {
         if (intent != null && MEDIABROWSER_SERVICE.equals(intent.getAction())) {
             // for Android auto, need to call super, or onGetRoot won't be called.
             return super.onBind(intent);
-        }
-        else if (intent != null && BLUETOOTH_SERVICE.equals(intent.getAction())){
+        } else if (intent != null && BLUETOOTH_SERVICE.equals(intent.getAction())) {
             return binder;
         }
         return binder;
@@ -341,7 +339,7 @@ implements OnCompletionListener, OnErrorListener {
                     mediaSession.getController().getTransportControls().skipToNext();
                     break;
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Logger.logException(e, "MusicPlayerService");
         }
     }
@@ -351,10 +349,10 @@ implements OnCompletionListener, OnErrorListener {
      * @param notificationAction the action being performed in this media session
      */
     @SuppressLint("RestrictedApi")
-    private void updateNotificationBuilder(int notificationAction){
+    private void updateNotificationBuilder(int notificationAction) {
         notificationManager = NotificationManagerCompat.from(this);
 
-        switch(notificationAction){
+        switch (notificationAction) {
             case NOTIFICATION_PLAY:
                 // initialize notification builder and appropriate intents for the first time
                 if (notificationBuilder == null) {
@@ -406,9 +404,7 @@ implements OnCompletionListener, OnErrorListener {
                             .mActions.set(1, new NotificationCompat.Action(
                                     R.drawable.ic_pause24dp, getString(R.string.Pause),
                                     notificationPause_intent));
-                }
-
-                else {
+                } else {
                     // update notifications with new song
                     MediaControllerCompat controller = mediaSession.getController();
                     MediaMetadataCompat mediaMetadata = controller.getMetadata();
@@ -430,7 +426,7 @@ implements OnCompletionListener, OnErrorListener {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private void initAudioFocus(){
+    private void initAudioFocus() {
         mAudioManager = (AudioManager) MusicPlayerService.this.getSystemService(Context.AUDIO_SERVICE);
 
         // request audio focus for playback, this registers the afChangeListener
@@ -476,7 +472,7 @@ implements OnCompletionListener, OnErrorListener {
                                 }).build();
     }
 
-    private void initBluetooth(){
+    private void initBluetooth() {
         // define callbacks for music player service binding, passed to bindService()
         musicPlayerServiceConnection = new ServiceConnection() {
 
@@ -484,8 +480,12 @@ implements OnCompletionListener, OnErrorListener {
             public void onServiceConnected(ComponentName className,
                                            IBinder service) {
                 // bound to MusicPlayerService, cast the IBinder and get service instance
-                MusicPlayerService.LocalBinder binder = (MusicPlayerService.LocalBinder) service;
-                musicPlayerService = binder.getService();
+                try {
+                    MusicPlayerService.LocalBinder binder = (MusicPlayerService.LocalBinder) service;
+                    musicPlayerService = binder.getService();
+                } catch (Exception e) {
+                    Logger.logException(e, "MusicPlayerService");
+                }
             }
 
             @Override
@@ -509,36 +509,41 @@ implements OnCompletionListener, OnErrorListener {
 
             @Override
             public void onServiceConnected(int profile, BluetoothProfile proxy) {
-                bluetoothProxy = proxy;
-                List<BluetoothDevice> connectedDevices = proxy.getConnectedDevices();
-                if (connectedDevices.size() > 0){
-                    bluetoothConnectedDevices.addAll(proxy.getConnectedDevices());
-                    bluetoothConnectedDevice = connectedDevices.get(0);
+                try {
+                    if (MainActivity.isBluetoothPermissionGranted) {
+                        bluetoothProxy = proxy;
+                        List<BluetoothDevice> connectedDevices = proxy.getConnectedDevices();
+                        if (connectedDevices.size() > 0) {
+                            bluetoothConnectedDevices.addAll(proxy.getConnectedDevices());
+                            bluetoothConnectedDevice = connectedDevices.get(0);
 
-                    // bind to prevent system from destroying service while device still connected
-                    doBindService();
+                            // bind to prevent system from destroying service while device still connected
+                            doBindService();
 
-                    // notify main activity that bluetooth device(s) already connected
-                    sendUpdateMessage(mainActivity_messenger, UPDATE_BLUETOOTH_CONNECTED);
+                            // notify main activity that bluetooth device(s) already connected
+                            sendUpdateMessage(mainActivity_messenger, UPDATE_BLUETOOTH_CONNECTED);
+                        }
+                    }
+                } catch (Exception e) {
+                    Logger.logException(e, "Bluetooth");
                 }
             }
 
             @Override
             public void onServiceDisconnected(int profile) {
-                bluetoothProxy = null;
-                doUnbindService();
+                if (MainActivity.isBluetoothPermissionGranted) {
+                    bluetoothProxy = null;
+                    doUnbindService();
+                }
             }
         };
 
         if (bluetoothAdapter == null) {
             // device doesn't support Bluetooth
             isBluetoothEnabled = false;
-        }
-
-        else if (bluetoothAdapter.isEnabled()) {
+        } else if (bluetoothAdapter.isEnabled()) {
             isBluetoothEnabled = true;
-        }
-        else{
+        } else {
             // request to enable Bluetooth through the system settings
             // Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             // startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
@@ -548,7 +553,7 @@ implements OnCompletionListener, OnErrorListener {
     /**
      * Bind this service to prevent it from being destroyed by system
      */
-    protected void doBindService(){
+    protected void doBindService() {
         Intent bluetooth_intent = new Intent(MusicPlayerService.this, MusicPlayerService.class);
         bluetooth_intent.setAction(BLUETOOTH_SERVICE);
 
@@ -559,7 +564,7 @@ implements OnCompletionListener, OnErrorListener {
         }
     }
 
-    protected void doUnbindService(){
+    protected void doUnbindService() {
         if (isBound) {
             // release information about the service's state
             unbindService(musicPlayerServiceConnection);
@@ -571,7 +576,7 @@ implements OnCompletionListener, OnErrorListener {
      *  checks for audio focus before toggling media
      */
     @TargetApi(26)
-    protected void audioFocusToggleMedia(){
+    protected void audioFocusToggleMedia() {
         int focusRequest = mAudioManager.requestAudioFocus(mAudioFocusRequest);
         switch (focusRequest) {
             case AudioManager.AUDIOFOCUS_REQUEST_FAILED:
@@ -595,8 +600,7 @@ implements OnCompletionListener, OnErrorListener {
                 playerHandler.removeMessages(PREPARE_SONG_PLAYED);
                 playerHandler.obtainMessage(PREPARE_SONG_PLAYED).sendToTarget();
             }
-        }
-        else if (mediaPlayer.isPlaying()) {
+        } else if (mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
             continuePlaying = false;
         }
@@ -630,8 +634,7 @@ implements OnCompletionListener, OnErrorListener {
                     }
                 }
             }, 0, 1000, TimeUnit.MILLISECONDS);
-        }
-        else {
+        } else {
             // stop the listener and interrupt any work currently being done
             if (song_listener_future != null) {
                 song_listener_future.cancel(true);
@@ -655,8 +658,7 @@ implements OnCompletionListener, OnErrorListener {
                     }
                 }
             }, 0, 200, TimeUnit.MILLISECONDS);
-        }
-        else {
+        } else {
             // stop the listener and interrupt any work currently being done
             if (progress_listener_future != null) {
                 progress_listener_future.cancel(true);
@@ -664,16 +666,16 @@ implements OnCompletionListener, OnErrorListener {
         }
     }
 
-    private synchronized Song getSong_currentlyListening(){
+    private synchronized Song getSong_currentlyListening() {
         return song_currentlyListening;
     }
 
 
-    private synchronized int getSong_secondsListened(){
+    private synchronized int getSong_secondsListened() {
         return song_secondsListened;
     }
 
-    private synchronized boolean getSong_isListened(){
+    private synchronized boolean getSong_isListened() {
         return song_isListened;
     }
 
@@ -681,7 +683,7 @@ implements OnCompletionListener, OnErrorListener {
      * set the current song that is being listened
      * @param song the song currently being listened
      */
-    private synchronized void setSong_currentlyListening(Song song){
+    private synchronized void setSong_currentlyListening(Song song) {
         this.song_currentlyListening = song;
     }
 
@@ -689,7 +691,7 @@ implements OnCompletionListener, OnErrorListener {
      * set the number of seconds has the song been listened
      * @param seconds the number of seconds the song has been listened
      */
-    private synchronized void setSong_secondsListened(int seconds){
+    private synchronized void setSong_secondsListened(int seconds) {
         this.song_secondsListened = seconds;
     }
 
@@ -697,7 +699,7 @@ implements OnCompletionListener, OnErrorListener {
      * set whether the current song been listened to already
      * @param isListened true if already listened, false otherwise
      */
-    private synchronized void setSong_isListened(boolean isListened){
+    private synchronized void setSong_isListened(boolean isListened) {
         this.song_isListened = isListened;
     }
 
@@ -705,17 +707,16 @@ implements OnCompletionListener, OnErrorListener {
      * Initialize mediaplayer for the first time with the current song (if exists)
      * If current song doesn't exist, initialize with default song
      */
-    private void initMediaPlayer(){
+    private void initMediaPlayer() {
         // create mediaplayer with current song, if it already exists
         Song current_song = MainActivity.getCurrent_song();
 
-        if (!current_song.equals(Song.EMPTY_SONG)){
+        if (!current_song.equals(Song.EMPTY_SONG)) {
             setMediaSessionMetadata(current_song);
             Uri audioURI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
             Uri songURI = ContentUris.withAppendedId(audioURI, current_song.getId());
             mediaPlayer = MediaPlayer.create(MusicPlayerService.this, songURI);
-        }
-        else {
+        } else {
             mediaPlayer = MediaPlayer.create(MusicPlayerService.this, R.raw.aft);
         }
         mediaPlayer.setOnCompletionListener(MusicPlayerService.this);
@@ -732,7 +733,7 @@ implements OnCompletionListener, OnErrorListener {
      * Initialize notification builder for the first time with proper intents, current song data,
      * and other necessary configurations that will remain for every notification update
      */
-    private void initNotificationBuilder(){
+    private void initNotificationBuilder() {
         notificationPlay_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
                 PlaybackStateCompat.ACTION_PLAY);
         notificationPause_intent = MediaButtonReceiver.buildMediaButtonPendingIntent(MusicPlayerService.this,
@@ -799,7 +800,7 @@ implements OnCompletionListener, OnErrorListener {
      * Recreates the mediaplayer with a new song URI by releasing the old one and creating anew
      * @param songId the id of the new song to create the new mediaplayer
      */
-    private void recreateMediaPlayer(int songId){
+    private void recreateMediaPlayer(int songId) {
         // release current mediaplayer to allow another to be created
         mediaPlayer.release();
 
@@ -813,7 +814,7 @@ implements OnCompletionListener, OnErrorListener {
         mediaPlayer = mp;
     }
 
-    private void setMediaSessionMetadata(Song song){
+    private void setMediaSessionMetadata(Song song) {
         metadataBuilder
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, song.getTitle())
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, song.getArtist())
@@ -824,12 +825,11 @@ implements OnCompletionListener, OnErrorListener {
         mediaSession.setMetadata(metadataBuilder.build());
     }
 
-    private void setMediaSessionPlaybackState(int state, int progress){
+    private void setMediaSessionPlaybackState(int state, int progress) {
         // playbackSpeed 0 for paused, 1 for normal, negative for rewind
-        if (state == PlaybackStateCompat.STATE_PAUSED){
+        if (state == PlaybackStateCompat.STATE_PAUSED) {
             playbackStateBuilder.setState(state, progress, 0);
-        }
-        else {
+        } else {
             playbackStateBuilder.setState(state, progress, 1);
         }
         mediaSession.setPlaybackState(playbackStateBuilder.build());
@@ -840,6 +840,7 @@ implements OnCompletionListener, OnErrorListener {
      * @param messenger the messenger to send update to
      * @param message the update code
      */
+    @SuppressLint("MissingPermission")
     private void sendUpdateMessage(Messenger messenger, int message) {
         Message msg = Message.obtain();
         Bundle bundle = new Bundle();
@@ -852,9 +853,11 @@ implements OnCompletionListener, OnErrorListener {
                     messenger.send(msg);
                     break;
                 case UPDATE_BLUETOOTH_CONNECTED:
-                    bundle.putString("name", bluetoothConnectedDevice.getName());
-                    msg.setData(bundle);
-                    messenger.send(msg);
+                    if (MainActivity.isBluetoothPermissionGranted) {
+                        bundle.putString("name", bluetoothConnectedDevice.getName());
+                        msg.setData(bundle);
+                        messenger.send(msg);
+                    }
                     break;
                 case UPDATE_BLUETOOTH_DISCONNECTED:
                     // only notify main activity if all bluetooth devices are disconnected
@@ -887,25 +890,29 @@ implements OnCompletionListener, OnErrorListener {
             if (service == null) {
                 return;
             }
-            switch (msg.what) {
-                case PREPARE_HANDSHAKE:
-                    // get bluetooth proxy to find any bluetooth devices already connected
-                    if (isBluetoothEnabled && bluetoothProxy == null) {
-                        bluetoothAdapter.getProfileProxy(MusicPlayerService.this, bluetoothServiceListener, BluetoothProfile.A2DP);
-                    }
-                    else if (bluetoothConnectedDevices.size() > 0) {
-                        sendUpdateMessage(mainActivity_messenger, UPDATE_BLUETOOTH_CONNECTED);
-                    }
+            try {
+                switch (msg.what) {
+                    case PREPARE_HANDSHAKE:
+                        // get bluetooth proxy to find any bluetooth devices already connected
+                        if ( MainActivity.isBluetoothPermissionGranted && isBluetoothEnabled && bluetoothProxy == null ) {
+                            bluetoothAdapter.getProfileProxy(MusicPlayerService.this, bluetoothServiceListener, BluetoothProfile.A2DP);
+                        } else if (bluetoothConnectedDevices.size() > 0) {
+                            sendUpdateMessage(mainActivity_messenger, UPDATE_BLUETOOTH_CONNECTED);
+                        }
 
-                    // send update to main messenger to complete handshake
-                    sendUpdateMessage(mainActivity_messenger, UPDATE_HANDSHAKE);
-                    break;
-                case PREPARE_SONG_PLAYED:
-                    sendUpdateMessage(mainActivity_messenger, UPDATE_SONG_PLAYED);
-                    break;
-                case PREPARE_SONG_LISTENED:
-                    sendUpdateMessage(mainActivity_messenger, UPDATE_SONG_LISTENED);
-                    break;
+                        // send update to main messenger to complete handshake
+                        sendUpdateMessage(mainActivity_messenger, UPDATE_HANDSHAKE);
+                        break;
+                    case PREPARE_SONG_PLAYED:
+                        sendUpdateMessage(mainActivity_messenger, UPDATE_SONG_PLAYED);
+                        break;
+                    case PREPARE_SONG_LISTENED:
+                        sendUpdateMessage(mainActivity_messenger, UPDATE_SONG_LISTENED);
+                        break;
+                }
+            }
+            catch (Exception e){
+                Logger.logException(e, "MusicPlayerService");
             }
         }
     }
@@ -913,9 +920,13 @@ implements OnCompletionListener, OnErrorListener {
     private class MusicPlayerNoisyReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
-                // pause the playback
-                mediaSession.getController().getTransportControls().pause();
+            try {
+                if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
+                    // pause the playback
+                    mediaSession.getController().getTransportControls().pause();
+                }
+            } catch (Exception e) {
+                Logger.logException(e, "MusicPlayerNoisyReceiver");
             }
         }
     }
@@ -923,50 +934,51 @@ implements OnCompletionListener, OnErrorListener {
     private class MusicPlayerBluetoothReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+            try {
+                if (MainActivity.isBluetoothPermissionGranted) {
+                    String action = intent.getAction();
+                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
-            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
-                final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
-                switch (state) {
-                    case BluetoothAdapter.STATE_OFF:
-                        isBluetoothEnabled = false;
-                        break;
-                    case BluetoothAdapter.STATE_ON:
-                        isBluetoothEnabled = true;
-                        break;
+                    if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                        final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                        switch (state) {
+                            case BluetoothAdapter.STATE_OFF:
+                                isBluetoothEnabled = false;
+                                break;
+                            case BluetoothAdapter.STATE_ON:
+                                isBluetoothEnabled = true;
+                                break;
+                        }
+                    } else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
+                        // device is now connected
+                        bluetoothConnectedDevices.add(device);
+                        bluetoothConnectedDevice = device;
+
+                        doBindService();
+
+                        // notify main activity that bluetooth connected
+                        if (mainActivity_messenger != null) {
+                            sendUpdateMessage(mainActivity_messenger, UPDATE_BLUETOOTH_CONNECTED);
+                        }
+                    } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+                        // device has disconnected
+                        bluetoothConnectedDevices.remove(device);
+                        if (bluetoothConnectedDevices.size() > 0) {
+                            bluetoothConnectedDevice = bluetoothConnectedDevices.iterator().next();
+                        } else {
+                            bluetoothConnectedDevice = null;
+                        }
+
+                        doUnbindService();
+
+                        // notify main activity that bluetooth disconnected
+                        if (mainActivity_messenger != null) {
+                            sendUpdateMessage(mainActivity_messenger, UPDATE_BLUETOOTH_DISCONNECTED);
+                        }
+                    }
                 }
-            }
-
-            else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
-                // device is now connected
-                bluetoothConnectedDevices.add(device);
-                bluetoothConnectedDevice = device;
-
-                doBindService();
-
-                // notify main activity that bluetooth connected
-                if (mainActivity_messenger != null) {
-                    sendUpdateMessage(mainActivity_messenger, UPDATE_BLUETOOTH_CONNECTED);
-                }
-            }
-
-            else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
-                // device has disconnected
-                bluetoothConnectedDevices.remove(device);
-                if (bluetoothConnectedDevices.size() > 0) {
-                    bluetoothConnectedDevice = bluetoothConnectedDevices.iterator().next();
-                }
-                else {
-                    bluetoothConnectedDevice = null;
-                }
-
-                doUnbindService();
-
-                // notify main activity that bluetooth disconnected
-                if (mainActivity_messenger != null) {
-                    sendUpdateMessage(mainActivity_messenger, UPDATE_BLUETOOTH_DISCONNECTED);
-                }
+            } catch (Exception e) {
+                Logger.logException(e, "MusicPlayerBluetoothReceiver");
             }
         }
     }
@@ -1198,7 +1210,9 @@ implements OnCompletionListener, OnErrorListener {
                 mAudioManager.abandonAudioFocusRequest(mAudioFocusRequest);
 
                 // unregister BECOME_NOISY BroadcastReceiver
-                unregisterReceiver(noisyAudioStreamReceiver);
+                try {
+                    unregisterReceiver(noisyAudioStreamReceiver);
+                } catch (Exception e){}
 
                 // stop the service
                 MusicPlayerService.this.stopSelf();

@@ -9,7 +9,8 @@ import androidx.room.PrimaryKey;
 public class SongMetadata implements Parcelable {
     // main fields for identifying a song
     @PrimaryKey
-    private int id;
+    private int songId;
+
     private String title;
     private String artist;
 
@@ -22,8 +23,8 @@ public class SongMetadata implements Parcelable {
      * Constructor only used by database to create a Song for every row
      * All fields other than the main three are null (or 0 for ints)
      */
-    public SongMetadata(int id, String title, String artist, int played, int listened, String dateListened) {
-        this.id = id;
+    public SongMetadata(int songId, String title, String artist, int played, int listened, String dateListened) {
+        this.songId = songId;
         this.title = title;
         this.artist = artist;
         this.played = played;
@@ -36,7 +37,7 @@ public class SongMetadata implements Parcelable {
      * @param song the song that needs metadata to be stored by this class
      */
     public SongMetadata(Song song){
-        this.id = song.getId();
+        this.songId = song.getId();
         this.title = song.getTitle();
         this.artist = song.getArtist();
         this.played = 0;
@@ -44,8 +45,8 @@ public class SongMetadata implements Parcelable {
         this.dateListened = null;
     }
 
-    public int getId() {
-        return id;
+    public int getSongId() {
+        return songId;
     }
 
     public String getTitle() {
@@ -87,7 +88,7 @@ public class SongMetadata implements Parcelable {
      */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(this.id);
+        dest.writeInt(this.songId);
         dest.writeString(this.title);
         dest.writeString(this.artist);
         dest.writeInt(this.played);
@@ -96,7 +97,7 @@ public class SongMetadata implements Parcelable {
     }
 
     public SongMetadata(Parcel in) {
-        this.id = in.readInt();
+        this.songId = in.readInt();
         this.title = in.readString();
         this.artist = in.readString();
         this.played = in.readInt();

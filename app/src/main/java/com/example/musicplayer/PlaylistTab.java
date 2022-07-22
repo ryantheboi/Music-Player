@@ -354,7 +354,7 @@ public class PlaylistTab extends Fragment {
                                 int numPlaylists = m_userSelection.size();
                                 int[] playlistIds = new int[numPlaylists];
                                 for (int i = 0; i < numPlaylists; i++){
-                                    playlistIds[i] = m_userSelection.get(i).getId();
+                                    playlistIds[i] = m_userSelection.get(i).getPlaylistId();
                                 }
 
                                 // send message to update mainactivity

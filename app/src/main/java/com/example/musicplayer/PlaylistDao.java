@@ -13,13 +13,13 @@ public interface PlaylistDao {
     @Query("SELECT * FROM Playlists")
     List<Playlist> getAll();
 
-    @Query("SELECT * FROM Playlists WHERE id IN (:playlistIds)")
+    @Query("SELECT * FROM Playlists WHERE playlistId IN (:playlistIds)")
     List<Playlist> getAllByIds(int[] playlistIds);
 
-    @Query("SELECT id FROM Playlists ORDER BY id DESC LIMIT 1")
+    @Query("SELECT playlistId FROM Playlists ORDER BY playlistId DESC LIMIT 1")
     int getMaxId();
 
-    @Query("SELECT * FROM Playlists WHERE id = :id")
+    @Query("SELECT * FROM Playlists WHERE playlistId = :id")
     Playlist findById(int id);
 
     @Query("SELECT * FROM Playlists WHERE name LIKE :name")

@@ -199,7 +199,7 @@ public class DatabaseRepository {
                                 break;
                             case INSERT_SONGMETADATA:
                                 SongMetadata sm = new SongMetadata((Song) query.object);
-                                if (songMetadataDao.findById(sm.getId()) == null) {
+                                if (songMetadataDao.findById(sm.getSongId()) == null) {
                                     songMetadataDao.insert(sm);
                                 }
                                 break;
@@ -240,12 +240,12 @@ public class DatabaseRepository {
                                 metadataDao.updateRandomSeed(0, (int) query.object);
                                 break;
                             case UPDATE_SONGMETADATA_PLAYED:
-                                int played_id = ((SongMetadata) query.object).getId();
+                                int played_id = ((SongMetadata) query.object).getSongId();
                                 int played = songMetadataDao.findPlayedById(played_id);
                                 songMetadataDao.updatePlayed(played_id, played + 1);
                                 break;
                             case UPDATE_SONGMETADATA_LISTENED:
-                                int listened_id = ((SongMetadata) query.object).getId();
+                                int listened_id = ((SongMetadata) query.object).getSongId();
                                 int listened = songMetadataDao.findListenedById(listened_id);
                                 songMetadataDao.updateListened(listened_id, listened + 1, (String) query.extra);
                                 break;

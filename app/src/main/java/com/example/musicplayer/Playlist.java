@@ -19,7 +19,7 @@ import java.util.HashMap;
 @Entity(tableName = "Playlists")
 public class Playlist implements Parcelable {
     @PrimaryKey
-    private int id;
+    private int playlistId;
 
     private String name;
     private ArrayList<Song> songList;
@@ -35,8 +35,8 @@ public class Playlist implements Parcelable {
     /**
      * Constructor used by database to create a playlist for every row
      */
-    public Playlist(int id, String name, ArrayList<Song> songList, int transientId, long dateAdded) {
-        this.id = id;
+    public Playlist(int playlistId, String name, ArrayList<Song> songList, int transientId, long dateAdded) {
+        this.playlistId = playlistId;
         this.name = name;
         this.songList = new ArrayList<>(songList);
         this.songHashMap = createHashMap(songList);
@@ -51,7 +51,7 @@ public class Playlist implements Parcelable {
      */
     @Ignore
     public Playlist(String name, ArrayList<Song> songList) {
-        this.id = 0;
+        this.playlistId = 0;
         this.name = name;
         this.songList = new ArrayList<>(songList);
         this.songHashMap = createHashMap(songList);
@@ -62,8 +62,8 @@ public class Playlist implements Parcelable {
      * Overloaded Constructor which does not need dateAdded
      */
     @Ignore
-    public Playlist(int id, String name, ArrayList<Song> songList, int transientId) {
-        this.id = id;
+    public Playlist(int playlistId, String name, ArrayList<Song> songList, int transientId) {
+        this.playlistId = playlistId;
         this.name = name;
         this.songList = new ArrayList<>(songList);
         this.songHashMap = createHashMap(songList);
@@ -71,8 +71,8 @@ public class Playlist implements Parcelable {
         this.dateAdded = System.currentTimeMillis();
     }
 
-    public int getId() {
-        return id;
+    public int getPlaylistId() {
+        return playlistId;
     }
 
     public String getName() {
@@ -117,8 +117,8 @@ public class Playlist implements Parcelable {
         return total_duration;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setPlaylistId(int playlistId) {
+        this.playlistId = playlistId;
     }
 
     public void setName(String name) {
@@ -178,7 +178,7 @@ public class Playlist implements Parcelable {
             // maximum transient playlists reached, stop counting
             // replace existing transient playlist songs with songList
             if (num_transients == MAX_TRANSIENTS){
-                return new Playlist(oldest_transient_playlist.getId(), oldest_transient_playlist.getName(), songList, oldest_transient_playlist.getTransientId());
+                return new Playlist(oldest_transient_playlist.getPlaylistId(), oldest_transient_playlist.getName(), songList, oldest_transient_playlist.getTransientId());
             }
         }
 
@@ -504,14 +504,14 @@ public class Playlist implements Parcelable {
     @TargetApi(29)
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(this.id);
+        dest.writeInt(this.playlistId);
         dest.writeString(this.name);
         dest.writeParcelableList(songList, flags);
     }
 
     @TargetApi(29)
     public Playlist(Parcel in) {
-        this.id = in.readInt();
+        this.playlistId = in.readInt();
         this.name = in.readString();
         this.songList = new ArrayList<>();
         in.readParcelableList(this.songList, Song.class.getClassLoader());
@@ -532,7 +532,7 @@ public class Playlist implements Parcelable {
         try {
             int prime = 31;
             int result = 1;
-            result = prime * result + id;
+            result = prime * result + playlistId;
             result = prime * result + name.hashCode();
             return result;
         }catch (Exception e){
@@ -543,7 +543,7 @@ public class Playlist implements Parcelable {
     @Override
     public boolean equals(Object obj) {
         try {
-            return this.id == ((Playlist) obj).id;
+            return this.playlistId == ((Playlist) obj).playlistId;
         }catch (Exception e){
             return super.equals(obj);
         }

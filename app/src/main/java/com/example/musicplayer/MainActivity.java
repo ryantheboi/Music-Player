@@ -490,7 +490,7 @@ public class MainActivity extends AppCompatActivity {
                     // removes song from the playlist reference
                     playlist_songs.remove(removed_song);
                 }
-                Playlist updated_playlist = new Playlist(playlist.getId(), playlist.getName(), playlist_songs, 0);
+                Playlist updated_playlist = new Playlist(playlist.getPlaylistId(), playlist.getName(), playlist_songs, 0);
                 databaseRepository.insertPlaylist(updated_playlist);
             }
         }
@@ -624,7 +624,7 @@ public class MainActivity extends AppCompatActivity {
                         // create hashmap of every song id to song metadata
                         fullSongMetadataHashMap = new HashMap<>();
                         for (SongMetadata songMetadata : database_songs) {
-                            fullSongMetadataHashMap.put(songMetadata.getId(), songMetadata);
+                            fullSongMetadataHashMap.put(songMetadata.getSongId(), songMetadata);
                         }
                     }
                     break;

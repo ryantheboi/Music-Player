@@ -205,7 +205,7 @@ public class AddPlaylistFragment extends Fragment {
                         addPlaylist.setName(addPlaylist_inputdialog.getText().toString());
                         addPlaylist_inputdialog.getText().clear();
                         // assign unique id to playlist
-                        addPlaylist.setId(DatabaseRepository.generatePlaylistId());
+                        addPlaylist.setPlaylistId(DatabaseRepository.generatePlaylistId());
 
                         // notify MainActivity about new playlist
                         sendPlaylistUpdateMessage(addPlaylist, ADD_PLAYLIST);

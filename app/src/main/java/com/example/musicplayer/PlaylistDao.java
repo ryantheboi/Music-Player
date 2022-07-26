@@ -27,7 +27,7 @@ public interface PlaylistDao {
 
     @Transaction
     @Query("SELECT * FROM Playlists")
-    List<PlaylistWithSongs> getAllPlaylistsWithSongs();
+    List<PlaylistWithSongMetadata> getAllPlaylistsWithSongMetadata();
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(Playlist playlist);
@@ -37,4 +37,8 @@ public interface PlaylistDao {
 
     @Delete
     void delete(Playlist playlist);
+
+    @Transaction
+    @Query("DELETE FROM PlaylistSongJunction WHERE pId = :pId")
+    void deleteByPlaylistId(int pId);
 }

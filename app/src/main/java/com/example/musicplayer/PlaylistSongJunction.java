@@ -20,11 +20,12 @@ public class PlaylistSongJunction {
         this.sId = sId;
     }
 
-    public static List<PlaylistSongJunction> createPlaylistSongsJointList(Playlist playlist, List<SongMetadata> songs){
+    public static List<PlaylistSongJunction> createPlaylistSongJunctionList(Playlist playlist){
         List<PlaylistSongJunction> playlistSongsJointList = new ArrayList<>();
         int pId = playlist.getPlaylistId();
-        for (SongMetadata s: songs){
-            playlistSongsJointList.add(new PlaylistSongJunction(pId, s.getSongId()));
+        List<Song> songs = playlist.getSongList();
+        for (Song s: songs){
+            playlistSongsJointList.add(new PlaylistSongJunction(pId, s.getId()));
         }
 
         return playlistSongsJointList;

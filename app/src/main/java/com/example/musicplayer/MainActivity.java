@@ -282,7 +282,7 @@ public class MainActivity extends AppCompatActivity {
 
                                 // asynchronously gets all songs and playlists from database, then updates main activity
                                 databaseRepository.asyncGetAllSongMetadata();
-                                databaseRepository.asyncInitAllPlaylists();
+                                databaseRepository.asyncGetAllPlaylistsWithSongs();
 
                                 // init listview functionality and playlist
                                 mainFragmentSecondary.initMainFragmentSecondaryUI();
@@ -412,6 +412,7 @@ public class MainActivity extends AppCompatActivity {
 
                                 // add the playlist and its songs to the database
                                 databaseRepository.insertPlaylist(current_playlist);
+                                databaseRepository.insertPlaylistSongJunction(PlaylistSongJunction.createPlaylistSongJunctionList(current_playlist));
                             }
                             playlistMembersCursor.close();
                         }
@@ -575,23 +576,24 @@ public class MainActivity extends AppCompatActivity {
     public void updateMainActivity(Object object, final Messenger messenger, final int operation){
         try {
             switch (operation) {
-                case DatabaseRepository.ASYNC_INIT_ALL_PLAYLISTS:
-                    // remove any songs that were not able to be found in the device
-                    playlistList = (ArrayList<Playlist>) object;
+                case DatabaseRepository.ASYNC_GET_ALL_PLAYLISTSWITHSONGMETADATA:
+                    // get all playlists from db (and clean if songs were removed) and update adapters
+                    ArrayList<PlaylistWithSongMetadata> playlistWithSongMetadataList = (ArrayList<PlaylistWithSongMetadata>) object;
+                    playlistList = PlaylistWithSongMetadata.extractPlaylists(playlistWithSongMetadataList);
                     cleanPlaylistDatabase();
+                    mainFragmentPrimary.setAdapters(new SongListAdapter(this, R.layout.adapter_song_layout, fullSongList, this),
+                                                    new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this));
 
-                    // update adapters for ui
-                    SongListAdapter songListadapter = new SongListAdapter(this, R.layout.adapter_song_layout, fullSongList, this);
-                    PlaylistAdapter playlistAdapter = new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this);
-                    mainFragmentPrimary.setAdapters(songListadapter, playlistAdapter);
+                    // set current playlist (initially null)
+                    current_playlist = null;
+                    for (PlaylistWithSongMetadata pws : playlistWithSongMetadataList) {
+                        if (pws.playlist.getPlaylistId() == 0) {
+                            current_playlist = pws.playlist;
+                            break;
+                        }
+                    }
 
-                    // initialize current playlist from database, if possible
-                    databaseRepository.asyncGetCurrentPlaylist();
-                    break;
-                case DatabaseRepository.ASYNC_GET_CURRENT_PLAYLIST:
-                    current_playlist = (Playlist) object;
-
-                    // if a playlist wasn't retrieved from the database
+                    // if no current playlist exists
                     if (current_playlist == null) {
                         current_playlist = fullPlaylist;
                         if (fullSongList.size() > 0) {
@@ -709,6 +711,9 @@ public class MainActivity extends AppCompatActivity {
 
         // TODO might be better to place this database write somewhere else
         databaseRepository.insertPlaylist(current_playlist);
+
+        databaseRepository.asyncRemovePlaylistSongJunctionByIds(new int[]{0});
+        databaseRepository.insertPlaylistSongJunction(PlaylistSongJunction.createPlaylistSongJunctionList(current_playlist));
     }
     public static void setCurrent_playlist_shufflemode(Playlist playlist){
         if (shuffle_mode == PlaybackStateCompat.SHUFFLE_MODE_ALL) {

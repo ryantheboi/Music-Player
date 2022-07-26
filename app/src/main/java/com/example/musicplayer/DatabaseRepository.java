@@ -5,6 +5,8 @@ import android.os.Messenger;
 import java.util.ArrayList;
 
 import androidx.room.Room;
+
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -21,27 +23,28 @@ public class DatabaseRepository {
     // playlist objects
     private static int playlist_maxid = 0;
 
-    public static final int ASYNC_INIT_ALL_PLAYLISTS = 0;
-    public static final int ASYNC_GET_CURRENT_PLAYLIST = 1;
-    public static final int ASYNC_GET_METADATA = 2;
-    public static final int ASYNC_GET_ALL_SONGMETADATA = 3;
-    public static final int ASYNC_INSERT_PLAYLIST = 4;
-    public static final int ASYNC_MODIFY_PLAYLIST = 5;
-    public static final int ASYNC_DELETE_PLAYLISTS_BY_ID = 6;
+    public static final int ASYNC_GET_ALL_PLAYLISTSWITHSONGMETADATA = 0;
+    public static final int ASYNC_GET_METADATA = 1;
+    public static final int ASYNC_GET_ALL_SONGMETADATA = 2;
+    public static final int ASYNC_INSERT_PLAYLIST = 3;
+    public static final int ASYNC_MODIFY_PLAYLIST = 4;
+    public static final int ASYNC_DELETE_PLAYLISTS_BY_ID = 5;
+    public static final int ASYNC_DELETE_PLAYLISTSONG_JUNCTION_BY_ID = 6;
     public static final int INSERT_SONGMETADATA = 7;
     public static final int INSERT_PLAYLIST = 8;
-    public static final int INSERT_METADATA = 9;
-    public static final int UPDATE_METADATA_THEME = 10;
-    public static final int UPDATE_METADATA_SONGTAB = 11;
-    public static final int UPDATE_METADATA_SONGINDEX = 12;
-    public static final int UPDATE_METADATA_SHUFFLEMODE = 13;
-    public static final int UPDATE_METADATA_REPEATMODE = 14;
-    public static final int UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED = 15;
-    public static final int UPDATE_METADATA_SEEK = 16;
-    public static final int UPDATE_METADATA_ISALBUMARTCIRCULAR = 17;
-    public static final int UPDATE_METADATA_RANDOMSEED = 18;
-    public static final int UPDATE_SONGMETADATA_PLAYED = 19;
-    public static final int UPDATE_SONGMETADATA_LISTENED = 20;
+    public static final int INSERT_PLAYLISTSONG_JUNCTIONS = 9;
+    public static final int INSERT_METADATA = 10;
+    public static final int UPDATE_METADATA_THEME = 11;
+    public static final int UPDATE_METADATA_SONGTAB = 12;
+    public static final int UPDATE_METADATA_SONGINDEX = 13;
+    public static final int UPDATE_METADATA_SHUFFLEMODE = 14;
+    public static final int UPDATE_METADATA_REPEATMODE = 15;
+    public static final int UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED = 16;
+    public static final int UPDATE_METADATA_SEEK = 17;
+    public static final int UPDATE_METADATA_ISALBUMARTCIRCULAR = 18;
+    public static final int UPDATE_METADATA_RANDOMSEED = 19;
+    public static final int UPDATE_SONGMETADATA_PLAYED = 20;
+    public static final int UPDATE_SONGMETADATA_LISTENED = 21;
 
     /**
      * Holds the query message and the object involved (if exists)
@@ -111,8 +114,8 @@ public class DatabaseRepository {
                         // current size includes current query, unless it is to get the metadata
                         int message = query.message;
                         switch (message) {
-                            case ASYNC_INIT_ALL_PLAYLISTS:
-                                final ArrayList<Playlist> allPlaylists = new ArrayList<>(playlistDao.getAll());
+                            case ASYNC_GET_ALL_PLAYLISTSWITHSONGMETADATA:
+                                final ArrayList<PlaylistWithSongMetadata> allPlaylistsWithSongs = new ArrayList<>(playlistDao.getAllPlaylistsWithSongMetadata());
 
                                 // store the current highest id value in memory
                                 playlist_maxid = playlistDao.getMaxId();
@@ -121,18 +124,7 @@ public class DatabaseRepository {
                                 mainActivity.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        mainActivity.updateMainActivity(allPlaylists, null, ASYNC_INIT_ALL_PLAYLISTS);
-                                    }
-                                });
-                                break;
-                            case ASYNC_GET_CURRENT_PLAYLIST:
-                                // the current playlist always has an id of 0
-                                final Playlist currentPlaylist = playlistDao.findById(0);
-
-                                mainActivity.runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        mainActivity.updateMainActivity(currentPlaylist, null, ASYNC_GET_CURRENT_PLAYLIST);
+                                        mainActivity.updateMainActivity(allPlaylistsWithSongs, null, ASYNC_GET_ALL_PLAYLISTSWITHSONGMETADATA);
                                     }
                                 });
                                 break;
@@ -165,6 +157,12 @@ public class DatabaseRepository {
                                         mainActivity.updateMainActivity(selectPlaylists, null, ASYNC_DELETE_PLAYLISTS_BY_ID);
                                     }
                                 });
+                                break;
+                            case ASYNC_DELETE_PLAYLISTSONG_JUNCTION_BY_ID:
+                                final int[] playlist_ids = (int[]) query.object;
+                                for (int pId : playlist_ids) {
+                                    playlistDao.deleteByPlaylistId(pId);
+                                }
                                 break;
                             case ASYNC_GET_METADATA:
                                 // there is only one row of metadata for now, with id 0
@@ -207,6 +205,12 @@ public class DatabaseRepository {
                                 Playlist p = (Playlist) query.object;
                                 if (p != null) {
                                     playlistDao.insert(p);
+                                }
+                                break;
+                            case INSERT_PLAYLISTSONG_JUNCTIONS:
+                                List<PlaylistSongJunction> playlistSongJunctionList = (List<PlaylistSongJunction>) query.object;
+                                if (playlistSongJunctionList.size() > 0) {
+                                    playlistDao.insertAll(playlistSongJunctionList);
                                 }
                                 break;
                             case INSERT_METADATA:
@@ -270,19 +274,11 @@ public class DatabaseRepository {
     }
 
     /**
-     * Queues message to get all playlists and the max playlist id stored in the database,
-     * then updates main activity with all playlists upon completion
+     * Queues message to get all playlists with their corresponding songs, and the max playlist id
+     * stored in the database, then updates main activity with all playlists upon completion
      */
-    public synchronized void asyncInitAllPlaylists(){
-        messageQueue.offer(new Query(ASYNC_INIT_ALL_PLAYLISTS, null));
-    }
-
-    /**
-     * Queues message to get the current playlist (id 0) stored in the database,
-     * then updates main activity upon completion
-     */
-    public synchronized void asyncGetCurrentPlaylist(){
-        messageQueue.offer(new Query(ASYNC_GET_CURRENT_PLAYLIST, null));
+    public synchronized void asyncGetAllPlaylistsWithSongs(){
+        messageQueue.offer(new Query(ASYNC_GET_ALL_PLAYLISTSWITHSONGMETADATA, null));
     }
 
     /**
@@ -330,6 +326,14 @@ public class DatabaseRepository {
     }
 
     /**
+     * Queues message to removes playlists from junction db table and updates main ui when complete
+     * @param playlistIds array of ids of the playlists to get
+     */
+    public synchronized void asyncRemovePlaylistSongJunctionByIds(int[] playlistIds){
+        messageQueue.offer(new Query(ASYNC_DELETE_PLAYLISTSONG_JUNCTION_BY_ID, playlistIds));
+    }
+
+    /**
      * Queues message to insert a song's metadata into database, if it doesn't already exist
      * @param song the song to try to insert into database to store its metadata
      */
@@ -343,6 +347,15 @@ public class DatabaseRepository {
      */
     public synchronized void insertPlaylist(Playlist playlist){
         messageQueue.offer(new Query(INSERT_PLAYLIST, playlist));
+    }
+
+    /**
+     * Queues message to insert new list of playlistSongJunction into database
+     * @param playlistSongJunctionList a list of objects each representing the many-to-many
+     *                                 relationship between playlists and songs
+     */
+    public synchronized void insertPlaylistSongJunction(List<PlaylistSongJunction> playlistSongJunctionList){
+        messageQueue.offer(new Query(INSERT_PLAYLISTSONG_JUNCTIONS, playlistSongJunctionList));
     }
 
     /**

@@ -4,9 +4,10 @@ import androidx.room.Embedded;
 import androidx.room.Junction;
 import androidx.room.Relation;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class PlaylistWithSongs {
+public class PlaylistWithSongMetadata {
     @Embedded
     public Playlist playlist;
     @Relation(
@@ -19,4 +20,12 @@ public class PlaylistWithSongs {
                     entityColumn = "sId")
     )
     public List<SongMetadata> songs;
+
+    public static ArrayList<Playlist> extractPlaylists(List<PlaylistWithSongMetadata> playlistWithSongMetadataList) {
+        ArrayList<Playlist> playlists = new ArrayList<>();
+        for (PlaylistWithSongMetadata pws : playlistWithSongMetadataList) {
+            playlists.add(pws.playlist);
+        }
+        return playlists;
+    }
 }

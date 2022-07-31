@@ -412,7 +412,7 @@ public class MainActivity extends AppCompatActivity {
 
                                 // add the playlist and its songs to the database
                                 databaseRepository.insertPlaylist(current_playlist);
-                                databaseRepository.insertPlaylistSongJunction(PlaylistSongJunction.createPlaylistSongJunctionList(current_playlist));
+                                databaseRepository.insertPlaylistSongJunctions(PlaylistSongJunction.createPlaylistSongJunctionList(current_playlist));
                             }
                             playlistMembersCursor.close();
                         }
@@ -475,25 +475,31 @@ public class MainActivity extends AppCompatActivity {
      */
     private void cleanPlaylistDatabase(){
         HashMap<Song, SongNode> fullSongHashMap = new HashMap<>(fullPlaylist.getSongHashMap());
+        ArrayList<PlaylistSongJunction> remove_junctions = new ArrayList<>();
         for (Playlist playlist : playlistList){
             // accumulate list of removed songs for this playlist (if any)
+            int playlist_id = playlist.getPlaylistId();
             ArrayList<Song> playlist_songs = playlist.getSongList();
             ArrayList<Song> playlist_removed_songs = new ArrayList<>();
             for (Song song : playlist_songs){
                 if (!fullSongHashMap.containsKey(song)){
                     playlist_removed_songs.add(song);
+                    remove_junctions.add(new PlaylistSongJunction(playlist_id, song.getId()));
                 }
             }
 
-            // recreate the playlist excluding its removed songs (if any) and replace in database
+            // remove songs (if any) from local playlist
             if (playlist_removed_songs.size() > 0){
                 for (Song removed_song : playlist_removed_songs){
                     // removes song from the playlist reference
                     playlist_songs.remove(removed_song);
                 }
-                Playlist updated_playlist = new Playlist(playlist.getPlaylistId(), playlist.getName(), playlist_songs, 0);
-                databaseRepository.insertPlaylist(updated_playlist);
             }
+        }
+
+        // remove songs from playlists (if any needs to be removed) from db
+        if (remove_junctions.size() > 0) {
+            databaseRepository.deletePlaylistSongJunctions(remove_junctions);
         }
     }
 
@@ -713,7 +719,7 @@ public class MainActivity extends AppCompatActivity {
         databaseRepository.insertPlaylist(current_playlist);
 
         databaseRepository.asyncRemovePlaylistSongJunctionByIds(new int[]{0});
-        databaseRepository.insertPlaylistSongJunction(PlaylistSongJunction.createPlaylistSongJunctionList(current_playlist));
+        databaseRepository.insertPlaylistSongJunctions(PlaylistSongJunction.createPlaylistSongJunctionList(current_playlist));
     }
     public static void setCurrent_playlist_shufflemode(Playlist playlist){
         if (shuffle_mode == PlaybackStateCompat.SHUFFLE_MODE_ALL) {

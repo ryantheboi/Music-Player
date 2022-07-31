@@ -38,6 +38,9 @@ public interface PlaylistDao {
     @Delete
     void delete(Playlist playlist);
 
+    @Delete
+    void deleteAll(List<PlaylistSongJunction> playlistSongJunctions);
+
     @Transaction
     @Query("DELETE FROM PlaylistSongJunction WHERE pId = :pId")
     void deleteByPlaylistId(int pId);

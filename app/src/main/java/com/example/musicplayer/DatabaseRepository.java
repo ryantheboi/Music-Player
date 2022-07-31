@@ -30,21 +30,22 @@ public class DatabaseRepository {
     public static final int ASYNC_MODIFY_PLAYLIST = 4;
     public static final int ASYNC_DELETE_PLAYLISTS_BY_ID = 5;
     public static final int ASYNC_DELETE_PLAYLISTSONG_JUNCTION_BY_ID = 6;
-    public static final int INSERT_SONGMETADATA = 7;
-    public static final int INSERT_PLAYLIST = 8;
-    public static final int INSERT_PLAYLISTSONG_JUNCTIONS = 9;
-    public static final int INSERT_METADATA = 10;
-    public static final int UPDATE_METADATA_THEME = 11;
-    public static final int UPDATE_METADATA_SONGTAB = 12;
-    public static final int UPDATE_METADATA_SONGINDEX = 13;
-    public static final int UPDATE_METADATA_SHUFFLEMODE = 14;
-    public static final int UPDATE_METADATA_REPEATMODE = 15;
-    public static final int UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED = 16;
-    public static final int UPDATE_METADATA_SEEK = 17;
-    public static final int UPDATE_METADATA_ISALBUMARTCIRCULAR = 18;
-    public static final int UPDATE_METADATA_RANDOMSEED = 19;
-    public static final int UPDATE_SONGMETADATA_PLAYED = 20;
-    public static final int UPDATE_SONGMETADATA_LISTENED = 21;
+    public static final int DELETE_PLAYLISTSONG_JUNCTIONS = 7;
+    public static final int INSERT_SONGMETADATA = 8;
+    public static final int INSERT_PLAYLIST = 9;
+    public static final int INSERT_PLAYLISTSONG_JUNCTIONS = 10;
+    public static final int INSERT_METADATA = 11;
+    public static final int UPDATE_METADATA_THEME = 12;
+    public static final int UPDATE_METADATA_SONGTAB = 13;
+    public static final int UPDATE_METADATA_SONGINDEX = 14;
+    public static final int UPDATE_METADATA_SHUFFLEMODE = 15;
+    public static final int UPDATE_METADATA_REPEATMODE = 16;
+    public static final int UPDATE_METADATA_ISMEDIASTOREPLAYLISTSIMPORTED = 17;
+    public static final int UPDATE_METADATA_SEEK = 18;
+    public static final int UPDATE_METADATA_ISALBUMARTCIRCULAR = 19;
+    public static final int UPDATE_METADATA_RANDOMSEED = 20;
+    public static final int UPDATE_SONGMETADATA_PLAYED = 21;
+    public static final int UPDATE_SONGMETADATA_LISTENED = 22;
 
     /**
      * Holds the query message and the object involved (if exists)
@@ -163,6 +164,10 @@ public class DatabaseRepository {
                                 for (int pId : playlist_ids) {
                                     playlistDao.deleteByPlaylistId(pId);
                                 }
+                                break;
+                            case DELETE_PLAYLISTSONG_JUNCTIONS:
+                                final List<PlaylistSongJunction> junctions = (List<PlaylistSongJunction>) query.object;
+                                playlistDao.deleteAll(junctions);
                                 break;
                             case ASYNC_GET_METADATA:
                                 // there is only one row of metadata for now, with id 0
@@ -334,6 +339,15 @@ public class DatabaseRepository {
     }
 
     /**
+     * Queues message to removes songs from playlists in junction db table
+     * @param junctions array of playlist-song junctions, each containing the
+     *                  playlist id and song id to remove
+     */
+    public synchronized void deletePlaylistSongJunctions(List<PlaylistSongJunction> junctions){
+        messageQueue.offer(new Query(DELETE_PLAYLISTSONG_JUNCTIONS, junctions));
+    }
+
+    /**
      * Queues message to insert a song's metadata into database, if it doesn't already exist
      * @param song the song to try to insert into database to store its metadata
      */
@@ -351,11 +365,11 @@ public class DatabaseRepository {
 
     /**
      * Queues message to insert new list of playlistSongJunction into database
-     * @param playlistSongJunctionList a list of objects each representing the many-to-many
-     *                                 relationship between playlists and songs
+     * @param junctions a list of objects each representing the many-to-many
+     *                  relationship between playlists and songs
      */
-    public synchronized void insertPlaylistSongJunction(List<PlaylistSongJunction> playlistSongJunctionList){
-        messageQueue.offer(new Query(INSERT_PLAYLISTSONG_JUNCTIONS, playlistSongJunctionList));
+    public synchronized void insertPlaylistSongJunctions(List<PlaylistSongJunction> junctions){
+        messageQueue.offer(new Query(INSERT_PLAYLISTSONG_JUNCTIONS, junctions));
     }
 
     /**

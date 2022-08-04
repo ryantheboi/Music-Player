@@ -1,7 +1,7 @@
 package com.example.musicplayer;
 
 import android.content.Context;
-import android.os.Messenger;
+
 import java.util.ArrayList;
 
 import androidx.room.Room;
@@ -29,7 +29,7 @@ public class DatabaseRepository {
     public static final int ASYNC_INSERT_PLAYLIST = 3;
     public static final int ASYNC_MODIFY_PLAYLIST = 4;
     public static final int ASYNC_DELETE_PLAYLISTS_BY_ID = 5;
-    public static final int ASYNC_DELETE_PLAYLISTSONG_JUNCTION_BY_ID = 6;
+    public static final int DELETE_PLAYLISTSONG_JUNCTION_BY_ID = 6;
     public static final int DELETE_PLAYLISTSONG_JUNCTIONS = 7;
     public static final int INSERT_SONGMETADATA = 8;
     public static final int INSERT_PLAYLIST = 9;
@@ -125,7 +125,7 @@ public class DatabaseRepository {
                                 mainActivity.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        mainActivity.updateMainActivity(allPlaylistsWithSongs, null, ASYNC_GET_ALL_PLAYLISTSWITHSONGMETADATA);
+                                        mainActivity.updateMainActivity(allPlaylistsWithSongs, ASYNC_GET_ALL_PLAYLISTSWITHSONGMETADATA);
                                     }
                                 });
                                 break;
@@ -134,18 +134,41 @@ public class DatabaseRepository {
                                 mainActivity.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        mainActivity.updateMainActivity((Playlist) query.object, (Messenger) query.extra, ASYNC_INSERT_PLAYLIST);
+                                        mainActivity.updateMainActivity((Playlist) query.object, ASYNC_INSERT_PLAYLIST);
                                     }
                                 });
                                 break;
                             case ASYNC_MODIFY_PLAYLIST:
-                                playlistDao.insert((Playlist) query.object);
-                                mainActivity.runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        mainActivity.updateMainActivity((Playlist) query.object, (Messenger) query.extra, ASYNC_MODIFY_PLAYLIST);
-                                    }
-                                });
+                                int operation = (int) query.extra;
+                                switch (operation) {
+                                    case Playlist.INSERT_SONGS:
+                                        playlistDao.insertAll((List<PlaylistSongJunction>) query.object);
+                                        mainActivity.runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                mainActivity.updateMainActivity((List<PlaylistSongJunction>) query.object, ASYNC_MODIFY_PLAYLIST);
+                                            }
+                                        });
+                                        break;
+                                    case Playlist.DELETE_SONGS:
+                                        playlistDao.deleteAll((List<PlaylistSongJunction>) query.object);
+                                        mainActivity.runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                mainActivity.updateMainActivity((List<PlaylistSongJunction>) query.object, ASYNC_MODIFY_PLAYLIST);
+                                            }
+                                        });
+                                        break;
+                                    case Playlist.RENAME:
+                                        playlistDao.insert((Playlist) query.object);
+                                        mainActivity.runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                mainActivity.updateMainActivity((Playlist) query.object, ASYNC_MODIFY_PLAYLIST);
+                                            }
+                                        });
+                                        break;
+                                }
                                 break;
                             case ASYNC_DELETE_PLAYLISTS_BY_ID:
                                 final ArrayList<Playlist> selectPlaylists = new ArrayList<>(playlistDao.getAllByIds((int[]) query.object));
@@ -155,11 +178,11 @@ public class DatabaseRepository {
                                 mainActivity.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        mainActivity.updateMainActivity(selectPlaylists, null, ASYNC_DELETE_PLAYLISTS_BY_ID);
+                                        mainActivity.updateMainActivity(selectPlaylists, ASYNC_DELETE_PLAYLISTS_BY_ID);
                                     }
                                 });
                                 break;
-                            case ASYNC_DELETE_PLAYLISTSONG_JUNCTION_BY_ID:
+                            case DELETE_PLAYLISTSONG_JUNCTION_BY_ID:
                                 final int[] playlist_ids = (int[]) query.object;
                                 for (int pId : playlist_ids) {
                                     playlistDao.deleteByPlaylistId(pId);
@@ -187,7 +210,7 @@ public class DatabaseRepository {
                                 mainActivity.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        mainActivity.updateMainActivity(availableMetadata, null, ASYNC_GET_METADATA);
+                                        mainActivity.updateMainActivity(availableMetadata, ASYNC_GET_METADATA);
                                     }
                                 });
                                 break;
@@ -196,7 +219,7 @@ public class DatabaseRepository {
                                 mainActivity.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        mainActivity.updateMainActivity(database_songs, null, ASYNC_GET_ALL_SONGMETADATA);
+                                        mainActivity.updateMainActivity(database_songs, ASYNC_GET_ALL_SONGMETADATA);
                                     }
                                 });
                                 break;
@@ -303,23 +326,28 @@ public class DatabaseRepository {
     }
 
     /**
-     * Queues message to insert new playlist into database,
-     * then updates main ui and notifies a messenger upon completion
+     * Queues message to insert new playlist into database, then updates main ui
      * @param playlist the new playlist to insert into database
-     * @param messenger the messenger to notify about the change
      */
-    public synchronized void asyncInsertPlaylist(Playlist playlist, Messenger messenger){
-        messageQueue.offer(new Query(ASYNC_INSERT_PLAYLIST, playlist, messenger));
+    public synchronized void asyncInsertPlaylist(Playlist playlist){
+        messageQueue.offer(new Query(ASYNC_INSERT_PLAYLIST, playlist, null));
     }
 
     /**
-     * Queues message to insert updated version of existing playlist into database,
-     * then updates main ui and notifies a messenger upon completion
-     * @param playlist the modified playlist to insert into database
-     * @param messenger the messenger to notify about the change
+     * Queues message to add or remove songs from a playlist via the playlist-songs junction table
+     * then updates main ui
+     * @param object the playlist-song junctions to add or remove from db if operation is
+     *               INSERT or DELETE, or a playlist to rename in db if operation is RENAME
+     * @param operation the operation being performed to this playlist
+     *                  (e.g. insert songs, delete songs, rename playlist)
      */
-    public synchronized void asyncModifyPlaylist(Playlist playlist, Messenger messenger){
-        messageQueue.offer(new Query(ASYNC_MODIFY_PLAYLIST, playlist, messenger));
+    public synchronized void asyncModifyPlaylist(Object object, int operation){
+        if (operation == Playlist.RENAME) {
+            messageQueue.offer(new Query(ASYNC_MODIFY_PLAYLIST, (Playlist) object, operation));
+        }
+        else {
+            messageQueue.offer(new Query(ASYNC_MODIFY_PLAYLIST, (List<PlaylistSongJunction>) object, operation));
+        }
     }
 
     /**
@@ -335,7 +363,7 @@ public class DatabaseRepository {
      * @param playlistIds array of ids of the playlists to get
      */
     public synchronized void asyncRemovePlaylistSongJunctionByIds(int[] playlistIds){
-        messageQueue.offer(new Query(ASYNC_DELETE_PLAYLISTSONG_JUNCTION_BY_ID, playlistIds));
+        messageQueue.offer(new Query(DELETE_PLAYLISTSONG_JUNCTION_BY_ID, playlistIds));
     }
 
     /**

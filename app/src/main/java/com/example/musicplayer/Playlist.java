@@ -5,6 +5,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 import androidx.annotation.NonNull;
@@ -31,6 +32,11 @@ public class Playlist implements Parcelable {
 
     private static final int MAX_TRANSIENTS = 3;
     private static final double TIMER_FACTOR = 0.05;
+
+    public static final int INSERT_SONGS = 0;
+    public static final int DELETE_SONGS = 1;
+    public static final int REPLACE_ALL_SONGS = 2;
+    public static final int RENAME = 3;
 
     /**
      * Constructor used by database to create a playlist for every row
@@ -390,9 +396,11 @@ public class Playlist implements Parcelable {
      * Adds every new song in the given playlist to this playlist's collection of songs
      * Reconstructs the underlying hashmap with the updated collection of songs
      * @param playlist the playlist to append to this playlist
-     * @return true if extend succeeded, false otherwise
+     * @return list of junctions representing the songs that were successfully added to this playlist
      */
-    public boolean extend(Playlist playlist){
+    public List<PlaylistSongJunction> extend(Playlist playlist){
+        ArrayList<PlaylistSongJunction> junctions = new ArrayList<>();
+
         // create songHashMap if it doesn't already exist (because it's not included in parcel)
         if (songHashMap == null) {
             songHashMap = createHashMap(songList);
@@ -400,36 +408,33 @@ public class Playlist implements Parcelable {
 
         // loop through list of songs to check if a song exists before adding
         ArrayList<Song> playlist_songs = playlist.getSongList();
-        int playlist_songs_size = playlist_songs.size();
-        int dupe_counter = 0;
         for (Song song : playlist_songs){
             if (!songHashMap.containsKey(song)){
                 songList.add(song);
+                junctions.add(new PlaylistSongJunction(playlistId, song.getId()));
             }
-            else{
-                dupe_counter += 1;
-            }
-        }
-
-        // all songs that were to be added are duplicates, extend unnecessary
-        if (dupe_counter == playlist_songs_size) {
-            return false;
         }
 
         // reconstruct hashmap with the updated song list
         songHashMap = createHashMap(songList);
-        return true;
+        return junctions;
     }
 
     /**
      * Removes the collection of songs from this playlist
      * @param songs the songs to remove from this playlist
+     * @return list of junctions representing the songs that were removed from this playlist
      */
-    public void removeAll(Collection<Song> songs){
-        songList.removeAll(songs);
+    public List<PlaylistSongJunction> removeAll(Collection<Song> songs){
+        List<PlaylistSongJunction> junctions = new ArrayList<>();
+        for (Song song : songs) {
+            songList.remove(song);
+            junctions.add(new PlaylistSongJunction(playlistId, song.getId()));
+        }
 
         // reconstruct hashmap with the updated song list
         songHashMap = createHashMap(songList);
+        return junctions;
     }
 
     /**

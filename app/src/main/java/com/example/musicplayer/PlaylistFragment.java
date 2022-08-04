@@ -8,9 +8,6 @@ import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Bundle;
-import android.os.Message;
-import android.os.Messenger;
-import android.os.RemoteException;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.text.Editable;
 import android.text.SpannableString;
@@ -41,14 +38,14 @@ import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.fragment.app.Fragment;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class PlaylistFragment extends Fragment {
 
-    private static final String MESSENGER_TAG = "Messenger";
     private static final String PLAYLIST_TAG = "Playlist";
     private static final int MAX_TIMER_CHARACTERS = 3;
 
-    private Messenger m_mainMessenger;
+    private MainActivity m_mainActivity;
     private Playlist m_playlist;
     private SongListAdapter m_songListAdapter;
     private RelativeLayout m_playlist_layout;
@@ -79,10 +76,9 @@ public class PlaylistFragment extends Fragment {
         super(R.layout.fragment_playlist);
     }
 
-    public static PlaylistFragment getInstance(Playlist playlist, Messenger messenger) {
+    public static PlaylistFragment getInstance(Playlist playlist) {
         PlaylistFragment fragment = new PlaylistFragment();
         Bundle bundle = new Bundle();
-        bundle.putParcelable(MESSENGER_TAG, messenger);
         bundle.putParcelable(PLAYLIST_TAG, playlist);
         fragment.setArguments(bundle);
         return fragment;
@@ -93,8 +89,8 @@ public class PlaylistFragment extends Fragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             this.m_playlist = getArguments().getParcelable(PLAYLIST_TAG);
-            this.m_mainMessenger = getArguments().getParcelable(MESSENGER_TAG);
         }
+        this.m_mainActivity = (MainActivity) getActivity();
     }
 
     @Override
@@ -266,12 +262,12 @@ public class PlaylistFragment extends Fragment {
 
                         // replace existing transient playlist with new current playlist
                         if (Playlist.isNumTransientsMaxed()){
-                            AddPlaylistFragment.sendPlaylistUpdateMessage(transient_playlist, m_mainMessenger, AddPlaylistFragment.MODIFY_PLAYLIST);
+                            m_mainActivity.modifyPlaylist(PlaylistSongJunction.createPlaylistSongJunctionList(transient_playlist), Playlist.REPLACE_ALL_SONGS);
                         }
 
                         // construct new transient and current playlist
                         else {
-                            AddPlaylistFragment.sendPlaylistUpdateMessage(transient_playlist, m_mainMessenger, AddPlaylistFragment.ADD_PLAYLIST);
+                            m_mainActivity.addPlaylist(transient_playlist);
                         }
 
                         // notify music player service to start the new song in the new playlist (queue)
@@ -285,7 +281,7 @@ public class PlaylistFragment extends Fragment {
                         // construct named playlist and send it to addPlaylist fragment
                         Playlist playlist = new Playlist(getString(R.string.Favorites), m_userSelection);
 
-                        AddPlaylistFragment addPlaylistFragment = AddPlaylistFragment.getInstance(playlist, m_mainMessenger);
+                        AddPlaylistFragment addPlaylistFragment = AddPlaylistFragment.getInstance(playlist);
                         getActivity().getSupportFragmentManager().beginTransaction()
                                 .setReorderingAllowed(true)
                                 .add(R.id.fragment_main_primary, addPlaylistFragment)
@@ -312,19 +308,10 @@ public class PlaylistFragment extends Fragment {
                                 dialog.dismiss();
 
                                 // remove selected song(s) from this playlist
-                                m_playlist.removeAll(m_userSelection);
+                                List<PlaylistSongJunction> junctions = m_playlist.removeAll(m_userSelection);
 
                                 // send message to update mainactivity
-                                Message msg = Message.obtain();
-                                Bundle bundle = new Bundle();
-                                bundle.putInt("update", AddPlaylistFragment.MODIFY_PLAYLIST);
-                                bundle.putParcelable("playlist", m_playlist);
-                                msg.setData(bundle);
-                                try {
-                                    m_mainMessenger.send(msg);
-                                } catch (RemoteException e) {
-                                    Logger.logException(e, "PlaylistFragment");
-                                }
+                                m_mainActivity.modifyPlaylist(junctions, Playlist.DELETE_SONGS);
 
                                 // update playlist size textview with new songs count
                                 String playlist_size = m_playlist.getSize() + " Songs";

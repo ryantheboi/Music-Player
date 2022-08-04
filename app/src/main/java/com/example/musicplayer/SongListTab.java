@@ -38,7 +38,6 @@ public class SongListTab extends Fragment {
     private static ListView listView;
     private static ImageView background;
     private static SongListAdapter songListAdapter;
-    private static Messenger mainActivityMessenger;
     private static MainActivity mainActivity;
     private static ArrayList<Song> userSelection;
     private ViewGroup decorView;
@@ -65,7 +64,6 @@ public class SongListTab extends Fragment {
         fragment.setArguments(args);
         userSelection = new ArrayList<>();
         songListAdapter = adapter;
-        mainActivityMessenger = messenger;
         mainActivity = activity;
         return fragment;
     }
@@ -221,12 +219,12 @@ public class SongListTab extends Fragment {
 
                         // replace existing transient playlist with new current playlist
                         if (Playlist.isNumTransientsMaxed()){
-                            AddPlaylistFragment.sendPlaylistUpdateMessage(transient_playlist, mainActivityMessenger, AddPlaylistFragment.MODIFY_PLAYLIST);
+                            mainActivity.modifyPlaylist(PlaylistSongJunction.createPlaylistSongJunctionList(transient_playlist), Playlist.REPLACE_ALL_SONGS);
                         }
 
                         // construct new transient and current playlist
                         else {
-                            AddPlaylistFragment.sendPlaylistUpdateMessage(transient_playlist, mainActivityMessenger, AddPlaylistFragment.ADD_PLAYLIST);
+                            mainActivity.addPlaylist(transient_playlist);
                         }
 
                         // notify music player service to start the new song in the new playlist (queue)
@@ -240,7 +238,7 @@ public class SongListTab extends Fragment {
                         // construct named playlist and send it to addPlaylist fragment
                         Playlist playlist = new Playlist(getString(R.string.Favorites), userSelection);
 
-                        AddPlaylistFragment addPlaylistFragment = AddPlaylistFragment.getInstance(playlist, mainActivityMessenger);
+                        AddPlaylistFragment addPlaylistFragment = AddPlaylistFragment.getInstance(playlist);
                         getActivity().getSupportFragmentManager().beginTransaction()
                                 .setReorderingAllowed(true)
                                 .add(R.id.fragment_main_primary, addPlaylistFragment)

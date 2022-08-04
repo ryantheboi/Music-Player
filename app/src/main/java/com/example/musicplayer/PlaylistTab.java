@@ -132,7 +132,7 @@ public class PlaylistTab extends Fragment {
                 // obtain the selected playlist object and launch playlist fragment
                 Playlist playlist = (Playlist) m_listView.getItemAtPosition(position);
 
-                PlaylistFragment playlistFragment = PlaylistFragment.getInstance(playlist, m_mainMessenger);
+                PlaylistFragment playlistFragment = PlaylistFragment.getInstance(playlist);
                 getActivity().getSupportFragmentManager().beginTransaction()
                         .setReorderingAllowed(true)
                         .add(R.id.fragment_main_primary, playlistFragment)
@@ -258,18 +258,7 @@ public class PlaylistTab extends Fragment {
                                     modify_playlist.setTransientId(0);
 
                                     // notify MainActivity about modified playlist
-                                    Message msg = Message.obtain();
-                                    Bundle bundle = new Bundle();
-                                    bundle.putInt("update", AddPlaylistFragment.MODIFY_PLAYLIST);
-                                    bundle.putParcelable("playlist", modify_playlist);
-                                    bundle.putParcelable("messenger", null);
-                                    msg.setData(bundle);
-
-                                    try {
-                                        m_mainMessenger.send(msg);
-                                    } catch (RemoteException e) {
-                                        Logger.logException(e, "PlaylistTab");
-                                    }
+                                    m_mainActivity.modifyPlaylist(modify_playlist, Playlist.RENAME);
                                 }
                                 renamePlaylist_input.getText().clear();
 

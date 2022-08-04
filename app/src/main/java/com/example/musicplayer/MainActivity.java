@@ -36,6 +36,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -576,10 +577,9 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Updates the main activity with the changes made by the database repository
      * @param object an object associated with the update operation (e.g. a playlist, or playlists)
-     * @param messenger the messenger to notify after successfully adding the playlist
      * @param operation the operation being performed with the playlist
      */
-    public void updateMainActivity(Object object, final Messenger messenger, final int operation){
+    public void updateMainActivity(Object object, final int operation){
         try {
             switch (operation) {
                 case DatabaseRepository.ASYNC_GET_ALL_PLAYLISTSWITHSONGMETADATA:
@@ -637,15 +637,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                     break;
             }
-
-            if (messenger != null) {
-                // send message to end the addplaylistactivity, as the views are now updated
-                Message msg = Message.obtain();
-                Bundle bundle = new Bundle();
-                bundle.putInt("msg", AddPlaylistFragment.FINISH);
-                msg.setData(bundle);
-                messenger.send(msg);
-            }
         }catch (Exception e){
             Logger.logException(e);
         }
@@ -696,6 +687,21 @@ public class MainActivity extends AppCompatActivity {
     }
     public void setSlidingUpPanelTouchEnabled(boolean status){
         mainActivityLayout.setTouchEnabled(status);
+    }
+    public void addPlaylist(Playlist playlist){
+        databaseRepository.asyncInsertPlaylist(playlist);
+        databaseRepository.insertPlaylistSongJunctions(PlaylistSongJunction.createPlaylistSongJunctionList(playlist));
+
+    }
+    public void modifyPlaylist(Object object, int operation){
+        // to replace all songs in existing playlist, first delete them and then insert
+        if (operation == Playlist.REPLACE_ALL_SONGS) {
+            databaseRepository.deletePlaylistSongJunctions((List<PlaylistSongJunction>) object);
+            databaseRepository.asyncModifyPlaylist(object, Playlist.INSERT_SONGS);
+        }
+        else {
+            databaseRepository.asyncModifyPlaylist(object, operation);
+        }
     }
     public static void setRandom_seed(int seed){
         metadata.setRandom_seed(seed);
@@ -799,12 +805,6 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             }
                         });
-                        break;
-                    case AddPlaylistFragment.ADD_PLAYLIST:
-                        databaseRepository.asyncInsertPlaylist((Playlist) bundle.get("playlist"), (Messenger) bundle.get("messenger"));
-                        break;
-                    case AddPlaylistFragment.MODIFY_PLAYLIST:
-                        databaseRepository.asyncModifyPlaylist((Playlist) bundle.get("playlist"), (Messenger) bundle.get("messenger"));
                         break;
                     case PlaylistTab.REMOVE_PLAYLISTS:
                         databaseRepository.asyncRemovePlaylistByIds((int[]) bundle.get("ids"));

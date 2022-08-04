@@ -9,10 +9,6 @@ import android.content.res.ColorStateList;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.os.Messenger;
-import android.os.RemoteException;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -31,9 +27,10 @@ import android.widget.Toast;
 
 import androidx.core.graphics.drawable.DrawableCompat;
 
+import java.util.List;
+
 public class AddPlaylistFragment extends Fragment {
 
-    private static final String MESSENGER_TAG = "Messenger";
     private static final String PLAYLIST_TAG = "Playlist";
 
     private Playlist addPlaylist;
@@ -49,23 +46,15 @@ public class AddPlaylistFragment extends Fragment {
     private AlertDialog addPlaylist_dialog;
     private View addPlaylist_inputdialog_view;
     private EditText addPlaylist_inputdialog;
-    private Messenger mainActivityMessenger;
-    private Messenger addPlaylistMessenger;
     private MainActivity mainActivity;
-
-
-    public static final int FINISH = 0;
-    public static final int ADD_PLAYLIST = 97;
-    public static final int MODIFY_PLAYLIST = 96;
 
     public AddPlaylistFragment() {
         super(R.layout.fragment_addplaylist);
     }
 
-    public static AddPlaylistFragment getInstance(Playlist playlist, Messenger messenger) {
+    public static AddPlaylistFragment getInstance(Playlist playlist) {
         AddPlaylistFragment fragment = new AddPlaylistFragment();
         Bundle bundle = new Bundle();
-        bundle.putParcelable(MESSENGER_TAG, messenger);
         bundle.putParcelable(PLAYLIST_TAG, playlist);
         fragment.setArguments(bundle);
         return fragment;
@@ -75,7 +64,6 @@ public class AddPlaylistFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            this.mainActivityMessenger = getArguments().getParcelable(MESSENGER_TAG);
             this.addPlaylist = getArguments().getParcelable(PLAYLIST_TAG);
         }
         this.mainActivity = (MainActivity) getActivity();
@@ -83,9 +71,6 @@ public class AddPlaylistFragment extends Fragment {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-        // init this messenger
-        addPlaylistMessenger = new Messenger(new AddPlaylistMessenger());
-
         initViews(view);
         initObjects();
         initListeners();
@@ -138,11 +123,12 @@ public class AddPlaylistFragment extends Fragment {
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
                 // obtain the selected playlist object to extend it with the current selection
                 Playlist playlist = (Playlist) listView.getItemAtPosition(position);
-                boolean isExtended = playlist.extend(addPlaylist);
+                List<PlaylistSongJunction> junctions = playlist.extend(addPlaylist);
 
                 // extend was successful, notify MainActivity about change to existing playlist
-                if (isExtended) {
-                    sendPlaylistUpdateMessage(playlist, MODIFY_PLAYLIST);
+                if (junctions.size() > 0) {
+                    mainActivity.modifyPlaylist(junctions, Playlist.INSERT_SONGS);
+                    finish();
                 }
                 else{
                     Toast.makeText(mainActivity.getApplicationContext(), "Song(s) already exist in playlist!", Toast.LENGTH_SHORT).show();
@@ -208,7 +194,8 @@ public class AddPlaylistFragment extends Fragment {
                         addPlaylist.setPlaylistId(DatabaseRepository.generatePlaylistId());
 
                         // notify MainActivity about new playlist
-                        sendPlaylistUpdateMessage(addPlaylist, ADD_PLAYLIST);
+                        mainActivity.addPlaylist(addPlaylist);
+                        finish();
                     }
                 });
 
@@ -271,51 +258,7 @@ public class AddPlaylistFragment extends Fragment {
         DrawableCompat.setTint(wrappedImageView, getResources().getColor(ThemeColors.getMainDrawableVectorColorId()));
     }
 
-    private void sendPlaylistUpdateMessage(Playlist playlist, int operation){
-        // send message
-        Message msg = Message.obtain();
-        Bundle bundle = new Bundle();
-        bundle.putInt("update", operation);
-        bundle.putParcelable("playlist", playlist);
-        bundle.putParcelable("messenger", addPlaylistMessenger);
-        msg.setData(bundle);
-        try {
-            mainActivityMessenger.send(msg);
-        } catch (RemoteException e) {
-            Logger.logException(e, "AddPlaylistActivity");
-        }
-    }
-
-    public static void sendPlaylistUpdateMessage(Playlist playlist, Messenger messenger, int operation){
-        // send message
-        Message msg = Message.obtain();
-        Bundle bundle = new Bundle();
-        bundle.putInt("update", operation);
-        bundle.putParcelable("playlist", playlist);
-        bundle.putParcelable("messenger", null);
-        msg.setData(bundle);
-        try {
-            messenger.send(msg);
-        } catch (RemoteException e) {
-            Logger.logException(e, "AddPlaylistActivity");
-        }
-    }
-
     public void finish() {
         mainActivity.getSupportFragmentManager().popBackStackImmediate();
-    }
-
-    private final class AddPlaylistMessenger extends Handler {
-
-        @Override
-        public void handleMessage(final Message msg) {
-            Bundle bundle = msg.getData();
-            int operation = (int) bundle.get("msg");
-            switch (operation) {
-                case FINISH:
-                    finish();
-                    break;
-            }
-        }
     }
 }

@@ -142,7 +142,7 @@ public class DatabaseRepository {
                                 int operation = (int) query.extra;
                                 switch (operation) {
                                     case Playlist.INSERT_SONGS:
-                                        playlistDao.insertAll((List<PlaylistSongJunction>) query.object);
+                                        playlistDao.insertAllJunctions((List<PlaylistSongJunction>) query.object);
                                         mainActivity.runOnUiThread(new Runnable() {
                                             @Override
                                             public void run() {
@@ -151,7 +151,7 @@ public class DatabaseRepository {
                                         });
                                         break;
                                     case Playlist.DELETE_SONGS:
-                                        playlistDao.deleteAll((List<PlaylistSongJunction>) query.object);
+                                        playlistDao.deleteAllJunctions((List<PlaylistSongJunction>) query.object);
                                         mainActivity.runOnUiThread(new Runnable() {
                                             @Override
                                             public void run() {
@@ -171,26 +171,26 @@ public class DatabaseRepository {
                                 }
                                 break;
                             case ASYNC_DELETE_PLAYLISTS_BY_ID:
-                                final ArrayList<Playlist> selectPlaylists = new ArrayList<>(playlistDao.getAllByIds((int[]) query.object));
-                                for (Playlist playlist : selectPlaylists) {
-                                    playlistDao.delete(playlist);
-                                }
+                                final int[] playlistIds = (int[]) query.object;
+                                final ArrayList<Playlist> deletedPlaylists = new ArrayList<>(playlistDao.getAllByIds(playlistIds));
+                                playlistDao.deleteByIds(playlistIds);
+                                playlistDao.deleteJunctionsByPlaylistIds(playlistIds);
                                 mainActivity.runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        mainActivity.updateMainActivity(selectPlaylists, ASYNC_DELETE_PLAYLISTS_BY_ID);
+                                        mainActivity.updateMainActivity(deletedPlaylists, ASYNC_DELETE_PLAYLISTS_BY_ID);
                                     }
                                 });
                                 break;
                             case DELETE_PLAYLISTSONG_JUNCTION_BY_ID:
                                 final int[] playlist_ids = (int[]) query.object;
                                 for (int pId : playlist_ids) {
-                                    playlistDao.deleteByPlaylistId(pId);
+                                    playlistDao.deleteJunctionsByPlaylistId(pId);
                                 }
                                 break;
                             case DELETE_PLAYLISTSONG_JUNCTIONS:
                                 final List<PlaylistSongJunction> junctions = (List<PlaylistSongJunction>) query.object;
-                                playlistDao.deleteAll(junctions);
+                                playlistDao.deleteAllJunctions(junctions);
                                 break;
                             case ASYNC_GET_METADATA:
                                 // there is only one row of metadata for now, with id 0
@@ -238,7 +238,7 @@ public class DatabaseRepository {
                             case INSERT_PLAYLISTSONG_JUNCTIONS:
                                 List<PlaylistSongJunction> playlistSongJunctionList = (List<PlaylistSongJunction>) query.object;
                                 if (playlistSongJunctionList.size() > 0) {
-                                    playlistDao.insertAll(playlistSongJunctionList);
+                                    playlistDao.insertAllJunctions(playlistSongJunctionList);
                                 }
                                 break;
                             case INSERT_METADATA:

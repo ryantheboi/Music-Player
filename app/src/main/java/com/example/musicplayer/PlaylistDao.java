@@ -33,15 +33,23 @@ public interface PlaylistDao {
     void insert(Playlist playlist);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insertAll(List<PlaylistSongJunction> playlistSongJunctions);
+    void insertAllJunctions(List<PlaylistSongJunction> playlistSongJunctions);
 
     @Delete
     void delete(Playlist playlist);
 
+    @Transaction
+    @Query("DELETE FROM Playlists WHERE playlistId IN (:pIds)")
+    void deleteByIds(int[] pIds);
+
     @Delete
-    void deleteAll(List<PlaylistSongJunction> playlistSongJunctions);
+    void deleteAllJunctions(List<PlaylistSongJunction> playlistSongJunctions);
 
     @Transaction
     @Query("DELETE FROM PlaylistSongJunction WHERE pId = :pId")
-    void deleteByPlaylistId(int pId);
+    void deleteJunctionsByPlaylistId(int pId);
+
+    @Transaction
+    @Query("DELETE FROM PlaylistSongJunction WHERE pId IN (:pIds)")
+    void deleteJunctionsByPlaylistIds(int[] pIds);
 }

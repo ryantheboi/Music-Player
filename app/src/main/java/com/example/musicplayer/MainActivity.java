@@ -693,6 +693,9 @@ public class MainActivity extends AppCompatActivity {
         databaseRepository.insertPlaylistSongJunctions(PlaylistSongJunction.createPlaylistSongJunctionList(playlist));
 
     }
+    public void removePlaylists(int[] ids){
+        databaseRepository.asyncRemovePlaylistByIds(ids);
+    }
     public void modifyPlaylist(Object object, int operation){
         // to replace all songs in existing playlist, first delete them and then insert
         if (operation == Playlist.REPLACE_ALL_SONGS) {
@@ -805,9 +808,6 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             }
                         });
-                        break;
-                    case PlaylistTab.REMOVE_PLAYLISTS:
-                        databaseRepository.asyncRemovePlaylistByIds((int[]) bundle.get("ids"));
                         break;
                     case MusicPlayerService.UPDATE_SONG_INDEX:
                         // update index for current song

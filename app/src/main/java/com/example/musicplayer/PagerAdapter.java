@@ -14,17 +14,15 @@ public class PagerAdapter extends FragmentStatePagerAdapter {
     int numTabs;
     SongListAdapter songListAdapter;
     PlaylistAdapter playlistAdapter;
-    Messenger mainActivityMessenger;
     MainActivity mainActivity;
     SongListTab songListTab;
     PlaylistTab playlistTab;
 
-    public PagerAdapter(FragmentManager fm, int numTabs, SongListAdapter songListAdapter, PlaylistAdapter playlistAdapter, Messenger mainActivityMessenger, MainActivity mainActivity){
+    public PagerAdapter(FragmentManager fm, int numTabs, SongListAdapter songListAdapter, PlaylistAdapter playlistAdapter, MainActivity mainActivity){
         super(fm);
         this.numTabs = numTabs;
         this.songListAdapter = songListAdapter;
         this.playlistAdapter = playlistAdapter;
-        this.mainActivityMessenger = mainActivityMessenger;
         this.mainActivity = mainActivity;
     }
 
@@ -32,10 +30,10 @@ public class PagerAdapter extends FragmentStatePagerAdapter {
     public Fragment getItem(int position) {
         switch (position){
             case SONGS_TAB:
-                songListTab = SongListTab.newInstance("Tab1", songListAdapter, mainActivityMessenger, mainActivity);
+                songListTab = SongListTab.newInstance("Tab1", songListAdapter, mainActivity);
                 return songListTab;
             case PLAYLISTS_TAB:
-                playlistTab = PlaylistTab.newInstance("Tab2", playlistAdapter, mainActivityMessenger, mainActivity);
+                playlistTab = PlaylistTab.newInstance("Tab2", playlistAdapter, mainActivity);
                 return playlistTab;
             default:
                 return null;

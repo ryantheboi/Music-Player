@@ -57,7 +57,7 @@ public class SongListTab extends Fragment {
      * @return A new instance of fragment Tab.
      */
     // TODO: Rename and change types and number of parameters
-    public static SongListTab newInstance(String param1, SongListAdapter adapter, Messenger messenger, MainActivity activity) {
+    public static SongListTab newInstance(String param1, SongListAdapter adapter, MainActivity activity) {
         SongListTab fragment = new SongListTab();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);

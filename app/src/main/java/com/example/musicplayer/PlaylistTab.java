@@ -47,7 +47,6 @@ public class PlaylistTab extends Fragment {
     private static ImageView background;
     private static PlaylistAdapter m_playlistAdapter;
     private static MainActivity m_mainActivity;
-    private static Messenger m_mainMessenger;
     private static ArrayList<Playlist> m_userSelection = new ArrayList<>();
     private static EditText renamePlaylist_input;
     private ViewGroup decorView;
@@ -71,13 +70,12 @@ public class PlaylistTab extends Fragment {
      * @return A new instance of fragment Tab.
      */
     // TODO: Rename and change types and number of parameters
-    public static PlaylistTab newInstance(String param1, PlaylistAdapter adapter, Messenger messenger, MainActivity activity) {
+    public static PlaylistTab newInstance(String param1, PlaylistAdapter adapter, MainActivity activity) {
         PlaylistTab fragment = new PlaylistTab();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         fragment.setArguments(args);
         m_playlistAdapter = adapter;
-        m_mainMessenger = messenger;
         m_mainActivity = activity;
         return fragment;
     }

@@ -281,7 +281,7 @@ public class MainFragmentPrimary extends Fragment {
         tabLayout.addTab(tabLayout.newTab().setText("Songs"));
         tabLayout.addTab(tabLayout.newTab().setText("Playlists"));
 
-        pagerAdapter = new PagerAdapter(getChildFragmentManager(), tabLayout.getTabCount(), songListAdapter, playlistAdapter, mainActivityMessenger, mainActivity);
+        pagerAdapter = new PagerAdapter(getChildFragmentManager(), tabLayout.getTabCount(), songListAdapter, playlistAdapter, mainActivity);
 
         // set dynamic viewpager
         viewPager.setMaxPages(pagerAdapter.getCount());

@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
     public static boolean isBluetoothPermissionGranted = false;
     private boolean isInfoDisplaying;
     private static Song current_song = Song.EMPTY_SONG;
-    private ArrayList<Song> fullSongList;
+    private HashMap<Integer, Song> fullSongHashMap;
     private HashMap<Integer, SongMetadata> fullSongMetadataHashMap;
     private static ArrayList<Playlist> playlistList;
     private static Playlist current_playlist;
@@ -325,8 +325,16 @@ public class MainActivity extends AppCompatActivity {
     @TargetApi(24)
     public void initMusicList() {
         // get all songs from device and sort them
-        ArrayList<Song> mediastoreSongList = getMusicSongList();
-        mediastoreSongList.sort(new Comparator<Song>() {
+        HashMap<Integer, Song> mediaStoreHashMap = getMusicSongList();
+
+        // there has been a change between the existing song list and the current song list
+        // this can happen when re-entering the app without destroying it
+        isSongListChanged = fullSongHashMap != null && !fullSongHashMap.equals(mediaStoreHashMap);
+
+        fullSongHashMap = mediaStoreHashMap;
+
+        ArrayList<Song> fullSongsList = new ArrayList<>(fullSongHashMap.values());
+        fullSongsList.sort(new Comparator<Song>() {
             @Override
             public int compare(Song o1, Song o2) {
                 String o1_title = o1.getTitle().toUpperCase();
@@ -335,17 +343,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // there has been a change between the existing song list and the current song list
-        // this can happen when re-entering the app without destroying it
-        isSongListChanged = fullSongList != null && !fullSongList.equals(mediastoreSongList);
-
-        fullSongList = mediastoreSongList;
-
-        fullPlaylist = new Playlist("FULL_PLAYLIST", fullSongList);
+        fullPlaylist = new Playlist("FULL_PLAYLIST", fullSongsList);
     }
 
-    public ArrayList<Song> getMusicSongList() {
-        ArrayList<Song> mediastoreSongList = new ArrayList<>();
+    public HashMap<Integer, Song> getMusicSongList() {
+        HashMap<Integer, Song> mediaStoreHashMap = new HashMap<>();
         ContentResolver contentResolver = getContentResolver();
         Uri songUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         Cursor songCursor = contentResolver.query(songUri, null, null, null, null);
@@ -356,12 +358,12 @@ public class MainActivity extends AppCompatActivity {
             do {
                 Song song = SongHelper.createSong(songCursor);
                 databaseRepository.insertSongMetadataIfNotExist(song);
-                mediastoreSongList.add(song);
+                mediaStoreHashMap.put(song.getId(), song);
             } while (songCursor.moveToNext());
 
             songCursor.close();
         }
-        return mediastoreSongList;
+        return mediaStoreHashMap;
     }
 
     @TargetApi(24)
@@ -585,9 +587,9 @@ public class MainActivity extends AppCompatActivity {
                 case DatabaseRepository.ASYNC_GET_ALL_PLAYLISTSWITHSONGMETADATA:
                     // get all playlists from db (and clean if songs were removed) and update adapters
                     ArrayList<PlaylistWithSongMetadata> playlistWithSongMetadataList = (ArrayList<PlaylistWithSongMetadata>) object;
-                    playlistList = PlaylistWithSongMetadata.extractPlaylists(playlistWithSongMetadataList);
+                    playlistList = PlaylistWithSongMetadata.extractPlaylists(playlistWithSongMetadataList, fullSongHashMap);
                     cleanPlaylistDatabase();
-                    mainFragmentPrimary.setAdapters(new SongListAdapter(this, R.layout.adapter_song_layout, fullSongList, this),
+                    mainFragmentPrimary.setAdapters(new SongListAdapter(this, R.layout.adapter_song_layout, fullPlaylist.getSongList(), this),
                                                     new PlaylistAdapter(this, R.layout.adapter_playlist_layout, playlistList, this));
 
                     // set current playlist (initially null)
@@ -602,8 +604,8 @@ public class MainActivity extends AppCompatActivity {
                     // if no current playlist exists
                     if (current_playlist == null) {
                         current_playlist = fullPlaylist;
-                        if (fullSongList.size() > 0) {
-                            current_song = fullSongList.get(0);
+                        if (current_playlist.getSize() > 0) {
+                            current_song = current_playlist.getSongList().get(0);
                         } else {
                             break;
                         }

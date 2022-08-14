@@ -23,9 +23,11 @@ public class Playlist implements Parcelable {
     private int playlistId;
 
     private String name;
-    private ArrayList<Song> songList;
     private int transientId;
     private long dateAdded;
+
+    @Ignore
+    private ArrayList<Song> songList;
 
     @Ignore
     private HashMap<Song, SongNode> songHashMap;
@@ -41,10 +43,10 @@ public class Playlist implements Parcelable {
     /**
      * Constructor used by database to create a playlist for every row
      */
-    public Playlist(int playlistId, String name, ArrayList<Song> songList, int transientId, long dateAdded) {
+    public Playlist(int playlistId, String name, int transientId, long dateAdded) {
         this.playlistId = playlistId;
         this.name = name;
-        this.songList = new ArrayList<>(songList);
+        this.songList = new ArrayList<>();
         this.songHashMap = createHashMap(songList);
         this.transientId = transientId;
         this.dateAdded = dateAdded;
